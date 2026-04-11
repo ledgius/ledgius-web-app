@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { PageShell, PageSection } from "@/components/layout"
 import { Badge } from "@/components/primitives"
 import { api } from "@/shared/lib/api"
-import { Bug, Lightbulb, Heart, HelpCircle, MessageSquare, Image } from "lucide-react"
+import { Bug, Lightbulb, Heart, HelpCircle, MessageSquare } from "lucide-react"
 
 interface FeedbackDetail {
   id: number

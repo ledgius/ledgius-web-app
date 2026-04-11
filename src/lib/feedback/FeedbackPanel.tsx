@@ -274,7 +274,7 @@ export function FeedbackPanel({ isOpen, onClose }: FeedbackPanelProps) {
                 <div className="mb-3">
                   <p className="text-[10px] font-medium text-gray-500 uppercase tracking-wider mb-1">Console messages (auto-attached)</p>
                   <div className="bg-gray-50 rounded-lg p-2 max-h-20 overflow-y-auto space-y-0.5">
-                    {consoleEntries.slice(0, 5).map((entry, i) => {
+                    {consoleEntries.slice(0, 5).map((entry) => {
                       const icon = entry.level === "error" ? <AlertCircle className="h-3 w-3 text-red-400 shrink-0" />
                         : entry.level === "success" ? <CheckCircle className="h-3 w-3 text-green-400 shrink-0" />
                         : <Info className="h-3 w-3 text-gray-400 shrink-0" />

@@ -38,10 +38,10 @@ function loadFloatPosition(): { x: number; y: number } {
 }
 
 interface HelpContent {
-  title: string
-  sections: {
-    heading?: string
-    body: string
+  readonly title: string
+  readonly sections: readonly {
+    readonly heading?: string
+    readonly body: string
   }[]
 }
 
