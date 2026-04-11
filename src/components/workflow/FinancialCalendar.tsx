@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react"
+import { useRef, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import {
   CheckCircle2, AlertCircle, Calendar,
@@ -6,6 +6,7 @@ import {
   ChevronRight,
 } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
+import { useCalendarTimeline, type TimelineItem as APITimelineItem } from "@/domains/calendar/hooks/useCalendar"
 import type { LucideIcon } from "lucide-react"
 
 // ── Types ──
@@ -190,10 +191,44 @@ interface FinancialCalendarProps {
   onClose: () => void
 }
 
+// ── Map API response to internal type ──
+
+const categoryIconMap: Record<string, LucideIcon> = {
+  recon: Landmark,
+  payroll: Wallet,
+  ar: FileText,
+  bas: Calculator,
+  period: Lock,
+  task: ClipboardList,
+}
+
+function mapAPIItems(apiItems: APITimelineItem[]): TimelineItem[] {
+  return apiItems.map((item) => ({
+    id: item.id,
+    title: item.title,
+    description: item.description,
+    date: new Date(item.date),
+    type: item.type,
+    category: item.category,
+    icon: categoryIconMap[item.category] || ClipboardList,
+    done: item.done,
+    doneAt: item.done_at ? new Date(item.done_at) : undefined,
+    doneBy: item.done_by ?? undefined,
+    overdue: item.overdue,
+    badge: item.badge ?? undefined,
+    link: item.link ?? undefined,
+  }))
+}
+
 export function FinancialCalendar({ isOpen, onClose }: FinancialCalendarProps) {
   const ref = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
-  const [items] = useState<TimelineItem[]>(generateMockTimeline)
+  const { data: apiData } = useCalendarTimeline(7)
+
+  // Use API data if available, fall back to mock
+  const items: TimelineItem[] = apiData?.items
+    ? mapAPIItems(apiData.items)
+    : generateMockTimeline()
 
   useEffect(() => {
     if (!isOpen) return
@@ -406,6 +441,16 @@ function TimelineNode({ item, onClick, variant }: { item: TimelineItem; onClick:
 // ── Badge hook for header ──
 
 export function useCalendarBadge() {
+  const { data: apiData } = useCalendarTimeline(7)
+
+  if (apiData?.summary) {
+    return {
+      overdueCount: apiData.summary.overdue_count,
+      todayCount: apiData.summary.today_count,
+    }
+  }
+
+  // Fallback to mock
   const items = generateMockTimeline()
   const overdueCount = items.filter((i) => i.overdue).length
   const todayCount = items.filter((i) => !i.done && !i.overdue && formatDayLabel(i.date) === "Today").length
