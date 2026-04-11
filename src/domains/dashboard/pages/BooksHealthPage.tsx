@@ -321,7 +321,7 @@ function FullCalendarTimeline() {
             <Calendar className="h-4 w-4 text-primary-600" />
           </div>
           <div>
-            <h2 className="text-sm font-semibold text-gray-900">Financial Calendar</h2>
+            <h2 className="text-sm font-semibold text-gray-900">Financial Timeline</h2>
             <div className="flex items-center gap-1 mt-0.5">
               {viewRangeOptions.map((opt) => (
                 <button
@@ -731,7 +731,7 @@ export function BooksHealthPage() {
         </HealthPanel>
       </div>
 
-      {/* ── Financial Calendar ── */}
+      {/* ── Financial Timeline ── */}
       <div className="border-t border-gray-200 pt-6">
         <FullCalendarTimeline />
       </div>

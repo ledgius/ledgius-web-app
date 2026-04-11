@@ -191,7 +191,7 @@ const dotColors: Record<string, { bg: string; ring: string }> = {
 
 // ── Component ──
 
-interface FinancialCalendarProps {
+interface FinancialTimelineProps {
   isOpen: boolean
   onClose: () => void
 }
@@ -237,7 +237,7 @@ const viewRangeOptions: { key: ViewRange; label: string; days: number }[] = [
   { key: "quarter", label: "Quarter", days: 90 },
 ]
 
-export function FinancialCalendar({ isOpen, onClose }: FinancialCalendarProps) {
+export function FinancialTimeline({ isOpen, onClose }: FinancialTimelineProps) {
   const ref = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
   const [viewRange, setViewRange] = useState<ViewRange>("7d")
@@ -305,7 +305,7 @@ export function FinancialCalendar({ isOpen, onClose }: FinancialCalendarProps) {
             <Calendar className="h-4 w-4 text-primary-600" />
           </div>
           <div>
-            <h3 className="text-sm font-semibold text-gray-900">Financial Calendar</h3>
+            <h3 className="text-sm font-semibold text-gray-900">Financial Timeline</h3>
             <div className="flex items-center gap-1 mt-0.5">
               {viewRangeOptions.map((opt) => (
                 <button
