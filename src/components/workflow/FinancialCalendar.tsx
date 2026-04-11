@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import {
   CheckCircle2, AlertCircle, Calendar,
   Landmark, Wallet, FileText, Calculator, Lock, ClipboardList,
-  ChevronRight,
+  ChevronRight, Receipt, PiggyBank, Send, Scale,
 } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import { useCalendarTimeline, type TimelineItem as APITimelineItem } from "@/domains/calendar/hooks/useCalendar"
@@ -177,9 +177,14 @@ function formatTime(date: Date): string {
 
 const dotColors: Record<string, { bg: string; ring: string }> = {
   recon: { bg: "bg-blue-500", ring: "ring-blue-100" },
+  banking: { bg: "bg-blue-500", ring: "ring-blue-100" },
   payroll: { bg: "bg-purple-500", ring: "ring-purple-100" },
   ar: { bg: "bg-amber-500", ring: "ring-amber-100" },
+  receivables: { bg: "bg-amber-500", ring: "ring-amber-100" },
+  payables: { bg: "bg-orange-500", ring: "ring-orange-100" },
   bas: { bg: "bg-red-500", ring: "ring-red-100" },
+  compliance: { bg: "bg-red-500", ring: "ring-red-100" },
+  accounting: { bg: "bg-gray-500", ring: "ring-gray-100" },
   period: { bg: "bg-gray-500", ring: "ring-gray-100" },
   task: { bg: "bg-primary-500", ring: "ring-primary-100" },
 }
@@ -195,9 +200,14 @@ interface FinancialCalendarProps {
 
 const categoryIconMap: Record<string, LucideIcon> = {
   recon: Landmark,
+  banking: Landmark,
   payroll: Wallet,
   ar: FileText,
+  receivables: FileText,
+  payables: Receipt,
   bas: Calculator,
+  compliance: Scale,
+  accounting: Lock,
   period: Lock,
   task: ClipboardList,
 }
