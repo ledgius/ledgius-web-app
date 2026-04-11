@@ -1,4 +1,4 @@
-import { useRef, useEffect } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import {
   CheckCircle2, AlertCircle, Calendar,
@@ -230,10 +230,19 @@ function mapAPIItems(apiItems: APITimelineItem[]): TimelineItem[] {
   }))
 }
 
+type ViewRange = "7d" | "30d" | "quarter"
+const viewRangeOptions: { key: ViewRange; label: string; days: number }[] = [
+  { key: "7d", label: "7 Days", days: 7 },
+  { key: "30d", label: "Month", days: 30 },
+  { key: "quarter", label: "Quarter", days: 90 },
+]
+
 export function FinancialCalendar({ isOpen, onClose }: FinancialCalendarProps) {
   const ref = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
-  const { data: apiData } = useCalendarTimeline(7)
+  const [viewRange, setViewRange] = useState<ViewRange>("7d")
+  const days = viewRangeOptions.find((v) => v.key === viewRange)!.days
+  const { data: apiData } = useCalendarTimeline(days)
 
   // Use API data if available, fall back to mock
   const items: TimelineItem[] = apiData?.items
@@ -273,6 +282,7 @@ export function FinancialCalendar({ isOpen, onClose }: FinancialCalendarProps) {
   }
 
   const overdueCount = overdue.length
+  const doneCount = items.filter((i) => i.done).length
   const todayUndone = items.filter((i) => !i.overdue && !i.done && formatDayLabel(i.date) === "Today").length
 
   function handleItemClick(item: TimelineItem) {
@@ -296,10 +306,31 @@ export function FinancialCalendar({ isOpen, onClose }: FinancialCalendarProps) {
           </div>
           <div>
             <h3 className="text-sm font-semibold text-gray-900">Financial Calendar</h3>
-            <p className="text-[10px] text-gray-400">7-day rolling view</p>
+            <div className="flex items-center gap-1 mt-0.5">
+              {viewRangeOptions.map((opt) => (
+                <button
+                  key={opt.key}
+                  type="button"
+                  onClick={() => setViewRange(opt.key)}
+                  className={cn(
+                    "text-[10px] px-1.5 py-0.5 rounded-full transition-colors",
+                    viewRange === opt.key
+                      ? "bg-primary-100 text-primary-700 font-semibold"
+                      : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+                  )}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-1.5">
+          {doneCount > 0 && (
+            <span className="px-2 py-0.5 rounded-full bg-green-50 text-green-600 text-[10px] font-semibold">
+              {doneCount} done
+            </span>
+          )}
           {overdueCount > 0 && (
             <span className="px-2 py-0.5 rounded-full bg-red-50 text-red-600 text-[10px] font-semibold">
               {overdueCount} overdue
