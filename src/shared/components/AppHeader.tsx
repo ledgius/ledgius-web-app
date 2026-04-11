@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query"
 import { cn } from "@/shared/lib/utils"
 import { useAuth } from "@/shared/lib/auth"
 import { useHelpPanelToggle } from "@/components/workflow"
+import { FinancialCalendar, useCalendarBadge } from "@/components/workflow/FinancialCalendar"
 import { api } from "@/shared/lib/api"
 import type { DashboardMetrics } from "@/domains/dashboard/hooks/useDashboard"
 
@@ -66,6 +67,9 @@ export function AppHeader({ onSearchOpen, onFeedbackOpen }: AppHeaderProps & { o
   const [createOpen, setCreateOpen] = useState(false)
   const [userOpen, setUserOpen] = useState(false)
   const [tenantOpen, setTenantOpen] = useState(false)
+  const [calendarOpen, setCalendarOpen] = useState(false)
+  const calendarRef = useRef<HTMLDivElement>(null)
+  const { overdueCount, todayCount } = useCalendarBadge()
   const createRef = useRef<HTMLDivElement>(null)
   const userRef = useRef<HTMLDivElement>(null)
   const tenantRef = useRef<HTMLDivElement>(null)
@@ -138,7 +142,7 @@ export function AppHeader({ onSearchOpen, onFeedbackOpen }: AppHeaderProps & { o
       </div>
 
       {/* ── Center: Time Context (hidden on mobile) ── */}
-      <div className="hidden md:flex flex-1 items-center justify-center gap-4 text-xs text-gray-500">
+      <div className="hidden md:flex flex-1 items-center justify-center gap-4 text-xs text-gray-500 relative" ref={calendarRef}>
         <button
           type="button"
           onClick={() => navigate("/reports")}
@@ -150,7 +154,26 @@ export function AppHeader({ onSearchOpen, onFeedbackOpen }: AppHeaderProps & { o
         <span className="text-gray-300" aria-hidden="true">&middot;</span>
         <span>{getQuarter(now)} | {now.toLocaleDateString("en-AU", { month: "long" })}</span>
         <span className="text-gray-300" aria-hidden="true">&middot;</span>
-        <span className="tabular-nums">{formatHeaderDate(now)}</span>
+        <button
+          type="button"
+          onClick={() => setCalendarOpen(!calendarOpen)}
+          className={cn(
+            "tabular-nums inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md transition-colors",
+            calendarOpen
+              ? "bg-primary-50 text-primary-700"
+              : "hover:bg-gray-100 hover:text-gray-700"
+          )}
+          title="Financial calendar — click to view tasks and events"
+        >
+          {formatHeaderDate(now)}
+          {overdueCount > 0 && (
+            <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+          )}
+          {overdueCount === 0 && todayCount > 0 && (
+            <span className="h-2 w-2 rounded-full bg-amber-400" />
+          )}
+        </button>
+        <FinancialCalendar isOpen={calendarOpen} onClose={() => setCalendarOpen(false)} />
       </div>
       {/* Spacer on mobile when time context is hidden */}
       <div className="flex-1 md:hidden" />
