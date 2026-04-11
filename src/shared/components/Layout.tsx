@@ -10,6 +10,7 @@ import {
   UsersRound, Percent, PiggyBank, UserCheck, Wallet,
   Camera, GitMerge, Send, Inbox, HeartPulse, Sparkles, Import,
   FileBarChart, Scale, TrendingUp, Clock, ClipboardCheck, ChevronsLeft, ChevronsRight,
+  Menu, X,
 } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import { useAuthTokenSync } from "@/shared/lib/auth"
@@ -249,11 +250,12 @@ export function Layout() {
   const [commandOpen, setCommandOpen] = useState(false)
   const [shortcutsOpen, setShortcutsOpen] = useState(false)
   const [feedbackOpen, setFeedbackOpen] = useState(false)
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
   // Initialise action trail and route tracking for feedback system.
   const location = useLocation()
   useEffect(() => { initActionTrail() }, [])
-  useEffect(() => { trailNavigate(location.pathname) }, [location.pathname])
+  useEffect(() => { trailNavigate(location.pathname); setMobileNavOpen(false) }, [location.pathname])
 
   // Sidebar mode — persisted to localStorage
   const [mode, setMode] = useState<SidebarMode>(() => {
@@ -316,9 +318,30 @@ export function Layout() {
 
       {/* ── Sidebar + Main ── */}
       <div className="flex flex-1 min-h-0">
+        {/* Mobile nav overlay */}
+        {mobileNavOpen && (
+          <div
+            className="fixed inset-0 bg-black/30 z-40 md:hidden"
+            onClick={() => setMobileNavOpen(false)}
+          />
+        )}
+
+        {/* Mobile hamburger button */}
+        <button
+          type="button"
+          onClick={() => setMobileNavOpen(!mobileNavOpen)}
+          className="fixed bottom-4 left-4 z-50 md:hidden p-3 rounded-full bg-primary-600 text-white shadow-lg hover:bg-primary-700 transition-colors"
+          aria-label="Toggle navigation"
+        >
+          {mobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        </button>
+
         <aside className={cn(
           "bg-white border-r border-gray-200 flex flex-col transition-all duration-200",
-          sidebarCollapsed ? "w-12" : "w-52"
+          sidebarCollapsed ? "w-12" : "w-52",
+          // Mobile: fixed overlay, hidden by default
+          "fixed md:static inset-y-0 left-0 z-40 mt-12 md:mt-0",
+          mobileNavOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         )}>
           {/* Collapse toggle */}
           <div className={cn("flex items-center border-b border-gray-100 px-2 py-1.5", sidebarCollapsed ? "justify-center" : "justify-end")}>

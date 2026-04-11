@@ -137,8 +137,8 @@ export function AppHeader({ onSearchOpen, onFeedbackOpen }: AppHeaderProps & { o
         )}
       </div>
 
-      {/* ── Center: Time Context ── */}
-      <div className="flex-1 flex items-center justify-center gap-4 text-xs text-gray-500">
+      {/* ── Center: Time Context (hidden on mobile) ── */}
+      <div className="hidden md:flex flex-1 items-center justify-center gap-4 text-xs text-gray-500">
         <button
           type="button"
           onClick={() => navigate("/reports")}
@@ -152,15 +152,17 @@ export function AppHeader({ onSearchOpen, onFeedbackOpen }: AppHeaderProps & { o
         <span className="text-gray-300" aria-hidden="true">&middot;</span>
         <span className="tabular-nums">{formatHeaderDate(now)}</span>
       </div>
+      {/* Spacer on mobile when time context is hidden */}
+      <div className="flex-1 md:hidden" />
 
       {/* ── Right: Alerts + Actions + User ── */}
       <div className="flex items-center gap-1">
-        {/* Alert badges */}
+        {/* Alert badges (hidden on mobile) */}
         {arOutstanding > 0 && (
           <button
             type="button"
             onClick={() => navigate("/invoices")}
-            className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs text-primary-700 bg-primary-50 hover:bg-primary-100 transition-colors"
+            className="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded-md text-xs text-primary-700 bg-primary-50 hover:bg-primary-100 transition-colors"
             title="Outstanding receivables — money owed to you"
           >
             <DollarSign className="h-3 w-3" />
@@ -171,7 +173,7 @@ export function AppHeader({ onSearchOpen, onFeedbackOpen }: AppHeaderProps & { o
           <button
             type="button"
             onClick={() => navigate("/bills")}
-            className="flex items-center gap-1.5 px-2 py-1 rounded-md text-xs text-amber-700 bg-amber-50 hover:bg-amber-100 transition-colors"
+            className="hidden lg:flex items-center gap-1.5 px-2 py-1 rounded-md text-xs text-amber-700 bg-amber-50 hover:bg-amber-100 transition-colors"
             title="Outstanding payables"
           >
             <DollarSign className="h-3 w-3" />
@@ -179,18 +181,18 @@ export function AppHeader({ onSearchOpen, onFeedbackOpen }: AppHeaderProps & { o
           </button>
         )}
 
-        {/* Reconciliation badge */}
+        {/* Reconciliation badge (hidden on mobile) */}
         <button
           type="button"
           onClick={() => navigate("/banking")}
-          className="p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+          className="hidden md:block p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           title="Bank reconciliation"
         >
           <CreditCard className="h-4 w-4" />
         </button>
 
-        {/* Divider */}
-        <div className="w-px h-5 bg-gray-200 mx-1" />
+        {/* Divider (hidden on mobile) */}
+        <div className="hidden md:block w-px h-5 bg-gray-200 mx-1" />
 
         {/* Search */}
         <button
@@ -231,12 +233,12 @@ export function AppHeader({ onSearchOpen, onFeedbackOpen }: AppHeaderProps & { o
           )}
         </div>
 
-        {/* Feedback button */}
+        {/* Feedback button (hidden on small mobile) */}
         {onFeedbackOpen && (
           <button
             type="button"
             onClick={onFeedbackOpen}
-            className="p-1.5 rounded-md transition-colors text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+            className="hidden sm:block p-1.5 rounded-md transition-colors text-gray-400 hover:text-gray-600 hover:bg-gray-100"
             title="Feedback (F2)"
             data-feedback-panel
           >
@@ -244,12 +246,12 @@ export function AppHeader({ onSearchOpen, onFeedbackOpen }: AppHeaderProps & { o
           </button>
         )}
 
-        {/* Help panel toggle */}
+        {/* Help panel toggle (hidden on small mobile) */}
         <button
           type="button"
           onClick={toggleHelp}
           className={cn(
-            "p-1.5 rounded-md transition-colors",
+            "hidden sm:block p-1.5 rounded-md transition-colors",
             helpOpen
               ? "text-primary-600 bg-primary-50"
               : "text-gray-400 hover:text-gray-600 hover:bg-gray-100"
@@ -260,7 +262,7 @@ export function AppHeader({ onSearchOpen, onFeedbackOpen }: AppHeaderProps & { o
         </button>
 
         {/* Divider */}
-        <div className="w-px h-5 bg-gray-200 mx-1" />
+        <div className="hidden sm:block w-px h-5 bg-gray-200 mx-1" />
 
         {/* User menu */}
         <div ref={userRef} className="relative">
