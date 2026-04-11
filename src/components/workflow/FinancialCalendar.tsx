@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import {
   CheckCircle2, AlertCircle, Calendar,
   Landmark, Wallet, FileText, Calculator, Lock, ClipboardList,
-  ChevronRight, Receipt, PiggyBank, Send, Scale,
+  ChevronRight, Receipt, Scale,
 } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import { useCalendarTimeline, type TimelineItem as APITimelineItem } from "@/domains/calendar/hooks/useCalendar"
