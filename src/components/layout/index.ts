@@ -1,3 +1,6 @@
+export { HealthPanel } from "./HealthPanel"
+export type { HealthPanelProps, HealthStatus } from "./HealthPanel"
+
 export { PageShell } from "./PageShell"
 export type { PageShellProps } from "./PageShell"
 

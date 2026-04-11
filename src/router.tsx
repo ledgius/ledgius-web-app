@@ -28,6 +28,7 @@ import { ProductsPage } from "@/domains/product/pages/ProductsPage"
 import { CreateProductPage } from "@/domains/product/pages/CreateProductPage"
 import { TaxCodesPage } from "@/domains/taxcode/pages/TaxCodesPage"
 import { DashboardPage } from "@/domains/dashboard/pages/DashboardPage"
+import { BooksHealthPage } from "@/domains/dashboard/pages/BooksHealthPage"
 import { LoginPage } from "@/domains/auth/pages/LoginPage"
 import { EditAccountPage } from "@/domains/account/pages/EditAccountPage"
 import { EditProductPage } from "@/domains/product/pages/EditProductPage"
@@ -57,6 +58,7 @@ export const router = createBrowserRouter([
     element: <RequireAuth><Layout /></RequireAuth>,
     children: [
       { index: true, element: <DashboardPage /> },
+      { path: "books-health", element: <BooksHealthPage /> },
 
       // Chart of Accounts
       { path: "accounts", element: <AccountsPage /> },

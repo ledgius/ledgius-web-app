@@ -10,7 +10,7 @@ import {
   UsersRound, Percent, PiggyBank, UserCheck, Wallet,
   Camera, GitMerge, Send, Inbox, Sparkles, Import,
   FileBarChart, Scale, TrendingUp, Clock, ClipboardCheck, ChevronsLeft, ChevronsRight,
-  Menu, X,
+  Menu, X, HeartPulse,
 } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import { useAuthTokenSync } from "@/shared/lib/auth"
@@ -46,6 +46,7 @@ const financeSections: NavSection[] = [
     title: "",
     items: [
       { to: "/", label: "Dashboard", icon: LayoutDashboard },
+      { to: "/books-health", label: "Books Health", icon: HeartPulse },
     ],
   },
   {
@@ -137,6 +138,7 @@ const tasksSections: NavSection[] = [
     title: "",
     items: [
       { to: "/", label: "Dashboard", icon: LayoutDashboard },
+      { to: "/books-health", label: "Books Health", icon: HeartPulse },
     ],
   },
   {
