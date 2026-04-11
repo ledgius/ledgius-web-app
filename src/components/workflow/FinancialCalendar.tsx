@@ -17,7 +17,7 @@ interface TimelineItem {
   description?: string
   date: Date
   type: "auto" | "task"
-  category: "recon" | "payroll" | "ar" | "bas" | "period" | "task"
+  category: string
   icon: LucideIcon
   done: boolean
   doneAt?: Date
