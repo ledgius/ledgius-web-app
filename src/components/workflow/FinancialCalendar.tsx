@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import {
-  CheckCircle2, Circle, AlertCircle, Calendar,
+  CheckCircle2, AlertCircle, Calendar,
   Landmark, Wallet, FileText, Calculator, Lock, ClipboardList,
   ChevronRight,
 } from "lucide-react"
