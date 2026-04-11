@@ -10,6 +10,8 @@ export type { StickyAsideProps } from "./StickyAside"
 export { SplitPane } from "./SplitPane"
 export type { SplitPaneProps } from "./SplitPane"
 
+export { InlineCreatePanel } from "./InlineCreatePanel"
+
 export { ActionBar } from "./ActionBar"
 export type { ActionBarProps } from "./ActionBar"
 

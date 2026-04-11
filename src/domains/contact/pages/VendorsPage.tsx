@@ -2,12 +2,15 @@ import { useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
-import { PageShell } from "@/components/layout"
-import { Button, Skeleton } from "@/components/primitives"
+import { PageShell, InlineCreatePanel } from "@/components/layout"
+import { Button, Skeleton, InlineAlert } from "@/components/primitives"
 import { MoneyValue } from "@/components/financial"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { SearchFilter } from "@/shared/components/SearchFilter"
 import { useVendors, type ContactSummary } from "../hooks/useContacts"
+import { useFeedback } from "@/components/feedback"
+import { api } from "@/shared/lib/api"
+import { useQueryClient } from "@tanstack/react-query"
 import { Plus } from "lucide-react"
 
 const columns: Column<ContactSummary>[] = [
@@ -23,12 +26,105 @@ const columns: Column<ContactSummary>[] = [
   },
 ]
 
+function InlineVendorForm({ onClose }: { onClose: () => void }) {
+  const qc = useQueryClient()
+  const feedback = useFeedback()
+  const [name, setName] = useState("")
+  const [legalName, setLegalName] = useState("")
+  const [taxId, setTaxId] = useState("")
+  const [curr, setCurr] = useState("AUD")
+  const [terms, setTerms] = useState("30")
+  const [creditLimit, setCreditLimit] = useState("")
+  const [submitting, setSubmitting] = useState(false)
+  const [error, setError] = useState("")
+
+  const handleSubmit = async () => {
+    setError("")
+    if (!name) { setError("Name is required"); return }
+    setSubmitting(true)
+    try {
+      await api.post("/vendors", {
+        name,
+        country_id: 15,
+        legal_name: legalName || name,
+        tax_id: taxId,
+        entity_class: 1,
+        meta_number: name.substring(0, 3).toUpperCase() + "-" + Date.now().toString().slice(-4),
+        curr,
+        credit_limit: parseFloat(creditLimit) || 0,
+        terms: parseInt(terms) || 30,
+      })
+      qc.invalidateQueries({ queryKey: ["vendors"] })
+      feedback.success("Vendor created")
+      setName("")
+      setLegalName("")
+      setTaxId("")
+      setCurr("AUD")
+      setTerms("30")
+      setCreditLimit("")
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to create vendor"
+      setError(message)
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  return (
+    <div>
+      {error && <InlineAlert variant="error" className="mb-3">{error}</InlineAlert>}
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
+        <div className="md:col-span-2">
+          <label className="block text-xs font-medium text-gray-600 mb-1">Name</label>
+          <input type="text" value={name} onChange={e => setName(e.target.value)}
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+            placeholder="Supplier Pty Ltd" />
+        </div>
+        <div className="md:col-span-2">
+          <label className="block text-xs font-medium text-gray-600 mb-1">Legal Name</label>
+          <input type="text" value={legalName} onChange={e => setLegalName(e.target.value)}
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+            placeholder="Same as name if blank" />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">ABN</label>
+          <input type="text" value={taxId} onChange={e => setTaxId(e.target.value)}
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm font-mono focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+            placeholder="XX XXX XXX XXX" />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Currency</label>
+          <input type="text" value={curr} onChange={e => setCurr(e.target.value)}
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm font-mono focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+            maxLength={3} />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Payment Terms (days)</label>
+          <input type="number" value={terms} onChange={e => setTerms(e.target.value)}
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500" />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Credit Limit</label>
+          <input type="number" step="0.01" value={creditLimit} onChange={e => setCreditLimit(e.target.value)}
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm font-mono focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+            placeholder="0.00" />
+        </div>
+      </div>
+      <div className="flex items-center gap-2 mt-3">
+        <Button loading={submitting} onClick={handleSubmit} size="sm">Create Vendor</Button>
+        <Button variant="secondary" size="sm" onClick={onClose}>Cancel</Button>
+      </div>
+    </div>
+  )
+}
+
 export function VendorsPage() {
   usePageHelp(pageHelpContent.vendors)
   usePagePolicies(["contact"])
   const { data: vendors, isLoading } = useVendors()
   const navigate = useNavigate()
   const [search, setSearch] = useState("")
+  const [createOpen, setCreateOpen] = useState(false)
 
   const filtered = useMemo(() => {
     if (!search || !vendors) return vendors ?? []
@@ -48,7 +144,7 @@ export function VendorsPage() {
         <span className="text-sm text-gray-500">Accounts Payable &middot; {filtered.length} contacts</span>
       </div>
       <div className="flex items-center gap-3 mt-3">
-        <Button onClick={() => navigate("/contacts/new?type=vendor")}>
+        <Button onClick={() => setCreateOpen(!createOpen)} variant={createOpen ? "secondary" : "primary"}>
           <Plus className="h-4 w-4" />
           New Vendor
         </Button>
@@ -62,13 +158,17 @@ export function VendorsPage() {
 
   return (
     <PageShell header={header}>
+      <InlineCreatePanel isOpen={createOpen} onClose={() => setCreateOpen(false)} title="New Vendor">
+        <InlineVendorForm onClose={() => setCreateOpen(false)} />
+      </InlineCreatePanel>
+
       {isLoading ? (
         <Skeleton variant="table" rows={8} columns={5} />
       ) : (
         <DataTable
           columns={columns}
           data={filtered}
-          emptyMessage="No vendors. Create a new vendor to get started."
+          emptyMessage="No vendors. Click 'New Vendor' to add your first vendor."
           onRowClick={(row) => navigate(`/contacts/${row.id}`)}
         />
       )}

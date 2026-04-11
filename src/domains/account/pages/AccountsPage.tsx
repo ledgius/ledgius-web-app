@@ -1,12 +1,13 @@
 import { useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
-import { PageShell } from "@/components/layout"
-import { Button, Skeleton, Badge } from "@/components/primitives"
+import { PageShell, InlineCreatePanel } from "@/components/layout"
+import { Button, Skeleton, Badge, InlineAlert } from "@/components/primitives"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { SearchFilter } from "@/shared/components/SearchFilter"
-import { useAccounts, type Account } from "../hooks/useAccounts"
+import { useAccounts, useCreateAccount, type Account } from "../hooks/useAccounts"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
+import { useFeedback } from "@/components/feedback"
 import { Plus, Eye, EyeOff } from "lucide-react"
 
 const categoryLabels: Record<string, string> = {
@@ -58,6 +59,85 @@ const columns: Column<Account>[] = [
   },
 ]
 
+function InlineAccountForm({ onClose }: { onClose: () => void }) {
+  const createAccount = useCreateAccount()
+  const feedback = useFeedback()
+  const [accno, setAccno] = useState("")
+  const [description, setDescription] = useState("")
+  const [category, setCategory] = useState("E")
+  const [headingId, setHeadingId] = useState("")
+  const [contra, setContra] = useState(false)
+  const [tax, setTax] = useState(false)
+  const [error, setError] = useState("")
+
+  const handleSubmit = async () => {
+    setError("")
+    if (!accno || !description || !headingId) {
+      setError("Account code, description, and heading are required")
+      return
+    }
+    try {
+      await createAccount.mutateAsync({
+        accno,
+        description,
+        category,
+        heading_id: parseInt(headingId),
+        contra,
+        tax,
+      })
+      feedback.success("Account created")
+      setAccno("")
+      setDescription("")
+      setCategory("E")
+      setHeadingId("")
+      setContra(false)
+      setTax(false)
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "Failed to create account"
+      setError(message)
+    }
+  }
+
+  return (
+    <div>
+      {error && <InlineAlert variant="error" className="mb-3">{error}</InlineAlert>}
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Account Code</label>
+          <input type="text" value={accno} onChange={e => setAccno(e.target.value)}
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm font-mono focus:ring-1 focus:ring-primary-500 focus:border-primary-500" placeholder="1010" />
+        </div>
+        <div className="md:col-span-2">
+          <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+          <input type="text" value={description} onChange={e => setDescription(e.target.value)}
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500" />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Category</label>
+          <select value={category} onChange={e => setCategory(e.target.value)}
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500">
+            <option value="A">Asset</option><option value="L">Liability</option><option value="Q">Equity</option>
+            <option value="I">Income</option><option value="E">Expense</option>
+          </select>
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Heading ID</label>
+          <input type="number" value={headingId} onChange={e => setHeadingId(e.target.value)}
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500" />
+        </div>
+        <div className="flex items-end gap-3 pb-0.5">
+          <label className="flex items-center gap-1.5 text-sm"><input type="checkbox" checked={contra} onChange={e => setContra(e.target.checked)} /> Contra</label>
+          <label className="flex items-center gap-1.5 text-sm"><input type="checkbox" checked={tax} onChange={e => setTax(e.target.checked)} /> Tax</label>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 mt-3">
+        <Button loading={createAccount.isPending} onClick={handleSubmit} size="sm">Create Account</Button>
+        <Button variant="secondary" size="sm" onClick={onClose}>Cancel</Button>
+      </div>
+    </div>
+  )
+}
+
 export function AccountsPage() {
   usePageHelp(pageHelpContent.chartOfAccounts)
   usePagePolicies(["account"])
@@ -65,16 +145,13 @@ export function AccountsPage() {
   const navigate = useNavigate()
   const [search, setSearch] = useState("")
   const [showInactive, setShowInactive] = useState(false)
+  const [createOpen, setCreateOpen] = useState(false)
 
   const filtered = useMemo(() => {
     let result = accounts ?? []
-
-    // Filter out inactive accounts (no transactions) unless toggled
     if (!showInactive) {
       result = result.filter((a) => a.has_activity)
     }
-
-    // Text search
     if (search) {
       const q = search.toLowerCase()
       result = result.filter(
@@ -84,7 +161,6 @@ export function AccountsPage() {
           a.links?.some((l) => l.description.toLowerCase().includes(q))
       )
     }
-
     return result
   }, [accounts, search, showInactive])
 
@@ -102,7 +178,7 @@ export function AccountsPage() {
         </span>
       </div>
       <div className="flex items-center gap-3 mt-3">
-        <Button onClick={() => navigate("/accounts/new")}>
+        <Button onClick={() => setCreateOpen(!createOpen)} variant={createOpen ? "secondary" : "primary"}>
           <Plus className="h-4 w-4" />
           New Account
         </Button>
@@ -133,6 +209,10 @@ export function AccountsPage() {
 
   return (
     <PageShell header={header}>
+      <InlineCreatePanel isOpen={createOpen} onClose={() => setCreateOpen(false)} title="New Account">
+        <InlineAccountForm onClose={() => setCreateOpen(false)} />
+      </InlineCreatePanel>
+
       {isLoading ? (
         <Skeleton variant="table" rows={10} columns={6} />
       ) : (
