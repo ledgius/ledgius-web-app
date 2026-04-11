@@ -424,7 +424,7 @@ function TimelineNode({ item, onClick, variant }: { item: TimelineItem; onClick:
 
       {/* Card */}
       <div className={cn(
-        "flex-1 rounded-lg border px-3 py-2 transition-all",
+        "flex-1 min-w-0 rounded-lg border px-3 py-2 transition-all overflow-hidden",
         variant === "done"
           ? "border-gray-100 bg-gray-50/50"
           : variant === "overdue"
