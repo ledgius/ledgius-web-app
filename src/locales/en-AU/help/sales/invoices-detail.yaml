@@ -1,0 +1,27 @@
+page: /invoices/:id
+title: Invoice Detail
+sections:
+  - heading: What is this?
+    body: >
+      The full detail of a single invoice including line items, totals, and
+      activity history.
+
+  - heading: Totals panel
+    body: >
+      The right sidebar shows net amount, {{term:GST}}, and total. These are
+      calculated from the line items.
+
+  - heading: Credit notes
+    body: >
+      Click **Issue Credit Note** to create a credit against this invoice. This
+      creates a separate {{term:credit note}} — it does not modify the original
+      invoice. {{warn:Never delete an invoice — issue a credit note instead.}}
+
+  - heading: PDF
+    body: >
+      Click the **PDF** button to download a printable version of this invoice.
+
+  - heading: Activity
+    body: >
+      The activity panel shows the audit trail — who created, modified, or
+      posted this invoice.

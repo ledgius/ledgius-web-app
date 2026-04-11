@@ -1,0 +1,16 @@
+page: /bills/:id
+title: Bill Detail
+sections:
+  - heading: What is this?
+    body: >
+      The full detail of a single supplier bill including line items, totals,
+      and activity history.
+
+  - heading: Debit notes
+    body: >
+      Click **Issue Debit Note** to raise a debit against this bill — for
+      returns, overcharges, or corrections.
+
+  - heading: Activity
+    body: >
+      The activity panel shows the audit trail for this bill.

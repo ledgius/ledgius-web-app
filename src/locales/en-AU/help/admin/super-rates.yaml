@@ -1,0 +1,18 @@
+page: /super-rates
+title: Superannuation Rates
+sections:
+  - heading: What is this?
+    body: >
+      Configure the {{term:SG}} rate. The current rate is set by the {{term:ATO}}
+      and changes periodically.
+
+  - heading: Current rate
+    body: >
+      Check the {{term:ATO}} website for the current {{term:SG}} percentage. This
+      rate is applied to ordinary time earnings in pay runs.
+
+  - heading: Rate history
+    body: >
+      - {{term:FY}} 2024 and earlier — 11.0%
+      - {{term:FY}} 2025 — 11.5%
+      - {{term:FY}} 2026 onwards — 12.0%

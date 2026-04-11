@@ -1,0 +1,17 @@
+page: /products/new
+title: Create Product / Service
+sections:
+  - heading: Required fields
+    body: >
+      Name is mandatory. All other fields are optional but recommended for
+      accurate invoicing.
+
+  - heading: SKU
+    body: >
+      Stock Keeping Unit — a unique identifier for the product. Optional but
+      useful for inventory tracking.
+
+  - heading: Accounts
+    body: >
+      - **Income account** — where revenue is recorded when sold
+      - **Expense account** — where cost is recorded when purchased

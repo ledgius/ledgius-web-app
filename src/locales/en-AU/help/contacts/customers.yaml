@@ -1,0 +1,17 @@
+page: /customers
+title: Customers
+sections:
+  - heading: What is this?
+    body: >
+      Your customer contacts for {{term:AR}}. Each customer has a credit account
+      that tracks their invoices and payments.
+
+  - heading: Key fields
+    body: >
+      {{term:ABN}}, credit limit, payment terms, and currency. These defaults are
+      used when creating invoices.
+
+  - heading: Tip
+    body: >
+      Click any customer to view and edit their details. Credit limits are advisory
+      — they don't block invoice creation.

@@ -1,0 +1,19 @@
+page: /headings
+title: Account Headings
+sections:
+  - heading: What is this?
+    body: >
+      Headings are the grouping structure for your {{term:COA}}. They appear
+      as section headers in financial reports.
+
+  - heading: Examples
+    body: >
+      - **1000** — Current Assets
+      - **1500** — Inventory
+      - **1800** — Non-Current Assets
+      - **2000** — Current Liabilities
+      - **4000** — Revenue
+
+  - heading: Creating headings
+    body: >
+      Enter a code and description. The code determines sort order in reports.

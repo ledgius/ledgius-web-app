@@ -1,0 +1,119 @@
+@import "tailwindcss";
+
+/*
+ * Ledgius brand colour system
+ *
+ * Primary:   #00B8C4 (cyan/teal) — trust, clarity, action
+ * Secondary: #FF7A00 (orange)    — energy, attention, warmth
+ * Accent:    #FFC400 (gold)      — highlights, awards, warnings
+ *
+ * Palette generated with accessible contrast ratios.
+ * Primary-700 and darker pass WCAG AA on white backgrounds.
+ */
+
+@theme {
+  /* Primary — Cyan/Teal */
+  --color-primary-50:  #e6fafb;
+  --color-primary-100: #b3eff4;
+  --color-primary-200: #80e5ed;
+  --color-primary-300: #4ddbe6;
+  --color-primary-400: #1ad1df;
+  --color-primary-500: #00B8C4;
+  --color-primary-600: #009da7;
+  --color-primary-700: #00838a;
+  --color-primary-800: #00696e;
+  --color-primary-900: #004f52;
+  --color-primary-950: #003538;
+
+  /* Secondary — Orange */
+  --color-secondary-50:  #fff5eb;
+  --color-secondary-100: #ffe0c2;
+  --color-secondary-200: #ffcc99;
+  --color-secondary-300: #ffb770;
+  --color-secondary-400: #ffa347;
+  --color-secondary-500: #FF7A00;
+  --color-secondary-600: #d96800;
+  --color-secondary-700: #b35600;
+  --color-secondary-800: #8c4400;
+  --color-secondary-900: #663200;
+  --color-secondary-950: #402000;
+
+  /* Accent — Gold */
+  --color-accent-50:  #fffbeb;
+  --color-accent-100: #fff3c2;
+  --color-accent-200: #ffeb99;
+  --color-accent-300: #ffe370;
+  --color-accent-400: #ffdb47;
+  --color-accent-500: #FFC400;
+  --color-accent-600: #d9a700;
+  --color-accent-700: #b38a00;
+  --color-accent-800: #8c6c00;
+  --color-accent-900: #664f00;
+  --color-accent-950: #403200;
+}
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 222.2 84% 4.9%;
+  --card: 0 0% 100%;
+  --card-foreground: 222.2 84% 4.9%;
+  --muted: 210 40% 96.1%;
+  --muted-foreground: 215.4 16.3% 46.9%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+  --border: 214.3 31.8% 91.4%;
+  --input: 214.3 31.8% 91.4%;
+  --ring: 183 100% 38%;
+  --radius: 0.5rem;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, -apple-system, sans-serif;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Consistent soft gray borders on all form inputs */
+input,
+textarea,
+select {
+  border-color: #d1d5db !important; /* gray-300 — soft, not harsh black */
+}
+input:focus,
+textarea:focus,
+select:focus {
+  border-color: #00B8C4 !important; /* primary-500 on focus */
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0, 184, 196, 0.15);
+}
+
+/* Consistent placeholder colour across all form inputs */
+input::placeholder,
+textarea::placeholder {
+  color: #9ca3af; /* gray-400 */
+  opacity: 1;
+}
+
+/* Date/time inputs show gray text when empty (no value selected) */
+input[type="date"]:not(:valid),
+input[type="datetime-local"]:not(:valid),
+input[type="time"]:not(:valid) {
+  color: #9ca3af; /* gray-400 */
+}
+
+/* Style select elements as gray when showing the empty/placeholder option */
+select:has(option[value=""]:checked) {
+  color: #9ca3af; /* gray-400 */
+}
+select option {
+  color: #111827; /* gray-900 — restore black for real options */
+}
+select option[value=""] {
+  color: #9ca3af; /* gray-400 — placeholder option stays gray */
+}
+
+#root {
+  min-height: 100vh;
+}

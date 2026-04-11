@@ -1,0 +1,28 @@
+page: /import
+title: Data Import
+sections:
+  - heading: What is this?
+    body: >
+      Import data from other accounting systems like {{term:MYOB}} or Xero.
+      Upload your exported files, review the mappings, and commit to your
+      ledger.
+
+  - heading: Safety
+    body: >
+      All imports are staged first. **Nothing is committed until you approve.**
+      You can review every account, customer, vendor, and transaction before
+      writing to the ledger. {{good:All changes can be previewed before commit.}}
+
+  - heading: Import stages
+    body: >
+      - **Upload** — select your export files
+      - **Analyse** — the system parses and validates the data
+      - **Map Accounts** — review how source accounts map to your {{term:COA}}
+      - **Map Contacts** — review auto-extracted customers and vendors
+      - **Preview** — verify totals match and check for duplicates
+      - **Commit** — write to the live ledger
+      - **Verify** — post-import checks
+
+  - heading: Keyboard
+    body: >
+      Press **F1** to toggle this help panel at any time.

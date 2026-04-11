@@ -1,0 +1,30 @@
+page: /accounts
+title: Chart of Accounts
+sections:
+  - heading: What is this?
+    body: >
+      The {{term:COA}} is the backbone of your accounting system. It lists every
+      account where transactions can be recorded.
+
+  - heading: Active vs inactive
+    body: >
+      By default only accounts with transactions are shown. Click **Show all**
+      to see unused accounts that came with the standard template.
+
+  - heading: Account types
+    body: >
+      - **A** — Asset
+      - **L** — Liability
+      - **Q** — Equity
+      - **I** — Income
+      - **E** — Expense
+
+  - heading: Links
+    body: >
+      Links like {{term:AR}}, {{term:AP}}, IC_sale connect accounts to functional
+      roles in the system (e.g. {{term:AR}} = Accounts Receivable control account).
+
+  - heading: Tip
+    body: >
+      Click any row to edit the account details. Use **Mark Obsolete** to retire
+      accounts you no longer need — never delete them.

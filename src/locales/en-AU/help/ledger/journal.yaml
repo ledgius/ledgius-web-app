@@ -1,0 +1,25 @@
+page: /gl
+title: Journal Entries
+sections:
+  - heading: What is this?
+    body: >
+      Manual journal entries allow you to post directly to the {{term:GL}}.
+      They must balance — total debits must equal total credits
+      ({{term:double-entry}}).
+
+  - heading: Balance indicator
+    body: >
+      The totals row shows whether the entry is balanced. The **Post** button is
+      disabled until debits equal credits.
+      {{good:A balanced entry shows zero difference.}}
+      {{bad:An unbalanced entry cannot be posted.}}
+
+  - heading: When to use
+    body: >
+      Use journal entries for adjustments, corrections, bank interest,
+      depreciation, and other transactions that don't flow through
+      {{term:AR}} or {{term:AP}}.
+
+  - heading: Approvals
+    body: >
+      Pending entries awaiting approval are shown below the entry form.

@@ -1,0 +1,17 @@
+page: /transfers
+title: Bank Transfers
+sections:
+  - heading: What is this?
+    body: >
+      Record cash movements between your own bank accounts. Transfers create
+      a debit in one account and a credit in another.
+
+  - heading: Required fields
+    body: >
+      Select the source and destination bank accounts, enter the amount,
+      date, and a reference.
+
+  - heading: Note
+    body: >
+      Transfers do not affect {{term:P&L}} — they only move cash between
+      balance sheet accounts.

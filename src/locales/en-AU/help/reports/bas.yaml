@@ -1,0 +1,24 @@
+page: /bas
+title: BAS / GST
+sections:
+  - heading: What is this?
+    body: >
+      {{term:BAS}} preparation. Shows {{term:GST}} collected, {{term:GST}} paid,
+      and the net amount owing to or refundable from the {{term:ATO}}.
+
+  - heading: GST Collected
+    body: >
+      {{term:GST}} you've charged on sales invoices. This is a liability — you
+      owe it to the {{term:ATO}}.
+
+  - heading: GST Paid
+    body: >
+      {{term:GST}} you've paid on purchase bills. This is a credit — the
+      {{term:ATO}} owes it back to you.
+
+  - heading: Net position
+    body: >
+      If {{term:GST}} collected exceeds {{term:GST}} paid, you owe the difference.
+      {{bad:You must remit this to the ATO by the BAS due date.}}
+      If {{term:GST}} paid exceeds collected, you're entitled to a refund.
+      {{good:The ATO will refund the difference to your nominated bank account.}}

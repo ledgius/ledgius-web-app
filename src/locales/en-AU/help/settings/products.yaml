@@ -1,0 +1,23 @@
+page: /products
+title: Products & Services
+sections:
+  - heading: What is this?
+    body: >
+      Your product and service catalogue. Items here can be selected when
+      creating invoices and bills for consistent pricing and account coding.
+
+  - heading: Product types
+    body: >
+      - **Service** — time-based (hours, sessions)
+      - **Product** — physical goods
+      - **Overhead** — internal costs
+
+  - heading: Pricing
+    body: >
+      Set default sell and buy prices. These are used as defaults when adding
+      the item to an invoice or bill — they can be overridden per transaction.
+
+  - heading: Tax codes
+    body: >
+      Assign default sell and buy {{term:tax code}}s so the correct {{term:GST}}
+      treatment is applied automatically.

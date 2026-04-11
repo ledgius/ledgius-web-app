@@ -1,0 +1,21 @@
+page: /contacts/new
+title: Create Contact
+sections:
+  - heading: Customer vs Vendor
+    body: >
+      The type is set based on where you navigated from — **Customers** or
+      **Vendors**. Each creates the appropriate {{term:ECA}}.
+
+  - heading: Required fields
+    body: >
+      Name is mandatory. Legal name defaults to the name if not specified.
+
+  - heading: ABN
+    body: >
+      The {{term:ABN}} is optional but recommended for {{term:GST}} reporting
+      and {{term:BAS}} preparation.
+
+  - heading: Payment terms
+    body: >
+      Default payment terms (in days) are applied to new invoices or bills
+      for this contact.

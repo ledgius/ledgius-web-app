@@ -1,0 +1,16 @@
+page: /contacts/:id
+title: Contact Detail
+sections:
+  - heading: What is this?
+    body: >
+      The full profile of a customer or vendor including entity details,
+      {{term:ECA}} settings, and activity history.
+
+  - heading: Editing
+    body: >
+      Click **Edit** to modify credit limit, payment terms, and discount
+      settings. Entity details (name, {{term:ABN}}) are shown read-only here.
+
+  - heading: Activity
+    body: >
+      The activity panel shows changes made to this contact record.

@@ -1,0 +1,36 @@
+page: /import
+context: xero
+title: Xero Import
+sections:
+  - heading: Exporting from Xero
+    body: >
+      In Xero, go to *Accounting → Reports → Account Transactions*. Export as CSV.
+      For the chart of accounts, go to *Accounting → Chart of Accounts → Export*.
+
+  - heading: File types
+    body: >
+      Xero exports comma-separated CSV files. Column headers use asterisk prefixes
+      (e.g. `*ContactName`, `*InvoiceNumber`). Upload the {{term:COA}} CSV first,
+      then Contacts, then Transactions.
+
+  - heading: Contacts
+    body: >
+      Xero contact exports include both customers and suppliers in one file. Upload
+      via the **Customers** or **Vendors** row — the system identifies the type from
+      the data.
+
+  - heading: Import stages
+    body: >
+      - **Upload** — select your Xero CSV files
+      - **Analyse** — the system parses and validates
+      - **Map Accounts** — review how Xero accounts map to your {{term:COA}}
+      - **Map Contacts** — review contact mappings
+      - **Preview** — verify totals match
+      - **Commit** — write to the ledger
+      - **Verify** — post-import checks
+
+  - heading: Tip
+    body: >
+      Export all reports for the same date range to ensure consistency. The system
+      verifies that debits equal credits across all imported transactions.
+      {{warn:Mismatched date ranges between files may cause reconciliation issues.}}

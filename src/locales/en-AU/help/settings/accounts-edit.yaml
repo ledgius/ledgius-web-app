@@ -1,0 +1,22 @@
+page: /accounts/:id/edit
+title: Edit Account
+sections:
+  - heading: What can you change?
+    body: >
+      You can update the description, and toggle the contra and tax flags. The
+      account code and category cannot be changed after creation.
+
+  - heading: Contra accounts
+    body: >
+      A contra account offsets another account of the same type (e.g. accumulated
+      depreciation is a contra asset).
+
+  - heading: Tax accounts
+    body: >
+      Tax accounts are used for {{term:GST}} calculations. Only mark an account
+      as a tax account if it holds {{term:GST}} collected or paid.
+
+  - heading: Mark Obsolete
+    body: >
+      {{warn:Obsolete accounts are hidden from selection lists}} but preserved for
+      historical reporting. This cannot be undone easily.

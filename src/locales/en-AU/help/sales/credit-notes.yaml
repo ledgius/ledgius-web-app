@@ -1,0 +1,22 @@
+page: /credit-notes
+title: Credit Notes
+sections:
+  - heading: What is this?
+    body: >
+      {{term:credit note}}s reduce or reverse an existing invoice. They create
+      a negative {{term:AR}} entry against the original invoice.
+
+  - heading: When to use
+    body: >
+      Use credit notes for returns, overcharges, or agreed discounts after invoicing.
+      {{warn:Never delete an invoice — issue a credit note instead.}}
+
+  - heading: Required fields
+    body: >
+      Select the customer and original invoice, then enter the credit note number,
+      date, amount, and reason.
+
+  - heading: Tip
+    body: >
+      The reason field is important — it becomes part of the audit trail and helps
+      explain the credit later.

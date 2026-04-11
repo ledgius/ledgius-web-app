@@ -1,0 +1,31 @@
+page: /invoices
+title: Invoices
+sections:
+  - heading: What is this?
+    body: >
+      Sales invoices issued to your customers. Each invoice creates an
+      {{term:AR}} entry and records revenue in the {{term:GL}}.
+
+  - heading: Status
+    body: >
+      - **Draft** — not yet posted to the ledger
+      - **Posted** — committed to the {{term:GL}}
+      - *On Hold* — temporarily paused
+
+  - heading: Creating invoices
+    body: >
+      Click **+ New Invoice** to create. You need a customer, date, and
+      at least one line item with a revenue account and {{term:tax code}}.
+      {{good:Invoice numbers are auto-generated}} using the INV- prefix.
+
+  - heading: Credit notes
+    body: >
+      To reverse or reduce an invoice, use **Issue Credit Note** from the
+      invoice detail page. This creates a separate {{term:credit note}} —
+      it does not modify the original invoice.
+      {{warn:Never delete an invoice — issue a credit note instead.}}
+
+  - heading: Tip
+    body: >
+      Use the search bar to find invoices by number or customer name.
+      Click any row to view details.

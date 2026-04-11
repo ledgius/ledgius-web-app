@@ -1,0 +1,21 @@
+page: /payments
+title: Payments
+sections:
+  - heading: What is this?
+    body: >
+      Record payments made to suppliers. Each payment allocates cash against
+      outstanding bills in {{term:AP}}.
+
+  - heading: How it works
+    body: >
+      Select a vendor to see their open bills, then enter the amount paid
+      against each bill.
+
+  - heading: Partial payments
+    body: >
+      You can pay a portion of a bill. The remaining amount stays in
+      {{term:AP}}.
+
+  - heading: Bank account
+    body: >
+      Select the bank account from which the payment was made.

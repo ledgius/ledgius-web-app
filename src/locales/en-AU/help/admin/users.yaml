@@ -1,0 +1,19 @@
+page: /users
+title: Users & Roles
+sections:
+  - heading: What is this?
+    body: >
+      Manage user accounts and their roles within the organisation.
+
+  - heading: Roles
+    body: >
+      - **Owner** — full access
+      - **Master Accountant** — reports, {{term:BAS}}, period close
+      - **Accountant** — transaction entry and review
+      - **Bookkeeper** — day-to-day entry
+      - **Viewer** — read-only
+
+  - heading: Tip
+    body: >
+      Assign the minimum role needed. Users can always be upgraded but
+      restricting access prevents accidental changes.

@@ -1,0 +1,72 @@
+page: /import
+context: myob
+title: MYOB Import
+sections:
+  - heading: Two files recommended
+    body: >
+      For the best results, export **two files** from {{term:MYOB}}:
+
+
+      - **Transaction data** — export in {{term:MYOB}} AO or CeeData format. Contains your accounts and all journal entries.
+
+      - **Chart of Accounts** — provides the account type classifications (*Asset, Liability, Income, Expense*, etc.) that the transaction file does not include.
+
+
+      The {{term:COA}} file is needed for accurate financial reporting and
+      customer/vendor classification.
+
+  - heading: How to export transactions
+    body: >
+      In {{term:MYOB}}, go to *Import and export data → Export*. Select Data type
+      **"Data for your accountant"** and choose **MYOB AO** or **CeeData** as the
+      export file type. This produces a single file with your accounts and all
+      journal entries.
+
+  - heading: How to export Chart of Accounts
+    body: >
+      In {{term:MYOB}}, go to *Reports → Accounts → Chart of Accounts* and export
+      to a text file. This file contains the **Account Type** column (Bank, Income,
+      Expense, etc.) which MYOB AO and CeeData formats do not include.
+
+  - heading: Why is the COA file important?
+    body: >
+      {{term:MYOB}} uses short account codes like *330* (Tools & Equipment) and
+      *454* (Subscriptions) that don't follow a predictable numbering pattern.
+      Without the {{term:COA}} file, the system cannot determine whether these are
+      Expense, Income, or Asset accounts.
+      {{warn:This affects financial report accuracy and customer/vendor classification.}}
+
+  - heading: MYOB AO format
+    body: >
+      **MYOB AO** (Accountants Office) is a single file containing your complete
+      chart of accounts and all journal entries in tab-delimited format. It starts
+      with `[MYOB2000.05]` and has `[ACCOUNTS]` and `[JOURNAL]` sections.
+      {{good:This is the recommended format.}}
+
+  - heading: CeeData format
+    body: >
+      **CeeData** is an alternative single-file format used by some accounting
+      practices. It uses tilde (`~`) delimiters with `AC~` lines for accounts and
+      `TR~` lines for transactions. It starts with `CDS1~` on the first line.
+
+  - heading: Upload order
+    body: >
+      Upload the MYOB AO or CeeData file first using **Single File Import**. Then
+      upload your {{term:COA}} file using the **Chart of Accounts** row. The system
+      enriches the account types automatically. Customers and vendors are extracted
+      from the transaction data.
+
+  - heading: Account strategy
+    body: >
+      **Import as new** (default) creates your {{term:MYOB}} accounts directly —
+      your chart of accounts becomes the working chart. Unused default accounts are
+      *hidden, not deleted* — they can be unhidden later if needed.
+      **Map to existing** lets you manually map {{term:MYOB}} accounts to the
+      existing chart instead.
+
+  - heading: Duplicate detection
+    body: >
+      If you import the same file twice or import files with overlapping date ranges,
+      the system detects duplicate transactions by matching reference, date, and amount.
+      {{good:Duplicates are flagged and skipped during commit}} — they won't create
+      double entries in your ledger.

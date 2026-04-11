@@ -1,0 +1,18 @@
+page: /payroll
+title: Pay Runs
+sections:
+  - heading: What is this?
+    body: >
+      Process payroll for a pay period. A pay run calculates gross pay,
+      {{term:PAYG}} withholding, {{term:SG}} (superannuation), and net pay
+      for selected employees.
+
+  - heading: Workflow
+    body: >
+      Select the pay period and employees, review the calculations, then
+      process. This creates {{term:GL}} entries for wages, tax, and super.
+
+  - heading: Tip
+    body: >
+      {{warn:Always review the pay run summary before processing.}} Pay runs
+      create multiple journal entries that are difficult to reverse.

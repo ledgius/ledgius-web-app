@@ -1,0 +1,17 @@
+page: /bills/new
+title: Create Bill
+sections:
+  - heading: Required fields
+    body: >
+      Vendor, bill number, and date are mandatory. Add line items with expense
+      accounts to categorise the spending.
+
+  - heading: Duplicate check
+    body: >
+      Use a consistent bill numbering scheme to avoid accidentally entering the
+      same supplier invoice twice.
+      {{warn:Duplicate bill numbers from the same vendor should be investigated.}}
+
+  - heading: Keyboard
+    body: >
+      Press **Esc** to cancel and return to the bills list.

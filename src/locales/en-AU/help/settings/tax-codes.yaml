@@ -1,0 +1,17 @@
+page: /tax-codes
+title: Tax Codes
+sections:
+  - heading: What is this?
+    body: >
+      {{term:tax code}}s define the {{term:GST}} rates applied to invoice and bill
+      line items. The standard codes are {{term:GST}} (10%) and GST Free (0%).
+
+  - heading: Creating codes
+    body: >
+      Enter a code name, rate (as a decimal, e.g. *0.10* for 10%), and the linked
+      tax accounts for collection and payment.
+
+  - heading: Tip
+    body: >
+      Most Australian businesses need only {{term:GST}} (10%) and GST Free. Add
+      custom codes for special rates like input-taxed or export supplies.

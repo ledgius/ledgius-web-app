@@ -1,0 +1,22 @@
+page: /reports
+title: Financial Reports
+sections:
+  - heading: What is this?
+    body: >
+      Standard financial reports: {{term:P&L}}, Balance Sheet,
+      {{term:trial balance}}, Aged Receivables/Payables, Cash Flow,
+      and Customer/Vendor Statements.
+
+  - heading: Date range
+    body: >
+      Select the reporting period using the date controls. Most reports
+      compare against the same period last year.
+
+  - heading: Drill down
+    body: >
+      Click on amounts to see the underlying transactions. This helps
+      investigate variances and verify balances.
+
+  - heading: Export
+    body: >
+      Reports can be exported for use in spreadsheets or for your accountant.

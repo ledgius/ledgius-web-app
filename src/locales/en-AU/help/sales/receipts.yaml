@@ -1,0 +1,22 @@
+page: /receipts
+title: Receipts
+sections:
+  - heading: What is this?
+    body: >
+      Record payments received from customers. Each receipt allocates cash
+      against outstanding invoices in {{term:AR}}.
+
+  - heading: How it works
+    body: >
+      Select a customer to see their open invoices, then enter the amount
+      received against each invoice.
+
+  - heading: Partial payments
+    body: >
+      You can allocate a partial amount against an invoice. The remaining
+      balance stays outstanding.
+
+  - heading: Bank account
+    body: >
+      Select the bank account where the payment was deposited. This creates
+      the corresponding bank entry in the {{term:GL}}.

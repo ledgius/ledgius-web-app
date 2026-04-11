@@ -1,0 +1,17 @@
+page: /employees
+title: Employees
+sections:
+  - heading: What is this?
+    body: >
+      Employee records for payroll processing. Each employee has pay rates,
+      tax settings, and superannuation details.
+
+  - heading: Creating employees
+    body: >
+      Enter the employee's name, pay rate, {{term:TFN}} status, and super fund
+      details.
+
+  - heading: PAYG
+    body: >
+      {{term:PAYG}} withholding is calculated based on {{term:ATO}} tax tables
+      and the employee's tax file declaration.

@@ -1,0 +1,17 @@
+page: /audit-log
+title: Audit Log
+sections:
+  - heading: What is this?
+    body: >
+      The system-wide immutable audit trail. Every create, update, and delete
+      action is recorded with who did it and when.
+
+  - heading: Filtering
+    body: >
+      Filter by entity type (invoice, bill, account, etc.) to find specific
+      changes.
+
+  - heading: Immutable
+    body: >
+      {{good:Audit entries cannot be modified or deleted.}} They are append-only
+      by design for compliance and accountability.

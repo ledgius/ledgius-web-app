@@ -1,0 +1,11 @@
+page: /vendors
+title: Vendors
+sections:
+  - heading: What is this?
+    body: >
+      Your supplier contacts for {{term:AP}}. Each vendor has a credit account
+      that tracks bills and payments you make to them.
+
+  - heading: Tip
+    body: >
+      Set up accurate payment terms to help manage cash flow and bill scheduling.

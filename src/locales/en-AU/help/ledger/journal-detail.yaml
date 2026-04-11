@@ -1,0 +1,16 @@
+page: /gl/:id
+title: Journal Entry Detail
+sections:
+  - heading: What is this?
+    body: >
+      The full detail of a posted journal entry showing all debit and credit
+      lines.
+
+  - heading: Debit & Credit
+    body: >
+      Positive amounts are debits, negative amounts are credits. The entry
+      must net to zero ({{term:double-entry}}).
+
+  - heading: Activity
+    body: >
+      The activity panel shows when the entry was created, posted, and by whom.

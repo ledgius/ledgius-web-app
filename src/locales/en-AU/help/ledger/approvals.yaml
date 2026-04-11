@@ -1,0 +1,18 @@
+page: /approvals
+title: Approvals
+sections:
+  - heading: What is this?
+    body: >
+      Transactions awaiting approval before they are posted to the
+      {{term:GL}}.
+
+  - heading: Actions
+    body: >
+      {{good:Approve}} to post the transaction, or {{bad:Reject}} with a
+      reason to send it back. Rejected transactions include the reason in
+      the audit trail.
+
+  - heading: Tip
+    body: >
+      Review the transaction details carefully before approving — posted
+      entries cannot be directly edited.

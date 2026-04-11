@@ -1,0 +1,23 @@
+page: /banking
+title: Bank Reconciliation
+sections:
+  - heading: What is this?
+    body: >
+      Reconcile your bank statement with the ledger. Match imported bank
+      transactions against recorded entries to verify your cash position.
+
+  - heading: Workflow
+    body: >
+      Select a bank account, enter the statement balance, then review uncleared
+      transactions and imported bank lines.
+
+  - heading: Matching
+    body: >
+      Unmatched imported transactions appear in the lower section. Match them
+      to ledger entries or create new transactions from them.
+
+  - heading: Status
+    body: >
+      Once all items are matched and the balance agrees, submit the
+      {{term:reconciliation}} for approval.
+      {{good:A balanced reconciliation confirms your ledger cash position is correct.}}

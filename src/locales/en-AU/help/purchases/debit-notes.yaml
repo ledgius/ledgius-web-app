@@ -1,0 +1,16 @@
+page: /debit-notes
+title: Debit Notes
+sections:
+  - heading: What is this?
+    body: >
+      {{term:debit note}}s reduce or reverse an existing bill. They create
+      a positive {{term:AP}} entry that offsets the original bill.
+
+  - heading: When to use
+    body: >
+      Use debit notes for supplier returns, billing errors, or agreed adjustments.
+      {{warn:Never delete a bill — issue a debit note instead.}}
+
+  - heading: Tip
+    body: >
+      Always include a reason — it becomes part of the permanent audit trail.

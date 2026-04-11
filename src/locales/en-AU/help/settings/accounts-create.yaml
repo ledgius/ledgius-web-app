@@ -1,0 +1,21 @@
+page: /accounts/new
+title: Create Account
+sections:
+  - heading: Account code
+    body: >
+      Use the standard numbering convention:
+      - **1xxx** — Assets
+      - **2xxx** — Liabilities
+      - **3xxx** — Equity
+      - **4xxx** — Income
+      - **5xxx–6xxx** — Expenses
+
+  - heading: Heading ID
+    body: >
+      Each account must belong to a heading group. Headings organise the
+      {{term:COA}} for reporting (e.g. *Current Assets*, *Revenue*).
+
+  - heading: Tip
+    body: >
+      Start with the standard template accounts. Only create new accounts when
+      you need a category that doesn't exist.

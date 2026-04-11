@@ -1,0 +1,21 @@
+page: /credit-notes/new
+title: Create Credit Note
+sections:
+  - heading: Required fields
+    body: >
+      Select the customer and original invoice, then enter the {{term:credit note}}
+      number, date, amount, and reason.
+
+  - heading: Amount
+    body: >
+      The credit amount cannot exceed the original invoice amount.
+      {{warn:Partial credits are allowed — you don't have to credit the full amount.}}
+
+  - heading: Tip
+    body: >
+      The reason field is important — it becomes part of the audit trail and
+      helps explain the credit later.
+
+  - heading: Keyboard
+    body: >
+      Press **Esc** to cancel and return to the credit notes list.

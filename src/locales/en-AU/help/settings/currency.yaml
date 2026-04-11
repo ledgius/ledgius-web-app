@@ -1,0 +1,17 @@
+page: /currency
+title: Currency & Exchange Rates
+sections:
+  - heading: What is this?
+    body: >
+      Manage exchange rates for foreign currency transactions. The base
+      currency is AUD.
+
+  - heading: Adding rates
+    body: >
+      Enter the currency code (e.g. *USD*, *NZD*) and the exchange rate
+      relative to AUD.
+
+  - heading: Tip
+    body: >
+      Exchange rates are used when creating invoices or bills in foreign
+      currencies. Keep rates up to date for accurate reporting.

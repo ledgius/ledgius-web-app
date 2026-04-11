@@ -1,0 +1,22 @@
+page: /bills
+title: Bills
+sections:
+  - heading: What is this?
+    body: >
+      Supplier bills ({{term:AP}}). Each bill records what you owe to a vendor
+      and the associated expenses.
+
+  - heading: Creating bills
+    body: >
+      Click **+ New Bill** to enter a supplier invoice. Select the vendor, add
+      line items with expense accounts, and the system calculates {{term:GST}}.
+
+  - heading: Debit notes
+    body: >
+      To reverse or reduce a bill, use **Issue Debit Note** from the bill detail
+      page. {{warn:Never delete a bill — issue a debit note instead.}}
+
+  - heading: Tip
+    body: >
+      Review the {{term:AP}} outstanding badge in the header to see your total
+      payables at a glance.

@@ -1,0 +1,12 @@
+page: /payg-config
+title: PAYG Withholding
+sections:
+  - heading: What is this?
+    body: >
+      Configure {{term:PAYG}} withholding rates based on {{term:ATO}} tax tables.
+      These rates are used in pay run calculations.
+
+  - heading: Tax tables
+    body: >
+      {{term:PAYG}} rates vary by income bracket and residency status. The system
+      uses the {{term:ATO}}'s published coefficients (Schedule 1 method).

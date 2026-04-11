@@ -1,0 +1,7 @@
+page: /products/:id/edit
+title: Edit Product / Service
+sections:
+  - heading: What can you change?
+    body: >
+      Name, unit, prices, and {{term:tax code}} assignments. Changes apply to
+      future transactions only — existing invoices and bills are not affected.

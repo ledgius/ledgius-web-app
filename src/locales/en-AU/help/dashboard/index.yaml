@@ -1,0 +1,17 @@
+page: /
+title: Dashboard
+sections:
+  - heading: What is this?
+    body: >
+      Your operational overview — what needs attention today. Shows outstanding
+      {{term:AR}}, {{term:AP}}, and the {{term:GST}} position.
+
+  - heading: AR & AP
+    body: >
+      **Receivables** ({{term:AR}}) is money owed *to you*. **Payables** ({{term:AP}})
+      is money *you owe*. The {{term:GST}} position shows your net tax obligation
+      for the current {{term:BAS}} period.
+
+  - heading: Tip
+    body: >
+      Click the amounts to jump directly to the relevant invoice or bill list.

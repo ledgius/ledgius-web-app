@@ -1,0 +1,122 @@
+# Glossary of accounting terms — en-AU
+# Referenced in help content via {{term:KEY}} syntax.
+
+AR:
+  term: AR
+  full: Accounts Receivable
+  definition: Money owed to you by customers for goods or services delivered.
+
+AP:
+  term: AP
+  full: Accounts Payable
+  definition: Money you owe to suppliers for goods or services received.
+
+GL:
+  term: GL
+  full: General Ledger
+  definition: The complete record of all financial transactions for a business, organised by account.
+
+BAS:
+  term: BAS
+  full: Business Activity Statement
+  definition: A form submitted to the ATO reporting GST collected, GST paid, and PAYG withholding obligations.
+
+GST:
+  term: GST
+  full: Goods and Services Tax
+  definition: A 10% value-added tax on most goods and services sold in Australia.
+
+PAYG:
+  term: PAYG
+  full: Pay As You Go
+  definition: A system where tax is withheld from employee wages and remitted to the ATO throughout the year.
+
+ATO:
+  term: ATO
+  full: Australian Taxation Office
+  definition: The Australian government agency responsible for administering tax law and collecting revenue.
+
+COA:
+  term: COA
+  full: Chart of Accounts
+  definition: The complete list of accounts used to categorise financial transactions in the ledger.
+
+ABN:
+  term: ABN
+  full: Australian Business Number
+  definition: A unique 11-digit identifier issued to businesses operating in Australia.
+
+RRULE:
+  term: RRULE
+  full: Recurrence Rule (RFC 5545)
+  definition: A standard format for defining repeating events, used for recurring transaction schedules.
+
+FY:
+  term: FY
+  full: Financial Year
+  definition: The 12-month period used for accounting and tax purposes. In Australia, 1 July to 30 June.
+
+SG:
+  term: SG
+  full: Superannuation Guarantee
+  definition: The minimum percentage of ordinary earnings an employer must pay into an employee's super fund.
+
+TFN:
+  term: TFN
+  full: Tax File Number
+  definition: A unique identifier issued by the ATO to individuals and organisations for tax purposes.
+
+COGS:
+  term: COGS
+  full: Cost of Goods Sold
+  definition: The direct costs of producing goods or services sold by a business.
+
+P&L:
+  term: P&L
+  full: Profit and Loss
+  definition: A financial statement summarising revenue, costs, and expenses during a specific period.
+
+MYOB:
+  term: MYOB
+  full: Mind Your Own Business
+  definition: An Australian accounting software package commonly used by small and medium businesses.
+
+ECA:
+  term: ECA
+  full: Entity Credit Account
+  definition: A credit account linking a customer or vendor entity to the accounts receivable or payable ledger.
+
+tax code:
+  term: Tax Code
+  full: Tax Code
+  definition: Defines the GST rate applied to a transaction line item (e.g. GST at 10%, GST Free at 0%).
+
+credit note:
+  term: Credit Note
+  full: Credit Note
+  definition: A document that reduces or reverses an invoice amount, creating a negative entry in accounts receivable.
+
+debit note:
+  term: Debit Note
+  full: Debit Note
+  definition: A document that reduces or reverses a bill amount, creating a positive entry in accounts payable.
+
+double-entry:
+  term: Double-Entry
+  full: Double-Entry Bookkeeping
+  definition: An accounting method where every transaction is recorded in at least two accounts — a debit and a credit — ensuring the books always balance.
+
+trial balance:
+  term: Trial Balance
+  full: Trial Balance
+  definition: A report listing all account balances at a point in time to verify that total debits equal total credits.
+
+reconciliation:
+  term: Reconciliation
+  full: Bank Reconciliation
+  definition: The process of matching transactions in the ledger against a bank statement to verify the cash balance is correct.
+
+opening balance:
+  term: Opening Balance
+  full: Opening Balance
+  definition: The starting balance of an account at the beginning of a financial period, carried forward from the previous period.

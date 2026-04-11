@@ -1,0 +1,21 @@
+page: /invoices/new
+title: Create Invoice
+sections:
+  - heading: Required fields
+    body: >
+      Customer, invoice number, and date are mandatory. At least one line item
+      with a description, price, and revenue account is needed.
+
+  - heading: Tax codes
+    body: >
+      Each line item can have a different {{term:tax code}}. The default is
+      {{term:GST}} at 10%. Select *GST Free* for exempt items.
+
+  - heading: Totals
+    body: >
+      The grey computed columns show calculated values — subtotal, {{term:GST}},
+      and total. These update live as you enter line items.
+
+  - heading: Keyboard
+    body: >
+      Press **Esc** to cancel and return to the invoices list.

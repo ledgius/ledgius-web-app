@@ -1,0 +1,12 @@
+page: /templates
+title: Transaction Templates
+sections:
+  - heading: What is this?
+    body: >
+      Saved templates for common transactions. Use them to quickly create
+      invoices, bills, or journal entries with pre-filled values.
+
+  - heading: Tip
+    body: >
+      Templates save time for repetitive entries. They store the accounts,
+      descriptions, and amounts but not dates or references.

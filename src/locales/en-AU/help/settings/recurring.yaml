@@ -1,0 +1,19 @@
+page: /recurring
+title: Recurring Transactions
+sections:
+  - heading: What is this?
+    body: >
+      Set up transactions that repeat on a schedule — monthly rent, weekly
+      wages, quarterly insurance. Uses {{term:RRULE}} (RFC 5545) for flexible
+      recurrence patterns.
+
+  - heading: How it works
+    body: >
+      Create a schedule with the amount, accounts, and frequency. Choose a
+      preset (weekly, monthly, quarterly) or enter a custom {{term:RRULE}}
+      for advanced patterns like *last Friday of the month*.
+
+  - heading: Tip
+    body: >
+      Review generated transactions before posting. Recurring entries create
+      drafts that still need approval.

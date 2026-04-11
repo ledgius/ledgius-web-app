@@ -1,0 +1,30 @@
+page: /admin/feedback
+title: Feedback Dashboard
+sections:
+  - heading: What is this?
+    body: >
+      Platform-level view of all user feedback across the application.
+      Identifies which areas need attention and which are working well.
+      {{warn:This page is only visible to platform administrators.}}
+
+  - heading: Heat map
+    body: >
+      Pages ranked by unresolved feedback count. Colour coding:
+      - **Red background** — 4+ open issues, needs urgent attention
+      - **Amber background** — 1-3 open issues
+      - **Green background** — positive pulse signals, no open issues
+      - Thumbs up/down columns show the *flow pulse* signals from users
+
+  - heading: Triage workflow
+    body: >
+      Click any feedback item to expand it. Change the status to track progress:
+      - **Open** — new, not yet reviewed
+      - **Acknowledged** — seen, will investigate
+      - **In Progress** — actively being worked on
+      - **Resolved** — fix deployed
+      - **Won't Fix** — intentional, not a bug
+
+  - heading: Email notifications
+    body: >
+      New feedback items are emailed to platform admins with full context
+      including screenshots and action trails.
