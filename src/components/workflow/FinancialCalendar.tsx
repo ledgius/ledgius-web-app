@@ -295,7 +295,7 @@ export function FinancialCalendar({ isOpen, onClose }: FinancialCalendarProps) {
   return (
     <div
       ref={ref}
-      className="absolute top-full mt-1 w-[26rem] bg-white border border-gray-200 rounded-xl shadow-2xl z-50 max-h-[34rem] flex flex-col"
+      className="absolute top-full mt-1 w-[32rem] bg-white border border-gray-200 rounded-xl shadow-2xl z-50 max-h-[34rem] flex flex-col"
       style={{ left: "50%", transform: "translateX(-50%)" }}
     >
       {/* Header */}
