@@ -8,7 +8,7 @@ import {
   CheckCircle, ListTree, Package,
   Calculator, DollarSign, Repeat, ClipboardList,
   UsersRound, Percent, PiggyBank, UserCheck, Wallet,
-  Camera, GitMerge, Send, Inbox, HeartPulse, Sparkles, Import,
+  Camera, GitMerge, Send, Inbox, Sparkles, Import,
   FileBarChart, Scale, TrendingUp, Clock, ClipboardCheck, ChevronsLeft, ChevronsRight,
   Menu, X,
 } from "lucide-react"
@@ -16,7 +16,7 @@ import { cn } from "@/shared/lib/utils"
 import { useAuthTokenSync } from "@/shared/lib/auth"
 import { AppHeader } from "./AppHeader"
 import { FeedbackConsoleStrip } from "@/components/feedback"
-import { HelpPanelSidebar, useHelpDockPosition } from "@/components/workflow"
+import { HelpPanelSidebar, useHelpDockPosition, SessionPlanner } from "@/components/workflow"
 import { FeedbackPanel, FlowPulse, initActionTrail, trailNavigate } from "@/lib/feedback"
 import { GlobalCommandPalette } from "@/components/workflow/GlobalCommandPalette"
 import { KeyboardShortcutOverlay } from "@/components/workflow/KeyboardShortcutOverlay"
@@ -140,33 +140,55 @@ const tasksSections: NavSection[] = [
     ],
   },
   {
-    title: "Tasks",
+    title: "Banking",
     items: [
       { to: "/banking", label: "Reconcile Bank", icon: GitMerge },
-      { to: "/invoices", label: "Process AR", icon: Send },
-      { to: "/bills", label: "Process AP", icon: Inbox },
+      { to: "/transfers", label: "Bank Transfers", icon: ArrowLeftRight },
+    ],
+  },
+  {
+    title: "Receivables",
+    items: [
+      { to: "/invoices", label: "Send & Chase Invoices", icon: Send },
+      { to: "/credit-notes", label: "Apply Credit Notes", icon: FileText },
       { to: "/receipts", label: "Record Receipts", icon: Camera },
-      { to: "/reports", label: "Financial Health", icon: HeartPulse },
+    ],
+  },
+  {
+    title: "Payables",
+    items: [
+      { to: "/bills", label: "Review & Pay Bills", icon: Inbox },
+      { to: "/payments", label: "Schedule Payments", icon: ArrowUpFromLine },
     ],
   },
   {
     title: "Payroll",
     items: [
       { to: "/pay-runs", label: "Run Payroll", icon: Wallet },
-      { to: "/employees", label: "Employees", icon: UserCheck },
+      { to: "/employees", label: "Manage Employees", icon: UserCheck },
     ],
   },
   {
-    title: "Contacts",
+    title: "Compliance",
     items: [
-      { to: "/customers", label: "Customers", icon: Users },
-      { to: "/vendors", label: "Vendors", icon: Users },
+      { to: "/bas", label: "BAS / GST", icon: Calculator },
+      { to: "/payg-config", label: "PAYG Withholding", icon: Percent },
+      { to: "/super-rates", label: "Super Guarantee", icon: PiggyBank },
+    ],
+  },
+  {
+    title: "Period",
+    items: [
+      { to: "/reports", label: "Month-end Review", icon: ClipboardCheck },
+      { to: "/audit-log", label: "Audit Log", icon: Shield },
     ],
   },
   {
     title: "Setup",
     items: [
       { to: "/import", label: "Data Import", icon: Import },
+      { to: "/accounts", label: "Chart of Accounts", icon: BookOpen },
+      { to: "/tax-codes", label: "Tax Codes", icon: Settings2 },
     ],
   },
 ]
@@ -446,6 +468,7 @@ export function Layout() {
         <div className="flex-1 flex flex-col min-h-0">
           <main className="flex-1 overflow-auto">
             <div className="p-6">
+              {mode === "tasks" && <SessionPlanner />}
               <Outlet />
             </div>
           </main>
