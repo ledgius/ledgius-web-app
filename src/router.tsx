@@ -1,5 +1,6 @@
 import { createBrowserRouter } from "react-router-dom"
 import { Layout } from "@/shared/components/Layout"
+import { RequireAuth } from "@/shared/components/RequireAuth"
 import { AccountsPage } from "@/domains/account/pages/AccountsPage"
 import { CreateAccountPage } from "@/domains/account/pages/CreateAccountPage"
 import { CustomersPage } from "@/domains/contact/pages/CustomersPage"
@@ -48,11 +49,12 @@ import { EmployeeDetailPage } from "@/domains/payroll/pages/EmployeeDetailPage"
 import { PayRunsPage } from "@/domains/payroll/pages/PayRunsPage"
 
 export const router = createBrowserRouter([
-  // Login page (no layout wrapper)
+  // Login page (no layout wrapper, no auth required)
   { path: "login", element: <LoginPage /> },
 
+  // All other routes require authentication
   {
-    element: <Layout />,
+    element: <RequireAuth><Layout /></RequireAuth>,
     children: [
       { index: true, element: <DashboardPage /> },
 
