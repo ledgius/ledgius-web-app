@@ -1,5 +1,6 @@
 // Spec references: R-0019, A-0019
 import { useState, useEffect, useCallback, useRef } from "react"
+import { Link } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { Button, Combobox, Skeleton, Badge, InfoPanel } from "@/components/primitives"
@@ -1291,13 +1292,13 @@ export function ReconciliationPage() {
                     return (
                       <>
                         <strong>Pre-requisite:</strong> Bank statement last imported <strong>{timeLabel}</strong> ({totalImported} transactions total).{" "}
-                        <a href="/bank-import-transactions" className="text-primary-600 hover:text-primary-800 underline">Import more</a>
+                        <Link to="/bank-import-transactions" className="text-primary-600 hover:text-primary-800 underline">Import more</Link>
                       </>
                     )
                   }
                   return (
                     <>
-                      <strong>Pre-requisite:</strong> Import bank statements via <a href="/bank-import-transactions" className="text-primary-600 hover:text-primary-800 underline font-semibold">Import Transactions</a> before using this page.
+                      <strong>Pre-requisite:</strong> Import bank statements via <Link to="/bank-import-transactions" className="text-primary-600 hover:text-primary-800 underline font-semibold">Import Transactions</Link> before using this page.
                     </>
                   )
                 })()}

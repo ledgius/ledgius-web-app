@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/shared/lib/auth"
 
@@ -8,6 +8,14 @@ export function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const [motivation, setMotivation] = useState("")
+
+  useEffect(() => {
+    fetch("/api/v1/motivation")
+      .then(r => r.json())
+      .then(d => setMotivation(d.message))
+      .catch(() => setMotivation("Your books are in good hands. Let's get things done."))
+  }, [])
   const [showTenantPicker, setShowTenantPicker] = useState(false)
 
   const handleLogin = async () => {
@@ -47,7 +55,7 @@ export function LoginPage() {
           <img src="/brand/logo/ledgius-400x120-transparent.png" alt="Ledgius" className="h-10 w-auto" />
         </div>
         <p className="text-sm text-gray-500 mb-1 text-center">Sign in to your account</p>
-        <p className="text-xs text-primary-600/70 mb-6 text-center italic">Your books are in good hands. Let's get things done.</p>
+        {motivation && <p className="text-xs text-primary-600/70 mb-6 text-center italic">{motivation}</p>}
 
         {error && <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-md">{error}</div>}
 
