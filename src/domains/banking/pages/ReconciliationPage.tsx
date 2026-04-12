@@ -672,7 +672,7 @@ export function ReconciliationPage() {
         feedback.success(msg)
         setPipelineMessage({ type: "success", text: msg })
       } else {
-        const msg = "No new matches found. Import bank transactions first (via Data Import), then come back and run auto-match."
+        const msg = "No matches found. Import your bank statements first (Banking → Bank Statements), then come back here to run auto-match."
         feedback.info(msg)
         setPipelineMessage({ type: "info", text: msg })
       }
@@ -789,7 +789,7 @@ export function ReconciliationPage() {
         </div>
 
         <InfoPanel title="Getting started" storageKey="recon-info" className="mb-3">
-          <p><strong>1.</strong> Select a bank account below, then click <strong>"Auto-Match Transactions"</strong> to automatically match your imported bank transactions against your ledger entries.</p>
+          <p><strong>1.</strong> Import your bank statement first via <strong>Banking → Bank Statements</strong>, then select a bank account below and click <strong>"Auto-Match Transactions"</strong> to automatically match imported transactions against your ledger entries.</p>
           <p><strong>2.</strong> Review the results in the left panel — matched items show a confidence score. Click any item to see details and candidate matches in the centre.</p>
           <p><strong>3.</strong> Accept good matches with the <strong>Accept</strong> button or press <strong>a</strong>. Defer uncertain items with <strong>d</strong>, exclude duplicates with <strong>x</strong>.</p>
           <p><strong>4.</strong> Use <strong>"Accept exact matches"</strong> to bulk-accept all high-confidence matches at once.</p>

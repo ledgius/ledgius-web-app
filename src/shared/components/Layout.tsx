@@ -8,7 +8,7 @@ import {
   CheckCircle, ListTree, Package,
   Calculator, DollarSign, Repeat, ClipboardList,
   UsersRound, Percent, PiggyBank, UserCheck, Wallet,
-  Camera, GitMerge, Send, Inbox, Sparkles, Import,
+  Camera, GitMerge, Send, Inbox, Sparkles, Import, Upload,
   FileBarChart, Scale, TrendingUp, Clock, ClipboardCheck, ChevronsLeft, ChevronsRight,
   Menu, X, HeartPulse, Calendar,
 } from "lucide-react"
@@ -72,7 +72,8 @@ const financeSections: NavSection[] = [
     title: "Banking",
     icon: CreditCard,
     items: [
-      { to: "/banking", label: "Reconciliation", icon: CreditCard },
+      { to: "/bank-statements", label: "Bank Statements", icon: Upload },
+      { to: "/banking", label: "Reconciliation", icon: GitMerge },
       { to: "/transfers", label: "Transfers", icon: ArrowLeftRight },
     ],
   },
@@ -146,6 +147,7 @@ const tasksSections: NavSection[] = [
   {
     title: "Banking",
     items: [
+      { to: "/bank-statements", label: "Bank Statements", icon: Upload },
       { to: "/banking", label: "Reconcile Bank", icon: GitMerge },
       { to: "/transfers", label: "Bank Transfers", icon: ArrowLeftRight },
     ],

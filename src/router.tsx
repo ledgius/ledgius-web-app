@@ -19,6 +19,7 @@ import { DebitNotesPage } from "@/domains/payable/pages/DebitNotesPage"
 import { ReceiptsPage } from "@/domains/receipt/pages/ReceiptsPage"
 import { PaymentsPage } from "@/domains/payment/pages/PaymentsPage"
 import { BankingPage } from "@/domains/banking/pages/BankingPage"
+import { BankStatementsPage } from "@/domains/banking/pages/BankStatementsPage"
 import { ReconciliationPage } from "@/domains/banking/pages/ReconciliationPage"
 import { TransfersPage } from "@/domains/banking/pages/TransfersPage"
 import { ReportsPage } from "@/domains/reporting/pages/ReportsPage"
@@ -91,6 +92,7 @@ export const router = createBrowserRouter([
       { path: "payments", element: <PaymentsPage /> },
 
       // Cash & Banking
+      { path: "bank-statements", element: <BankStatementsPage /> },
       { path: "banking", element: <ReconciliationPage /> },
       { path: "banking/legacy", element: <BankingPage /> },
       { path: "transfers", element: <TransfersPage /> },
