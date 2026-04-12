@@ -263,7 +263,7 @@ export function BankStatementsPage() {
         <p><strong>1.</strong> Select a bank account below</p>
         <p><strong>2.</strong> Upload a bank statement file (OFX or CSV from your internet banking)</p>
         <p><strong>3.</strong> Review imported transactions — check for duplicates and verify totals</p>
-        <p><strong>4.</strong> Go to Reconciliation (<strong>Banking → Reconciliation</strong>) to match transactions to your ledger</p>
+        <p><strong>4.</strong> Go to <a href="/banking" className="text-primary-600 hover:text-primary-800 underline font-semibold">Reconciliation</a> to match transactions to your ledger</p>
       </InfoPanel>
 
       {/* Bank account selector */}

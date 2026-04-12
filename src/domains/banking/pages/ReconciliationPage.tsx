@@ -1262,7 +1262,7 @@ export function ReconciliationPage() {
                 <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
               )}
               <p className="text-sm">
-                <strong>Pre-requisite:</strong> Import bank statements via <strong>Banking → Bank Statements</strong> before using this page.
+                <strong>Pre-requisite:</strong> Import bank statements via <a href="/bank-statements" className="text-primary-600 hover:text-primary-800 underline font-semibold">Bank Statements</a> before using this page.
               </p>
             </div>
 
