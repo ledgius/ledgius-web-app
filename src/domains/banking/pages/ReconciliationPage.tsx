@@ -1253,12 +1253,12 @@ export function ReconciliationPage() {
               </div>
             </div>
             <div className="flex items-center gap-4 text-xs text-gray-600 shrink-0">
-              <span>Matched: <strong className="font-mono">{reconciled}</strong></span>
-              <span>Unprocessed: <strong className="font-mono">{summary.unprocessed ?? 0}</strong></span>
-              <span>Review: <strong className="font-mono">{summary.needs_review ?? 0}</strong></span>
+              <span title="Bank transactions successfully matched to ledger entries (auto or manual)">Matched: <strong className="font-mono">{reconciled}</strong></span>
+              <span title="Newly imported bank transactions not yet processed by the matching pipeline">Unprocessed: <strong className="font-mono">{summary.unprocessed ?? 0}</strong></span>
+              <span title="Transactions the pipeline could not auto-match — need manual review, create entry, or define a rule">Review: <strong className="font-mono">{summary.needs_review ?? 0}</strong></span>
             </div>
             {(summary.exception ?? 0) > 0 && (
-              <Badge variant="danger" className="shrink-0">
+              <Badge variant="danger" className="shrink-0" title="Transactions flagged as problems — duplicates, ambiguous matches, or items needing investigation">
                 <AlertTriangle className="h-3 w-3 mr-1" />
                 {summary.exception} exceptions
               </Badge>
