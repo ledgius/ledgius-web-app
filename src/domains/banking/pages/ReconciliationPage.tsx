@@ -129,7 +129,7 @@ function BankLineRow({
   onClick: () => void
 }) {
   const { label, badgeVariant, icon } = getStatusConfig(item.reconciliation_status)
-  const amount = typeof item.amount === "number" ? item.amount : parseFloat(String(item.amount))
+  const amount = typeof item?.amount === "number" ? (item?.amount ?? 0) : parseFloat(String(item?.amount ?? 0))
   const isCredit = amount >= 0
 
   return (
@@ -310,7 +310,7 @@ function DetailInspector({
 
   const { data: auditEvents, isLoading: auditLoading } = useReconAudit(tab === "audit" ? item.id : null)
 
-  const amount = typeof item.amount === "number" ? item.amount : parseFloat(String(item.amount))
+  const amount = typeof item?.amount === "number" ? (item?.amount ?? 0) : parseFloat(String(item?.amount ?? 0))
   const { label, badgeVariant } = getStatusConfig(item.reconciliation_status)
 
   const handleDefer = () => {
@@ -674,8 +674,8 @@ function RuleCreationPanel({
           </div>
           <div className="flex items-center gap-3 mt-2 text-[10px] text-gray-400">
             <span>{item.trans_date}</span>
-            <span className={cn("font-mono font-medium", item.amount < 0 ? "text-red-600" : "text-green-600")}>
-              ${Math.abs(item.amount).toFixed(2)}
+            <span className={cn("font-mono font-medium", (item?.amount ?? 0) < 0 ? "text-red-600" : "text-green-600")}>
+              ${Math.abs((item?.amount ?? 0)).toFixed(2)}
             </span>
           </div>
         </div>
@@ -728,7 +728,7 @@ function RuleCreationPanel({
                 step="0.01"
                 value={amountExact}
                 onChange={(e) => setAmountExact(e.target.value)}
-                placeholder={Math.abs(item.amount).toFixed(2)}
+                placeholder={Math.abs((item?.amount ?? 0)).toFixed(2)}
                 className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
               />
             </div>
@@ -822,7 +822,7 @@ function CreateEntryForm({
   // Smart default: positive amount = income first, negative = expense first
   useEffect(() => {
     if (selectedItem) {
-      const isCredit = selectedItem.amount > 0
+      const isCredit = (selectedItem?.amount ?? 0) > 0
       setShowIncome(isCredit)
       setShowExpense(!isCredit)
     }
@@ -890,7 +890,7 @@ function CreateEntryForm({
             Expense
           </button>
           <span className="text-[10px] text-gray-400 ml-1">
-            {selectedItem.amount > 0 ? "(credit — income suggested)" : "(debit — expense suggested)"}
+            {(selectedItem?.amount ?? 0) > 0 ? "(credit — income suggested)" : "(debit — expense suggested)"}
           </span>
         </div>
 
@@ -1544,17 +1544,17 @@ export function ReconciliationPage() {
                         <p
                           className={cn(
                             "text-base font-mono font-semibold",
-                            (typeof selectedItem.amount === "number"
-                              ? selectedItem.amount
-                              : parseFloat(String(selectedItem.amount))) >= 0
+                            (typeof (selectedItem?.amount ?? 0) === "number"
+                              ? (selectedItem?.amount ?? 0)
+                              : parseFloat(String((selectedItem?.amount ?? 0)))) >= 0
                               ? "text-green-700"
                               : "text-red-700"
                           )}
                         >
                           {formatCurrency(
-                            typeof selectedItem.amount === "number"
-                              ? selectedItem.amount
-                              : parseFloat(String(selectedItem.amount))
+                            typeof (selectedItem?.amount ?? 0) === "number"
+                              ? (selectedItem?.amount ?? 0)
+                              : parseFloat(String((selectedItem?.amount ?? 0)))
                           )}
                         </p>
                         <Badge variant={getStatusConfig(selectedItem.reconciliation_status).badgeVariant} className="mt-1">
