@@ -767,7 +767,7 @@ export function ReconciliationPage() {
 
       {/* ── Page header ─────────────────────────────────────────────────────── */}
       <div className="shrink-0 mb-4">
-        <div className="flex items-baseline gap-3 mb-3">
+        <div className="flex items-baseline gap-3 mb-2">
           <h1 className="text-xl font-semibold text-gray-900">Bank Reconciliation</h1>
           {selectedAccountId > 0 && (
             <span className="text-sm text-gray-500">
@@ -775,6 +775,13 @@ export function ReconciliationPage() {
             </span>
           )}
         </div>
+
+        <InfoPanel title="Getting started" storageKey="recon-info" className="mb-3">
+          <p><strong>1.</strong> Select a bank account below, then click <strong>"Auto-Match Transactions"</strong> to automatically match your imported bank transactions against your ledger entries.</p>
+          <p><strong>2.</strong> Review the results in the left panel — matched items show a confidence score. Click any item to see details and candidate matches in the centre.</p>
+          <p><strong>3.</strong> Accept good matches with the <strong>Accept</strong> button or press <strong>a</strong>. Defer uncertain items with <strong>d</strong>, exclude duplicates with <strong>x</strong>.</p>
+          <p><strong>4.</strong> Use <strong>"Accept exact matches"</strong> to bulk-accept all high-confidence matches at once.</p>
+        </InfoPanel>
 
         <div className="flex items-end gap-4 flex-wrap">
           <div className="w-72">
@@ -798,7 +805,7 @@ export function ReconciliationPage() {
               disabled={!selectedAccountId || runPipeline.isPending}
             >
               <Play className="h-3.5 w-3.5" />
-              {runPipeline.isPending ? "Running..." : "Run Pipeline"}
+              {runPipeline.isPending ? "Matching..." : "Auto-Match Transactions"}
             </Button>
             <Button
               variant="secondary"
@@ -861,16 +868,6 @@ export function ReconciliationPage() {
             </p>
           </div>
         </div>
-      )}
-
-      {/* ── Getting started info ────────────────────────────────────────────── */}
-      {selectedAccountId > 0 && (
-        <InfoPanel title="How bank reconciliation works" storageKey="recon-info" className="mx-0">
-          <p><strong>1. Run Pipeline</strong> — automatically matches bank transactions to your ledger using 5 passes: exact IDs, date/amount tolerance, multi-entry composition, bank rules, and scored suggestions.</p>
-          <p><strong>2. Review matches</strong> — click a bank line on the left to see candidate matches in the centre. Accept, split, or create new entries.</p>
-          <p><strong>3. Handle exceptions</strong> — defer items for later, exclude duplicates, or escalate unusual transactions.</p>
-          <p>Use keyboard shortcuts: <strong>j/k</strong> navigate, <strong>a</strong> accept, <strong>d</strong> defer, <strong>x</strong> exclude, <strong>u</strong> undo.</p>
-        </InfoPanel>
       )}
 
       {/* ── Three-pane workstation ────────────────────────────────────────────── */}
