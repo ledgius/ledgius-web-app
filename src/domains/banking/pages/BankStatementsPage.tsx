@@ -259,11 +259,11 @@ export function BankStatementsPage() {
   return (
     <PageShell header={header}>
       {/* Info panel */}
-      <InfoPanel title="How to use Bank Statements" storageKey="bank-statements-info">
+      <InfoPanel title="How to use Bank Statements" storageKey="bank-import-transactions-info">
         <p><strong>1.</strong> Select a bank account below</p>
         <p><strong>2.</strong> Upload a bank statement file (OFX or CSV from your internet banking)</p>
         <p><strong>3.</strong> Review imported transactions — check for duplicates and verify totals</p>
-        <p><strong>4.</strong> Go to <Link to="/banking" className="text-primary-600 hover:text-primary-800 underline font-semibold">Reconciliation</Link> to match transactions to your ledger</p>
+        <p><strong>4.</strong> Go to <Link to="/bank-reconciliation" className="text-primary-600 hover:text-primary-800 underline font-semibold">Reconciliation</Link> to match transactions to your ledger</p>
       </InfoPanel>
 
       {/* Bank account selector */}
@@ -366,7 +366,7 @@ export function BankStatementsPage() {
               </p>
               <Button
                 variant="secondary"
-                onClick={() => navigate("/banking")}
+                onClick={() => navigate("/bank-reconciliation")}
               >
                 Go to Reconciliation
                 <ArrowRight className="h-3.5 w-3.5 ml-1.5" />

@@ -204,7 +204,7 @@ export function AppHeader({ onSearchOpen, onFeedbackOpen }: AppHeaderProps & { o
         {/* Reconciliation badge (hidden on mobile) */}
         <button
           type="button"
-          onClick={() => navigate("/banking")}
+          onClick={() => navigate("/bank-reconciliation")}
           className="hidden md:block p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           title="Bank reconciliation"
         >

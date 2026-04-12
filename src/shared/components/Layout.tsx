@@ -72,8 +72,8 @@ const financeSections: NavSection[] = [
     title: "Banking",
     icon: CreditCard,
     items: [
-      { to: "/bank-statements", label: "Bank Statements", icon: Upload },
-      { to: "/banking", label: "Reconciliation", icon: GitMerge },
+      { to: "/bank-import-transactions", label: "Import Transactions", icon: Upload },
+      { to: "/bank-reconciliation", label: "Reconciliation", icon: GitMerge },
       { to: "/transfers", label: "Transfers", icon: ArrowLeftRight },
     ],
   },
@@ -147,8 +147,8 @@ const tasksSections: NavSection[] = [
   {
     title: "Banking",
     items: [
-      { to: "/bank-statements", label: "Bank Statements", icon: Upload },
-      { to: "/banking", label: "Reconcile Bank", icon: GitMerge },
+      { to: "/bank-import-transactions", label: "Import Transactions", icon: Upload },
+      { to: "/bank-reconciliation", label: "Reconcile Bank", icon: GitMerge },
       { to: "/transfers", label: "Bank Transfers", icon: ArrowLeftRight },
     ],
   },

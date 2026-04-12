@@ -24,7 +24,7 @@ const commands: CommandItem[] = [
   { id: "nav-vendors", label: "Vendors", description: "Vendor contacts", icon: Users, group: "Go to", path: "/vendors", keywords: ["vendor", "supplier", "contact"] },
   { id: "nav-accounts", label: "Chart of Accounts", description: "View all accounts", icon: BookOpen, group: "Go to", path: "/accounts", keywords: ["account", "chart", "coa", "ledger"] },
   { id: "nav-gl", label: "Journal Entries", description: "General ledger", icon: Landmark, group: "Go to", path: "/gl", keywords: ["journal", "gl", "ledger", "entry"] },
-  { id: "nav-banking", label: "Bank Reconciliation", description: "Reconcile bank accounts", icon: CreditCard, group: "Go to", path: "/banking", keywords: ["bank", "reconcile", "recon", "statement"] },
+  { id: "nav-banking", label: "Bank Reconciliation", description: "Reconcile bank accounts", icon: CreditCard, group: "Go to", path: "/bank-reconciliation", keywords: ["bank", "reconcile", "recon", "statement"] },
   { id: "nav-reports", label: "Financial Reports", description: "P&L, balance sheet, more", icon: BarChart3, group: "Go to", path: "/reports", keywords: ["report", "pnl", "balance", "financial"] },
   { id: "nav-approvals", label: "Approvals", description: "Pending transaction approvals", icon: Shield, group: "Go to", path: "/approvals", keywords: ["approval", "approve", "pending"] },
   { id: "nav-audit", label: "Audit Log", description: "System-wide audit trail", icon: Shield, group: "Go to", path: "/audit-log", keywords: ["audit", "log", "history", "trail"] },

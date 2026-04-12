@@ -480,7 +480,7 @@ export function BooksHealthPage() {
           icon={Landmark}
           status={bh?.bank_reconciliation?.status ?? "green"}
           summary={bh?.bank_reconciliation?.summary ?? "Loading…"}
-          link="/banking"
+          link="/bank-reconciliation"
         >
           {bh?.bank_reconciliation?.accounts && bh.bank_reconciliation.accounts.length > 0 ? (
             <div className="overflow-x-auto">
@@ -570,7 +570,7 @@ export function BooksHealthPage() {
           status={bh?.cash_position?.status ?? "green"}
           summary={bh?.cash_position?.summary ?? "Loading…"}
           metric={bh ? fmtCurrency(bh.cash_position.current_balance) : undefined}
-          link="/banking"
+          link="/bank-reconciliation"
         >
           {bh?.cash_position && (
             <div className="space-y-2 text-[11px]">

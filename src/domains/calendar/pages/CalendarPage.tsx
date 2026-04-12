@@ -246,7 +246,7 @@ function DayItemCard({ item, onNavigate }: { item: TimelineItem; onNavigate: (li
 
 const LINK_OPTIONS = [
   { label: "None", value: "" },
-  { label: "Banking / Reconciliation", value: "/banking" },
+  { label: "Banking / Reconciliation", value: "/bank-reconciliation" },
   { label: "Invoices", value: "/invoices" },
   { label: "Bills", value: "/bills" },
   { label: "Pay Runs", value: "/pay-runs" },

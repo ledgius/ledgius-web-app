@@ -51,7 +51,7 @@ function generateMockTimeline(): TimelineItem[] {
       done: false,
       overdue: true,
       badge: "$134.50 out",
-      link: "/banking",
+      link: "/bank-reconciliation",
     },
     {
       id: "payroll-done",
@@ -114,7 +114,7 @@ function generateMockTimeline(): TimelineItem[] {
       icon: Landmark,
       done: false,
       overdue: false,
-      link: "/banking",
+      link: "/bank-reconciliation",
     },
     {
       id: "bas-upcoming",

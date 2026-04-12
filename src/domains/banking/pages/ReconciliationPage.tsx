@@ -1278,13 +1278,13 @@ export function ReconciliationPage() {
                     return (
                       <>
                         <strong>Pre-requisite:</strong> Bank statement last imported <strong>{timeLabel}</strong> ({totalImported} transactions total).{" "}
-                        <a href="/bank-statements" className="text-primary-600 hover:text-primary-800 underline">Import more</a>
+                        <a href="/bank-import-transactions" className="text-primary-600 hover:text-primary-800 underline">Import more</a>
                       </>
                     )
                   }
                   return (
                     <>
-                      <strong>Pre-requisite:</strong> Import bank statements via <a href="/bank-statements" className="text-primary-600 hover:text-primary-800 underline font-semibold">Bank Statements</a> before using this page.
+                      <strong>Pre-requisite:</strong> Import bank statements via <a href="/bank-import-transactions" className="text-primary-600 hover:text-primary-800 underline font-semibold">Import Transactions</a> before using this page.
                     </>
                   )
                 })()}

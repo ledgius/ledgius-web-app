@@ -92,9 +92,9 @@ export const router = createBrowserRouter([
       { path: "payments", element: <PaymentsPage /> },
 
       // Cash & Banking
-      { path: "bank-statements", element: <BankStatementsPage /> },
-      { path: "banking", element: <ReconciliationPage /> },
-      { path: "banking/legacy", element: <BankingPage /> },
+      { path: "bank-import-transactions", element: <BankStatementsPage /> },
+      { path: "bank-reconciliation", element: <ReconciliationPage /> },
+      { path: "bank-reconciliation/legacy", element: <BankingPage /> },
       { path: "transfers", element: <TransfersPage /> },
 
       // General Ledger
