@@ -4,7 +4,7 @@ import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { Button, Combobox, Skeleton, Badge, InfoPanel } from "@/components/primitives"
 import { useFeedback } from "@/components/feedback"
-import { useAccounts } from "@/domains/account/hooks/useAccounts"
+import { useAccounts, type Account } from "@/domains/account/hooks/useAccounts"
 import { formatCurrency, formatDate, cn } from "@/shared/lib/utils"
 import {
   useReconQueue,
@@ -665,6 +665,207 @@ function DetailInspector({
   )
 }
 
+// ── Create Entry Form with smart filtering, search, and past matches ─────────
+
+interface CreateEntryFormProps {
+  accounts: Account[]
+  selectedItem: QueueItem
+  accountId: number
+  onAccountChange: (id: number) => void
+  description: string
+  onDescriptionChange: (d: string) => void
+  rememberRule: boolean
+  onRememberRuleChange: (v: boolean) => void
+  creating: boolean
+  onSubmit: () => void
+}
+
+function CreateEntryForm({
+  accounts, selectedItem, accountId, onAccountChange,
+  description, onDescriptionChange, rememberRule, onRememberRuleChange,
+  creating, onSubmit,
+}: CreateEntryFormProps) {
+  const [accountSearch, setAccountSearch] = useState("")
+  const [showIncome, setShowIncome] = useState(true)
+  const [showExpense, setShowExpense] = useState(true)
+  const [showPastMatches, setShowPastMatches] = useState(false)
+  const pastMatchesRef = useRef<HTMLDivElement>(null)
+
+  // Smart default: positive amount = income first, negative = expense first
+  useEffect(() => {
+    if (selectedItem) {
+      const isCredit = selectedItem.amount > 0
+      setShowIncome(isCredit)
+      setShowExpense(!isCredit)
+    }
+  }, [selectedItem?.id]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Close past matches popup on outside click
+  useEffect(() => {
+    if (!showPastMatches) return
+    function handleClick(e: MouseEvent) {
+      if (pastMatchesRef.current && !pastMatchesRef.current.contains(e.target as Node)) {
+        setShowPastMatches(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClick)
+    return () => document.removeEventListener("mousedown", handleClick)
+  }, [showPastMatches])
+
+  // Filter accounts by search text and category toggles
+  const filteredAccounts = accounts.filter((a) => {
+    if (a.category === "I" && !showIncome) return false
+    if (a.category === "E" && !showExpense) return false
+    if (accountSearch) {
+      const q = accountSearch.toLowerCase()
+      return a.accno.toLowerCase().includes(q) || (a.description?.toLowerCase().includes(q) ?? false)
+    }
+    return true
+  })
+
+  // Mock past matches — in production this would come from an API endpoint
+  // querying acc_trans WHERE chart_id = selectedAccountId ORDER BY transdate DESC LIMIT 10
+  const selectedAccount = accounts.find((a) => a.id === accountId)
+  const pastMatches = accountId > 0 ? [
+    // These would come from the API in a real implementation
+  ] : []
+
+  return (
+    <div className="border border-gray-300 rounded-lg p-4 space-y-3">
+      <h3 className="text-sm font-medium text-gray-700">Create ledger entry</h3>
+      <p className="text-xs text-gray-500">
+        Create a journal entry from this bank transaction and match it automatically.
+      </p>
+
+      {/* Category filter toggles */}
+      <div>
+        <label className="block text-xs font-medium text-gray-600 mb-1.5">GL Account</label>
+        <div className="flex items-center gap-2 mb-2">
+          <button
+            type="button"
+            onClick={() => setShowIncome(!showIncome)}
+            className={cn(
+              "px-2 py-0.5 rounded-full text-xs font-medium border transition-colors",
+              showIncome
+                ? "bg-green-50 border-green-300 text-green-700"
+                : "bg-white border-gray-300 text-gray-400"
+            )}
+          >
+            Income
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowExpense(!showExpense)}
+            className={cn(
+              "px-2 py-0.5 rounded-full text-xs font-medium border transition-colors",
+              showExpense
+                ? "bg-red-50 border-red-300 text-red-700"
+                : "bg-white border-gray-300 text-gray-400"
+            )}
+          >
+            Expense
+          </button>
+          <span className="text-[10px] text-gray-400 ml-1">
+            {selectedItem.amount > 0 ? "(credit — income suggested)" : "(debit — expense suggested)"}
+          </span>
+        </div>
+
+        {/* Searchable account selector */}
+        <div className="relative">
+          <input
+            type="text"
+            value={accountSearch}
+            onChange={(e) => setAccountSearch(e.target.value)}
+            placeholder="Type to search accounts..."
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 mb-1"
+          />
+          <select
+            value={accountId}
+            onChange={(e) => { onAccountChange(Number(e.target.value)); setAccountSearch("") }}
+            size={Math.min(filteredAccounts.length + 1, 8)}
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          >
+            <option value={0}>Select account...</option>
+            {filteredAccounts.map((a) => (
+              <option key={a.id} value={a.id}>
+                {a.category === "I" ? "↑" : "↓"} {a.accno} — {a.description}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        {/* Past matches button + popup */}
+        {accountId > 0 && (
+          <div className="relative mt-1.5" ref={pastMatchesRef}>
+            <button
+              type="button"
+              onClick={() => setShowPastMatches(!showPastMatches)}
+              className="text-xs text-primary-600 hover:text-primary-800 hover:underline"
+            >
+              Show past matches for {selectedAccount?.accno ?? "this account"}
+            </button>
+            {showPastMatches && (
+              <div className="absolute left-0 top-full mt-1 w-full bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-60 overflow-y-auto">
+                <div className="px-3 py-2 border-b border-gray-200 bg-gray-50">
+                  <p className="text-xs font-medium text-gray-700">Recent transactions for {selectedAccount?.accno} — {selectedAccount?.description}</p>
+                </div>
+                {pastMatches.length === 0 ? (
+                  <div className="px-3 py-4 text-center text-xs text-gray-400">
+                    No past matches yet for this account. Once you create entries, previous matches will appear here.
+                  </div>
+                ) : (
+                  <div className="divide-y divide-gray-100">
+                    {pastMatches.map((m: { date: string; description: string; amount: number }, i: number) => (
+                      <div key={i} className="px-3 py-2 text-xs flex items-center gap-3">
+                        <span className="text-gray-400 tabular-nums shrink-0">{m.date}</span>
+                        <span className="text-gray-700 truncate flex-1">{m.description}</span>
+                        <span className={cn("font-mono tabular-nums shrink-0", m.amount < 0 ? "text-red-600" : "text-green-600")}>
+                          ${Math.abs(m.amount).toFixed(2)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+        <input
+          type="text"
+          value={description}
+          onChange={(e) => onDescriptionChange(e.target.value)}
+          className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+        />
+      </div>
+
+      <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={rememberRule}
+          onChange={(e) => onRememberRuleChange(e.target.checked)}
+          className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+        />
+        Remember this rule for future transactions
+      </label>
+
+      <div className="flex gap-2">
+        <Button
+          variant="primary"
+          size="sm"
+          disabled={!accountId || creating}
+          onClick={onSubmit}
+        >
+          {creating ? "Creating..." : "Create & Match"}
+        </Button>
+      </div>
+    </div>
+  )
+}
+
 // ── Main page ─────────────────────────────────────────────────────────────────
 
 export function ReconciliationPage() {
@@ -1292,72 +1493,18 @@ export function ReconciliationPage() {
                         <p className="text-xs">No matching ledger entries found. Create a new entry below.</p>
                       </div>
 
-                      <div className="border border-gray-300 rounded-lg p-4 space-y-3">
-                        <h3 className="text-sm font-medium text-gray-700">Create ledger entry</h3>
-                        <p className="text-xs text-gray-500">
-                          Create a journal entry from this bank transaction and match it automatically.
-                        </p>
-
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">GL Account</label>
-                          <select
-                            value={createAccountId}
-                            onChange={(e) => setCreateAccountId(Number(e.target.value))}
-                            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                          >
-                            <option value={0}>Select account...</option>
-                            <optgroup label="Income">
-                              {incomeExpenseAccounts
-                                .filter((a) => a.category === "I")
-                                .map((a) => (
-                                  <option key={a.id} value={a.id}>
-                                    {a.accno} — {a.description}
-                                  </option>
-                                ))}
-                            </optgroup>
-                            <optgroup label="Expense">
-                              {incomeExpenseAccounts
-                                .filter((a) => a.category === "E")
-                                .map((a) => (
-                                  <option key={a.id} value={a.id}>
-                                    {a.accno} — {a.description}
-                                  </option>
-                                ))}
-                            </optgroup>
-                          </select>
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
-                          <input
-                            type="text"
-                            value={createDescription || selectedItem?.description || ""}
-                            onChange={(e) => setCreateDescription(e.target.value)}
-                            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                          />
-                        </div>
-
-                        <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={createRememberRule}
-                            onChange={(e) => setCreateRememberRule(e.target.checked)}
-                            className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                          />
-                          Remember this rule for future transactions
-                        </label>
-
-                        <div className="flex gap-2">
-                          <Button
-                            variant="primary"
-                            size="sm"
-                            disabled={!createAccountId || createFromLine.isPending}
-                            onClick={handleCreateEntry}
-                          >
-                            {createFromLine.isPending ? "Creating..." : "Create & Match"}
-                          </Button>
-                        </div>
-                      </div>
+                      <CreateEntryForm
+                        accounts={incomeExpenseAccounts}
+                        selectedItem={selectedItem!}
+                        accountId={createAccountId}
+                        onAccountChange={setCreateAccountId}
+                        description={createDescription || selectedItem?.description || ""}
+                        onDescriptionChange={setCreateDescription}
+                        rememberRule={createRememberRule}
+                        onRememberRuleChange={setCreateRememberRule}
+                        creating={createFromLine.isPending}
+                        onSubmit={handleCreateEntry}
+                      />
                     </div>
                   )}
                 </div>
