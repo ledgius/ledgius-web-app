@@ -30,6 +30,7 @@ export function TaxCodesPage() {
         <h1 className="text-xl font-semibold text-gray-900">Tax Codes</h1>
         <span className="text-sm text-gray-500">{codes?.length ?? 0} codes</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">How GST is calculated on transactions</p>
     </div>
   )
 

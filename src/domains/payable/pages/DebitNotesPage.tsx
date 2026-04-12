@@ -58,6 +58,7 @@ export function DebitNotesPage() {
         <h1 className="text-xl font-semibold text-gray-900">Debit Notes</h1>
         <span className="text-sm text-gray-500">Issue debits against AP bills</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Adjustments reducing what you owe suppliers</p>
       <div className="flex items-center gap-2 mt-3">
         <Button variant="secondary" onClick={handleCancel}>Cancel</Button>
         <Button loading={createDebitNote.isPending} onClick={handleCreate}>

@@ -49,6 +49,7 @@ export function BillsPage() {
         <h1 className="text-xl font-semibold text-gray-900">Bills</h1>
         <span className="text-sm text-gray-500">Accounts Payable &middot; {bills?.length ?? 0} records</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Money you owe your suppliers</p>
       <div className="flex items-center gap-3 mt-3">
         <Button onClick={() => navigate("/bills/new")}>
           <Plus className="h-4 w-4" />

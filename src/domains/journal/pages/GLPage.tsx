@@ -133,6 +133,7 @@ export function GLPage() {
       <div className="flex items-baseline gap-3">
         <h1 className="text-xl font-semibold text-gray-900">General Ledger</h1>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">All journal entries and transactions</p>
       <div className="flex items-center gap-3 mt-3">
         <Button onClick={() => setShowForm(!showForm)}>
           {showForm ? "Cancel" : "New Journal Entry"}

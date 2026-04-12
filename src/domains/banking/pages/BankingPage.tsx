@@ -180,6 +180,7 @@ export function BankingPage() {
           <span className="text-sm text-gray-500">{selectedAccountName}</span>
         )}
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Match your bank statement to your books</p>
       <div className="flex items-end gap-4 mt-3">
         <div className="w-64">
           <label className="block text-xs font-medium text-gray-600 mb-1">Bank Account</label>

@@ -118,6 +118,7 @@ export function PAYGConfigPage() {
         <h1 className="text-xl font-semibold text-gray-900">PAYG Withholding Configuration</h1>
         <span className="text-sm text-gray-500">{brackets?.length ?? 0} brackets · {fyList.length} financial years</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Tax withholding rates for employee wages</p>
     </div>
   )
 

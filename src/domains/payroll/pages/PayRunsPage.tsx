@@ -75,6 +75,7 @@ export function PayRunsPage() {
         <h1 className="text-xl font-semibold text-gray-900">Pay Runs</h1>
         <span className="text-sm text-gray-500">{runs?.length ?? 0} pay runs</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Process payroll and generate payslips</p>
       <div className="flex items-center gap-3 mt-3">
         <Button onClick={() => setShowForm(!showForm)}>
           {showForm ? "Cancel" : "Process Pay Run"}

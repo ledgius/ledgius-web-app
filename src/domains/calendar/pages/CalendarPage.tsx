@@ -536,36 +536,39 @@ export function CalendarPage() {
   const monthLabel = currentMonth.toLocaleDateString("en-AU", { month: "long", year: "numeric" })
 
   const header = (
-    <div className="flex items-center justify-between gap-4">
-      <div className="flex items-center gap-3">
-        <h1 className="text-xl font-semibold text-gray-900">Calendar</h1>
-        <span className="text-xl font-normal text-gray-500">{monthLabel}</span>
+    <div>
+      <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <h1 className="text-xl font-semibold text-gray-900">Calendar</h1>
+          <span className="text-xl font-normal text-gray-500">{monthLabel}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={goToday}
+            className="px-3 py-1.5 rounded-md border border-gray-300 bg-white text-sm text-gray-600 hover:bg-gray-50 transition-colors"
+          >
+            Today
+          </button>
+          <button
+            type="button"
+            onClick={prevMonth}
+            className="p-1.5 rounded-md border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 transition-colors"
+            aria-label="Previous month"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={nextMonth}
+            className="p-1.5 rounded-md border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 transition-colors"
+            aria-label="Next month"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
       </div>
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={goToday}
-          className="px-3 py-1.5 rounded-md border border-gray-300 bg-white text-sm text-gray-600 hover:bg-gray-50 transition-colors"
-        >
-          Today
-        </button>
-        <button
-          type="button"
-          onClick={prevMonth}
-          className="p-1.5 rounded-md border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 transition-colors"
-          aria-label="Previous month"
-        >
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-        <button
-          type="button"
-          onClick={nextMonth}
-          className="p-1.5 rounded-md border border-gray-300 bg-white text-gray-600 hover:bg-gray-50 transition-colors"
-          aria-label="Next month"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </button>
-      </div>
+      <p className="text-sm text-gray-500 mt-0.5">Plan your month and manage tasks</p>
     </div>
   )
 

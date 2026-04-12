@@ -56,6 +56,7 @@ export function RecurringPage() {
         <h1 className="text-xl font-semibold text-gray-900">Recurring Transactions</h1>
         <span className="text-sm text-gray-500">{schedules?.length ?? 0} schedules</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Transactions that repeat on a schedule</p>
       <div className="flex items-center gap-3 mt-3">
         <Button onClick={() => setShowForm(!showForm)}>
           {showForm ? "Cancel" : "New Schedule"}

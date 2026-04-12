@@ -216,6 +216,7 @@ export function DataImportPage() {
         <h1 className="text-xl font-semibold text-gray-900">Data Import</h1>
         <span className="text-sm text-gray-500">Migrate from another accounting system</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Bring in data from another accounting system</p>
       {batch && (
         <div className="flex items-center gap-2 mt-3">
           {isCommitted ? (

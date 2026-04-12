@@ -72,6 +72,7 @@ export function PaymentsPage() {
         <h1 className="text-xl font-semibold text-gray-900">Payments</h1>
         <span className="text-sm text-gray-500">{payments?.length ?? 0} payments made</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Record payments made to suppliers</p>
       <div className="flex items-center gap-3 mt-3">
         <Button onClick={() => setShowForm(!showForm)}>
           {showForm ? "Cancel" : "New Payment"}

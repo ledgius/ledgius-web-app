@@ -62,6 +62,7 @@ export function InvoicesPage() {
         <h1 className="text-xl font-semibold text-gray-900">Invoices</h1>
         <span className="text-sm text-gray-500">Accounts Receivable &middot; {filtered.length} records</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Money your customers owe you</p>
       <div className="flex items-center gap-3 mt-3">
         <Button onClick={() => navigate("/invoices/new")}>
           <Plus className="h-4 w-4" />

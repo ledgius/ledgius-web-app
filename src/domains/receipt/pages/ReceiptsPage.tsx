@@ -88,6 +88,7 @@ export function ReceiptsPage() {
         <h1 className="text-xl font-semibold text-gray-900">Receipts</h1>
         <span className="text-sm text-gray-500">{receipts?.length ?? 0} payments received</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Record payments received from customers</p>
       <div className="flex items-center gap-3 mt-3">
         <Button onClick={() => setShowForm(!showForm)}>
           {showForm ? "Cancel" : "New Receipt"}

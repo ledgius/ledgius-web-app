@@ -63,6 +63,7 @@ export function CreateEmployeePage() {
       <div className="flex items-baseline gap-3">
         <h1 className="text-xl font-semibold text-gray-900">New Employee</h1>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Add a team member to payroll</p>
       <div className="flex items-center gap-2 mt-3">
         <Button variant="secondary" onClick={handleCancel}>Cancel</Button>
         <Button loading={createEmployee.isPending} onClick={handleCreate}>

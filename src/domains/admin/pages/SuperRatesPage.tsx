@@ -70,6 +70,7 @@ export function SuperRatesPage() {
         <h1 className="text-xl font-semibold text-gray-900">Super Guarantee Rates</h1>
         <span className="text-sm text-gray-500">{rates?.length ?? 0} financial years</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Superannuation contribution percentages by year</p>
     </div>
   )
 

@@ -143,6 +143,7 @@ export function VendorsPage() {
         <h1 className="text-xl font-semibold text-gray-900">Vendors</h1>
         <span className="text-sm text-gray-500">Accounts Payable &middot; {filtered.length} contacts</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">People and businesses you buy from</p>
       <div className="flex items-center gap-3 mt-3">
         <Button onClick={() => setCreateOpen(!createOpen)} variant={createOpen ? "secondary" : "primary"}>
           <Plus className="h-4 w-4" />

@@ -53,6 +53,7 @@ export function CreditNoteListPage() {
         <h1 className="text-xl font-semibold text-gray-900">Credit Notes</h1>
         <span className="text-sm text-gray-500">{creditNotes.length} credit notes</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Adjustments reducing what customers owe</p>
       <div className="flex items-center gap-3 mt-3">
         <Button onClick={() => navigate("/credit-notes/new")}>
           <Plus className="h-4 w-4" />

@@ -28,6 +28,7 @@ export function TemplatesPage() {
         <h1 className="text-xl font-semibold text-gray-900">Transaction Templates</h1>
         <span className="text-sm text-gray-500">{templates?.length ?? 0} templates</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Reusable templates for common transactions</p>
     </div>
   )
 

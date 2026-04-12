@@ -59,6 +59,7 @@ export function ApprovalsPage() {
         <h1 className="text-xl font-semibold text-gray-900">Transaction Approvals</h1>
         <span className="text-sm text-gray-500">{pending?.length ?? 0} pending</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Review and approve pending transactions</p>
     </div>
   )
 

@@ -1250,6 +1250,7 @@ export function ReconciliationPage() {
             </span>
           )}
         </div>
+        <p className="text-sm text-gray-500 mt-0.5">Match your bank statement to your books</p>
 
         <InfoPanel title="Reconciliation progress" storageKey="recon-info" className="mb-3">
           <div className="space-y-2">
