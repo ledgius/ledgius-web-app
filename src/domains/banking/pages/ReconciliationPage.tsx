@@ -1310,7 +1310,7 @@ export function ReconciliationPage() {
         <div className="flex-1 min-h-0 flex gap-0 border border-gray-300 rounded-lg overflow-hidden bg-white">
 
           {/* ── Left pane: Bank Line Queue ───────────────────────────────────── */}
-          <div className="w-96 shrink-0 flex flex-col border-r border-gray-300 min-h-0">
+          <div className="w-[484px] shrink-0 flex flex-col border-r border-gray-300 min-h-0">
             {/* Filter / sort bar */}
             <div className="shrink-0 border-b border-gray-300 px-3 py-2 space-y-2 bg-gray-50">
               {/* Search */}
@@ -1513,7 +1513,7 @@ export function ReconciliationPage() {
           </div>
 
           {/* ── Right pane: Detail Inspector ─────────────────────────────────── */}
-          <div className="w-96 shrink-0 flex flex-col min-h-0">
+          <div className="w-[484px] shrink-0 flex flex-col min-h-0">
             {selectedItem ? (
               <DetailInspector
                 item={selectedItem}
