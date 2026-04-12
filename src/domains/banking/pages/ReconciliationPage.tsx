@@ -1683,7 +1683,6 @@ export function ReconciliationPage() {
             <span><kbd className="px-1 py-0.5 rounded bg-gray-100 font-mono text-gray-600">d</kbd> defer</span>
             <span><kbd className="px-1 py-0.5 rounded bg-gray-100 font-mono text-gray-600">x</kbd> exclude</span>
             <span><kbd className="px-1 py-0.5 rounded bg-gray-100 font-mono text-gray-600">u</kbd> undo</span>
-            <span><kbd className="px-1 py-0.5 rounded bg-gray-100 font-mono text-gray-600">/</kbd> search</span>
             <span><kbd className="px-1 py-0.5 rounded bg-gray-100 font-mono text-gray-600">1–9</kbd> select candidate</span>
             <span><kbd className="px-1 py-0.5 rounded bg-gray-100 font-mono text-gray-600">Esc</kbd> deselect</span>
           </div>
