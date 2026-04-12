@@ -103,10 +103,7 @@ export function AppHeader({ onSearchOpen, onFeedbackOpen }: AppHeaderProps & { o
     <header className="h-12 shrink-0 border-b border-gray-200 bg-white flex items-center px-4 gap-4">
       {/* ── Left: Logo + Tenant ── */}
       <div className="flex items-center gap-3 min-w-0">
-        <div className="flex items-center gap-1.5">
-          <img src="/favicon.png" alt="Ledgius" className="h-6 w-6" />
-          <span className="text-base font-bold text-primary-700 whitespace-nowrap">Ledgius</span>
-        </div>
+        <img src="/brand/logo/ledgius-400x120-transparent.png" alt="Ledgius" className="h-7 w-auto" />
         <span className="text-gray-300" aria-hidden="true">|</span>
         {tenants.length > 1 ? (
           <div ref={tenantRef} className="relative">

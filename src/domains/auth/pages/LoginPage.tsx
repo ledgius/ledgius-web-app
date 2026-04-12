@@ -43,8 +43,10 @@ export function LoginPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="bg-white border rounded-lg p-8 w-full max-w-sm shadow-sm">
-        <h1 className="text-2xl font-semibold text-gray-900 mb-1">Ledgius</h1>
-        <p className="text-sm text-gray-500 mb-6">Sign in to your account</p>
+        <div className="flex justify-center mb-4">
+          <img src="/brand/logo/ledgius-400x120-transparent.png" alt="Ledgius" className="h-10 w-auto" />
+        </div>
+        <p className="text-sm text-gray-500 mb-6 text-center">Sign in to your account</p>
 
         {error && <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-md">{error}</div>}
 
