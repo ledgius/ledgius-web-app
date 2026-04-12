@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, InlineCreatePanel } from "@/components/layout"
-import { Button, Skeleton, Badge, InlineAlert } from "@/components/primitives"
+import { Button, Badge, InlineAlert } from "@/components/primitives"
 import { DateValue } from "@/components/financial"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { useEmployees, useCreateEmployee, type Employee } from "../hooks/usePayroll"
@@ -250,16 +250,13 @@ export function EmployeesPage() {
         <InlineEmployeeForm onClose={() => setCreateOpen(false)} />
       </InlineCreatePanel>
 
-      {isLoading ? (
-        <Skeleton variant="table" rows={5} columns={5} />
-      ) : (
-        <DataTable
-          columns={columns}
-          data={employees ?? []}
-          emptyMessage="No employees. Click '+ New Employee' to add your first employee."
-          onRowClick={(row) => navigate(`/employees/${row.id}`)}
-        />
-      )}
+      <DataTable
+        columns={columns}
+        data={employees ?? []}
+        loading={isLoading}
+        emptyMessage="No employees. Click '+ New Employee' to add your first employee."
+        onRowClick={(row) => navigate(`/employees/${row.id}`)}
+      />
     </PageShell>
   )
 }

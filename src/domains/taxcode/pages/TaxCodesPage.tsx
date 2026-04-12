@@ -35,11 +35,7 @@ export function TaxCodesPage() {
 
   return (
     <PageShell header={header}>
-      {isLoading ? (
-        <p className="text-gray-500">Loading...</p>
-      ) : (
-        <DataTable columns={columns} data={codes ?? []} emptyMessage="No tax codes configured." />
-      )}
+      <DataTable columns={columns} data={codes ?? []} loading={isLoading} emptyMessage="No tax codes configured." />
     </PageShell>
   )
 }

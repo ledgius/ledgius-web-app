@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, InlineCreatePanel } from "@/components/layout"
-import { Button, Skeleton, InlineAlert } from "@/components/primitives"
+import { Button, InlineAlert } from "@/components/primitives"
 import { MoneyValue } from "@/components/financial"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { SearchFilter } from "@/shared/components/SearchFilter"
@@ -162,16 +162,13 @@ export function CustomersPage() {
         <InlineCustomerForm onClose={() => setCreateOpen(false)} />
       </InlineCreatePanel>
 
-      {isLoading ? (
-        <Skeleton variant="table" rows={8} columns={5} />
-      ) : (
-        <DataTable
-          columns={columns}
-          data={filtered}
-          emptyMessage="No customers. Click 'New Customer' to add your first customer."
-          onRowClick={(row) => navigate(`/contacts/${row.id}`)}
-        />
-      )}
+      <DataTable
+        columns={columns}
+        data={filtered}
+        loading={isLoading}
+        emptyMessage="No customers. Click 'New Customer' to add your first customer."
+        onRowClick={(row) => navigate(`/contacts/${row.id}`)}
+      />
     </PageShell>
   )
 }

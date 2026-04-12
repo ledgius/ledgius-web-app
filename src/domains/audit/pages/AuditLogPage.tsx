@@ -42,7 +42,7 @@ export function AuditLogPage() {
 
   return (
     <PageShell header={header}>
-      {isLoading ? <p className="text-gray-500">Loading...</p> : <DataTable columns={columns} data={entries ?? []} emptyMessage="No audit entries." />}
+      <DataTable columns={columns} data={entries ?? []} loading={isLoading} emptyMessage="No audit entries." />
     </PageShell>
   )
 }

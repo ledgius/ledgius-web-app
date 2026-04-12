@@ -33,7 +33,7 @@ export function TemplatesPage() {
 
   return (
     <PageShell header={header}>
-      {isLoading ? <p className="text-gray-500">Loading...</p> : <DataTable columns={columns} data={templates ?? []} emptyMessage="No saved templates." />}
+      <DataTable columns={columns} data={templates ?? []} loading={isLoading} emptyMessage="No saved templates." />
     </PageShell>
   )
 }

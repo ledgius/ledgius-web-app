@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell } from "@/components/layout"
-import { Button, Skeleton } from "@/components/primitives"
+import { Button } from "@/components/primitives"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { StatusPill, MoneyValue, DateValue } from "@/components/financial"
 import { useBills, type BillSummary } from "../hooks/useBills"
@@ -60,16 +60,13 @@ export function BillsPage() {
 
   return (
     <PageShell header={header}>
-      {isLoading ? (
-        <Skeleton variant="table" rows={8} columns={6} />
-      ) : (
-        <DataTable
-          columns={columns}
-          data={bills ?? []}
-          emptyMessage="No bills recorded. Create a new bill to get started."
-          onRowClick={(row) => navigate(`/bills/${row.trans_id}`)}
-        />
-      )}
+      <DataTable
+        columns={columns}
+        data={bills ?? []}
+        loading={isLoading}
+        emptyMessage="No bills recorded. Create a new bill to get started."
+        onRowClick={(row) => navigate(`/bills/${row.trans_id}`)}
+      />
     </PageShell>
   )
 }

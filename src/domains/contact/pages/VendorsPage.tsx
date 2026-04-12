@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, InlineCreatePanel } from "@/components/layout"
-import { Button, Skeleton, InlineAlert } from "@/components/primitives"
+import { Button, InlineAlert } from "@/components/primitives"
 import { MoneyValue } from "@/components/financial"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { SearchFilter } from "@/shared/components/SearchFilter"
@@ -162,16 +162,13 @@ export function VendorsPage() {
         <InlineVendorForm onClose={() => setCreateOpen(false)} />
       </InlineCreatePanel>
 
-      {isLoading ? (
-        <Skeleton variant="table" rows={8} columns={5} />
-      ) : (
-        <DataTable
-          columns={columns}
-          data={filtered}
-          emptyMessage="No vendors. Click 'New Vendor' to add your first vendor."
-          onRowClick={(row) => navigate(`/contacts/${row.id}`)}
-        />
-      )}
+      <DataTable
+        columns={columns}
+        data={filtered}
+        loading={isLoading}
+        emptyMessage="No vendors. Click 'New Vendor' to add your first vendor."
+        onRowClick={(row) => navigate(`/contacts/${row.id}`)}
+      />
     </PageShell>
   )
 }

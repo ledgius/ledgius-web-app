@@ -1,4 +1,5 @@
 import { cn } from "@/shared/lib/utils"
+import { Skeleton } from "@/components/primitives"
 
 export interface Column<T> {
   key: string
@@ -12,6 +13,7 @@ interface DataTableProps<T> {
   data: T[]
   onRowClick?: (row: T) => void
   emptyMessage?: string
+  loading?: boolean
 }
 
 export function DataTable<T>({
@@ -19,7 +21,13 @@ export function DataTable<T>({
   data,
   onRowClick,
   emptyMessage = "No data",
+  loading = false,
 }: DataTableProps<T>) {
+  // While loading, show skeleton — no table flash
+  if (loading) {
+    return <Skeleton variant="table" rows={8} columns={columns.length} />
+  }
+
   return (
     <div className="border border-gray-200 rounded-lg overflow-hidden">
       <table className="w-full text-sm">

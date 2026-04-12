@@ -1,7 +1,6 @@
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell } from "@/components/layout"
-import { Skeleton } from "@/components/primitives"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { DateValue } from "@/components/financial"
 import { useQuery } from "@tanstack/react-query"
@@ -76,11 +75,7 @@ export function SuperRatesPage() {
 
   return (
     <PageShell header={header}>
-      {isLoading ? (
-        <Skeleton variant="table" rows={6} columns={5} />
-      ) : (
-        <DataTable columns={columns} data={rates ?? []} emptyMessage="No super guarantee rates configured." />
-      )}
+      <DataTable columns={columns} data={rates ?? []} loading={isLoading} emptyMessage="No super guarantee rates configured." />
     </PageShell>
   )
 }

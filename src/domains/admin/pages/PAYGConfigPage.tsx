@@ -2,7 +2,7 @@ import { useState, useMemo } from "react"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
-import { Skeleton, Badge } from "@/components/primitives"
+import { Badge } from "@/components/primitives"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { useQuery } from "@tanstack/react-query"
 import { api } from "@/shared/lib/api"
@@ -145,11 +145,7 @@ export function PAYGConfigPage() {
         </div>
       </PageSection>
 
-      {isLoading ? (
-        <Skeleton variant="table" rows={10} columns={7} />
-      ) : (
-        <DataTable columns={columns} data={activeBrackets} emptyMessage="No brackets for this period." />
-      )}
+      <DataTable columns={columns} data={activeBrackets} loading={isLoading} emptyMessage="No brackets for this period." />
     </PageShell>
   )
 }

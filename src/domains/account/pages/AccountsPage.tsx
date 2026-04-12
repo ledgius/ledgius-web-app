@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { PageShell, InlineCreatePanel } from "@/components/layout"
-import { Button, Skeleton, Badge, InlineAlert } from "@/components/primitives"
+import { Button, Badge, InlineAlert } from "@/components/primitives"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { SearchFilter } from "@/shared/components/SearchFilter"
 import { useAccounts, useCreateAccount, type Account } from "../hooks/useAccounts"
@@ -213,20 +213,17 @@ export function AccountsPage() {
         <InlineAccountForm onClose={() => setCreateOpen(false)} />
       </InlineCreatePanel>
 
-      {isLoading ? (
-        <Skeleton variant="table" rows={10} columns={6} />
-      ) : (
-        <DataTable
-          columns={columns}
-          data={filtered}
-          onRowClick={(row) => navigate(`/accounts/${row.id}/edit`)}
-          emptyMessage={
-            showInactive
-              ? "No accounts match your search."
-              : "No active accounts. Click 'Show all' to see unused accounts."
-          }
-        />
-      )}
+      <DataTable
+        columns={columns}
+        data={filtered}
+        loading={isLoading}
+        onRowClick={(row) => navigate(`/accounts/${row.id}/edit`)}
+        emptyMessage={
+          showInactive
+            ? "No accounts match your search."
+            : "No active accounts. Click 'Show all' to see unused accounts."
+        }
+      />
     </PageShell>
   )
 }

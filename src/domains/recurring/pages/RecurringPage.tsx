@@ -94,7 +94,7 @@ export function RecurringPage() {
           </div>
         </PageSection>
       )}
-      {isLoading ? <p className="text-gray-500">Loading...</p> : <DataTable columns={columns} data={schedules ?? []} emptyMessage="No recurring schedules." />}
+      <DataTable columns={columns} data={schedules ?? []} loading={isLoading} emptyMessage="No recurring schedules." />
     </PageShell>
   )
 }

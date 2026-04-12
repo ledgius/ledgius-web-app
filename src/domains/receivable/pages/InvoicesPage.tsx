@@ -2,7 +2,6 @@ import { useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { PageShell } from "@/components/layout"
 import { Button } from "@/components/primitives"
-import { Skeleton } from "@/components/primitives"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { SearchFilter } from "@/shared/components/SearchFilter"
 import { StatusPill, MoneyValue, DateValue } from "@/components/financial"
@@ -78,16 +77,13 @@ export function InvoicesPage() {
 
   return (
     <PageShell header={header}>
-      {isLoading ? (
-        <Skeleton variant="table" rows={8} columns={6} />
-      ) : (
-        <DataTable
-          columns={columns}
-          data={filtered}
-          emptyMessage="No invoices in this period. Create a new invoice or adjust your filters."
-          onRowClick={(row) => navigate(`/invoices/${row.trans_id}`)}
-        />
-      )}
+      <DataTable
+        columns={columns}
+        data={filtered}
+        loading={isLoading}
+        emptyMessage="No invoices in this period. Create a new invoice or adjust your filters."
+        onRowClick={(row) => navigate(`/invoices/${row.trans_id}`)}
+      />
     </PageShell>
   )
 }

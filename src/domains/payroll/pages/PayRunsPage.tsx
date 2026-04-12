@@ -143,8 +143,7 @@ export function PayRunsPage() {
         </PageSection>
       )}
 
-      {isLoading ? <p className="text-gray-500">Loading...</p> :
-        <DataTable columns={columns} data={runs ?? []} emptyMessage="No pay runs processed yet." />}
+      <DataTable columns={columns} data={runs ?? []} loading={isLoading} emptyMessage="No pay runs processed yet." />
     </PageShell>
   )
 }

@@ -61,7 +61,7 @@ export function HeadingsPage() {
           </div>
         </PageSection>
       )}
-      {isLoading ? <p className="text-gray-500">Loading...</p> : <DataTable columns={columns} data={headings ?? []} emptyMessage="No headings." />}
+      <DataTable columns={columns} data={headings ?? []} loading={isLoading} emptyMessage="No headings." />
     </PageShell>
   )
 }

@@ -350,19 +350,12 @@ export function BankStatementsPage() {
       {selectedAccountId > 0 && (
         <div className="bg-white border border-gray-200 rounded-lg p-5 space-y-4">
           <h2 className="text-sm font-semibold text-gray-700">Import History</h2>
-          {batchesLoading ? (
-            <div className="space-y-2">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-10 w-full" />
-            </div>
-          ) : (
-            <DataTable<ImportBatch>
-              columns={batchColumns}
-              data={batches ?? []}
-              emptyMessage="No imports yet — upload a statement file above to get started"
-            />
-          )}
+          <DataTable<ImportBatch>
+            columns={batchColumns}
+            data={batches ?? []}
+            loading={batchesLoading}
+            emptyMessage="No imports yet — upload a statement file above to get started"
+          />
 
           {/* Unmatched transactions summary */}
           {unmatchedCount > 0 && (

@@ -177,8 +177,7 @@ export function ReceiptsPage() {
         </PageSection>
       )}
 
-      {isLoading ? <p className="text-gray-500">Loading...</p> :
-        <DataTable columns={columns} data={receipts ?? []} emptyMessage="No receipts recorded yet." />}
+      <DataTable columns={columns} data={receipts ?? []} loading={isLoading} emptyMessage="No receipts recorded yet." />
     </PageShell>
   )
 }

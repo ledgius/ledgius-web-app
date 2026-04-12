@@ -308,19 +308,15 @@ export function BankingPage() {
           </div>
 
           {tab === "uncleared" && (
-            unclearedLoading ? <p className="text-gray-500 text-sm">Loading...</p> :
-            <DataTable columns={unclearedColumns} data={uncleared ?? []} emptyMessage="No uncleared transactions." />
+            <DataTable columns={unclearedColumns} data={uncleared ?? []} loading={unclearedLoading} emptyMessage="No uncleared transactions." />
           )}
           {tab === "unmatched" && (
-            unmatchedLoading ? <p className="text-gray-500 text-sm">Loading...</p> :
-            <DataTable columns={unmatchedColumns} data={unmatched ?? []} emptyMessage="No unmatched imports." />
+            <DataTable columns={unmatchedColumns} data={unmatched ?? []} loading={unmatchedLoading} emptyMessage="No unmatched imports." />
           )}
           {tab === "history" && (
-            batchesLoading ? <p className="text-gray-500 text-sm">Loading...</p> :
-            <DataTable columns={batchColumns} data={batches ?? []} emptyMessage="No import history." />
+            <DataTable columns={batchColumns} data={batches ?? []} loading={batchesLoading} emptyMessage="No import history." />
           )}
           {tab === "rules" && (
-            rulesLoading ? <p className="text-gray-500 text-sm">Loading...</p> :
             <DataTable columns={[
               { key: "name", header: "Rule Name" },
               { key: "description_pattern", header: "Description Pattern", render: (r: BankRule) => r.description_pattern ?? "-" },
@@ -328,7 +324,7 @@ export function BankingPage() {
               { key: "priority", header: "Priority", className: "w-16 text-right" },
               { key: "enabled", header: "Enabled", className: "w-16 text-center",
                 render: (r: BankRule) => r.enabled ? <span className="text-green-600 text-xs">Yes</span> : <span className="text-gray-400 text-xs">No</span> },
-            ]} data={bankRules ?? []} emptyMessage="No matching rules configured." />
+            ]} data={bankRules ?? []} loading={rulesLoading} emptyMessage="No matching rules configured." />
           )}
         </>
       )}

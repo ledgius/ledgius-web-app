@@ -245,13 +245,7 @@ export function GLPage() {
       )}
 
       <PageSection title="Pending Approvals">
-        {pendingLoading ? (
-          <p className="text-gray-500 text-sm">Loading...</p>
-        ) : (pending?.length ?? 0) === 0 ? (
-          <p className="text-gray-500 text-sm">No transactions pending approval.</p>
-        ) : (
-          <DataTable columns={pendingColumns} data={pending ?? []} />
-        )}
+        <DataTable columns={pendingColumns} data={pending ?? []} loading={pendingLoading} emptyMessage="No transactions pending approval." />
       </PageSection>
 
       {showYearEnd && (

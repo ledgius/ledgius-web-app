@@ -77,7 +77,7 @@ function TrialBalance() {
     { key: "debit", header: "Debit", className: "text-right font-mono", render: (r: TrialBalanceLine) => r.debit !== "0" ? formatCurrency(r.debit) : "" },
     { key: "credit", header: "Credit", className: "text-right font-mono", render: (r: TrialBalanceLine) => r.credit !== "0" ? formatCurrency(r.credit) : "" },
   ]
-  return isLoading ? <p>Loading...</p> : <DataTable columns={columns} data={data ?? []} />
+  return <DataTable columns={columns} data={data ?? []} loading={isLoading} />
 }
 
 function ProfitLoss({ from, to, onFromChange, onToChange }: { from: string; to: string; onFromChange: (v: string) => void; onToChange: (v: string) => void }) {

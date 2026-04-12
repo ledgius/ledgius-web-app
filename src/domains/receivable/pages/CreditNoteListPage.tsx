@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell } from "@/components/layout"
-import { Button, Skeleton } from "@/components/primitives"
+import { Button } from "@/components/primitives"
 import { StatusPill, MoneyValue, DateValue } from "@/components/financial"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { useInvoices, type InvoiceSummary } from "../hooks/useInvoices"
@@ -64,16 +64,13 @@ export function CreditNoteListPage() {
 
   return (
     <PageShell header={header}>
-      {isLoading ? (
-        <Skeleton variant="table" rows={5} columns={5} />
-      ) : (
-        <DataTable
-          columns={columns}
-          data={creditNotes}
-          emptyMessage="No credit notes issued. Click '+ New Credit Note' to issue one against an existing invoice."
-          onRowClick={(row) => navigate(`/invoices/${row.trans_id}`)}
-        />
-      )}
+      <DataTable
+        columns={columns}
+        data={creditNotes}
+        loading={isLoading}
+        emptyMessage="No credit notes issued. Click '+ New Credit Note' to issue one against an existing invoice."
+        onRowClick={(row) => navigate(`/invoices/${row.trans_id}`)}
+      />
     </PageShell>
   )
 }

@@ -147,8 +147,7 @@ export function PaymentsPage() {
         </PageSection>
       )}
 
-      {isLoading ? <p className="text-gray-500">Loading...</p> :
-        <DataTable columns={columns} data={payments ?? []} emptyMessage="No payments recorded yet." />}
+      <DataTable columns={columns} data={payments ?? []} loading={isLoading} emptyMessage="No payments recorded yet." />
     </PageShell>
   )
 }

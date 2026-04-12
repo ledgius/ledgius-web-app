@@ -84,8 +84,7 @@ export function CurrencyPage() {
           <DataTable columns={currColumns} data={currencies ?? []} emptyMessage="No currencies." />
         </PageSection>
         <PageSection title="Recent Exchange Rates">
-          {isLoading ? <p className="text-gray-500 text-sm">Loading...</p> :
-            <DataTable columns={rateColumns} data={rates ?? []} emptyMessage="No exchange rates." />}
+          <DataTable columns={rateColumns} data={rates ?? []} loading={isLoading} emptyMessage="No exchange rates." />
         </PageSection>
       </div>
     </PageShell>

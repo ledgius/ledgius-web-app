@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, InlineCreatePanel } from "@/components/layout"
-import { Button, Skeleton, InlineAlert } from "@/components/primitives"
+import { Button, InlineAlert } from "@/components/primitives"
 import { DataTable } from "@/shared/components/DataTable"
 import { SearchFilter } from "@/shared/components/SearchFilter"
 import { useProducts, useCreateProduct, type Product } from "../hooks/useProducts"
@@ -219,16 +219,13 @@ export function ProductsPage() {
         </select>
       </div>
 
-      {isLoading ? (
-        <Skeleton variant="table" rows={8} columns={6} />
-      ) : (
-        <DataTable
-          columns={columns}
-          data={products ?? []}
-          emptyMessage="No products or services found."
-          onRowClick={(row) => navigate(`/products/${row.id}`)}
-        />
-      )}
+      <DataTable
+        columns={columns}
+        data={products ?? []}
+        loading={isLoading}
+        emptyMessage="No products or services found."
+        onRowClick={(row) => navigate(`/products/${row.id}`)}
+      />
     </PageShell>
   )
 }
