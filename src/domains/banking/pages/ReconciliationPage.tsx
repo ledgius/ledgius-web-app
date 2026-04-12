@@ -17,6 +17,8 @@ import {
   useUndoAction,
   useBulkAccept,
   useRunPipeline,
+  useCreateFromLine,
+  useCreateBankRule,
   type QueueItem,
   type MatchCandidate,
   type QueueFilter,
@@ -40,6 +42,27 @@ import {
   RefreshCw,
   X,
 } from "lucide-react"
+
+// ── Pattern extraction ────────────────────────────────────────────────────────
+
+/**
+ * Extract the stable "merchant" portion of a bank transaction description.
+ * Strips leading transaction codes, trailing dates, and variable IDs.
+ *
+ * Example: "DEPOSIT 2459971 Square Australia Pty Ltd T3N8TVQKRJS78XT 05 JUL 2025"
+ *          → "Square Australia Pty Ltd"
+ */
+function extractPattern(description: string): string {
+  if (!description) return ""
+  // Remove leading codes like "DEPOSIT 1234567" or "PAYMENT 9876543"
+  let s = description.replace(/^\s*[A-Z]+\s+\d+\s*/i, "")
+  // Remove trailing date like "05 JUL 2025" or "05/07/2025"
+  s = s.replace(/\s+\d{1,2}\s+[A-Z]{3}\s+\d{4}\s*$/i, "")
+  s = s.replace(/\s+\d{1,2}\/\d{1,2}\/\d{2,4}\s*$/, "")
+  // Remove trailing alphanumeric ID tokens (all caps/digits 8+ chars)
+  s = s.replace(/\s+[A-Z0-9]{8,}\s*$/i, "")
+  return s.trim()
+}
 
 // ── Status helpers ────────────────────────────────────────────────────────────
 
@@ -254,20 +277,26 @@ type DetailTab = "details" | "actions" | "audit"
 
 function DetailInspector({
   item,
+  accounts,
   onDefer,
   onExclude,
   onUndo,
+  onCreateRule,
   deferring,
   excluding,
   undoing,
+  creatingRule,
 }: {
   item: QueueItem
+  accounts: { id: number; accno: string; description: string | null; category: string }[]
   onDefer: (lineId: number, reasonCode: string, notes: string) => void
   onExclude: (lineId: number, reasonCode: string, notes: string) => void
   onUndo: (lineId: number) => void
+  onCreateRule: (lineId: number, pattern: string, accountId: number) => void
   deferring: boolean
   excluding: boolean
   undoing: boolean
+  creatingRule: boolean
 }) {
   const [tab, setTab] = useState<DetailTab>("details")
   const [deferReason, setDeferReason] = useState("")
@@ -276,6 +305,8 @@ function DetailInspector({
   const [excludeNotes, setExcludeNotes] = useState("")
   const [showDeferForm, setShowDeferForm] = useState(false)
   const [showExcludeForm, setShowExcludeForm] = useState(false)
+  const [rulePattern, setRulePattern] = useState(() => extractPattern(item.description ?? ""))
+  const [ruleAccountId, setRuleAccountId] = useState<number>(0)
 
   const { data: auditEvents, isLoading: auditLoading } = useReconAudit(tab === "audit" ? item.id : null)
 
@@ -531,6 +562,54 @@ function DetailInspector({
                 </div>
               )}
             </div>
+
+            {/* Create matching rule */}
+            <div className="border-t border-gray-200 pt-3 mt-3">
+              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Create Rule</h4>
+              <p className="text-xs text-gray-400 mb-2">
+                Always classify transactions matching this pattern to a specific account.
+              </p>
+              <div className="space-y-2">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Pattern (from description)</label>
+                  <input
+                    type="text"
+                    value={rulePattern}
+                    onChange={(e) => setRulePattern(e.target.value)}
+                    className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Target Account</label>
+                  <select
+                    value={ruleAccountId}
+                    onChange={(e) => setRuleAccountId(Number(e.target.value))}
+                    className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  >
+                    <option value={0}>Select account...</option>
+                    {accounts
+                      .filter((a) => a.category === "E" || a.category === "I")
+                      .map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.accno} — {a.description}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+                <Button
+                  size="sm"
+                  variant="secondary"
+                  disabled={!rulePattern || !ruleAccountId || creatingRule}
+                  onClick={() => {
+                    if (rulePattern && ruleAccountId) {
+                      onCreateRule(item.id, rulePattern, ruleAccountId)
+                    }
+                  }}
+                >
+                  Save Rule
+                </Button>
+              </div>
+            </div>
           </>
         )}
 
@@ -588,6 +667,12 @@ export function ReconciliationPage() {
   const [pipelineMessage, setPipelineMessage] = useState<{ type: "success" | "info" | "error"; text: string } | null>(null)
   const searchRef = useRef<HTMLInputElement>(null)
 
+  // Create-from-line form state
+  const [createAccountId, setCreateAccountId] = useState<number>(0)
+  const [createDescription, setCreateDescription] = useState<string>("")
+  const [createRememberRule, setCreateRememberRule] = useState(false)
+  const [bulkAccepted, setBulkAccepted] = useState(false)
+
   // Data queries
   const { data: queue, isLoading: queueLoading, error: queueError } = useReconQueue(selectedAccountId, sort, filter)
   const { data: candidatesData, isLoading: candidatesLoading } = useReconCandidates(selectedLineId)
@@ -600,12 +685,16 @@ export function ReconciliationPage() {
   const undoAction = useUndoAction()
   const bulkAccept = useBulkAccept()
   const runPipeline = useRunPipeline()
+  const createFromLine = useCreateFromLine()
+  const createBankRule = useCreateBankRule()
 
   const candidates = candidatesData?.candidates ?? []
   const selectedItem = queue?.find((q) => q.id === selectedLineId) ?? null
   const queueList = queue ?? []
 
-  const bankAccounts = accounts?.filter((a) => a.category === "A") ?? []
+  const allAccounts = accounts ?? []
+  const bankAccounts = allAccounts.filter((a) => a.category === "A")
+  const incomeExpenseAccounts = allAccounts.filter((a) => a.category === "E" || a.category === "I")
   const accountOptions = bankAccounts.map((a) => ({
     value: a.id,
     label: `${a.accno} — ${a.description}`,
@@ -703,11 +792,46 @@ export function ReconciliationPage() {
     }
     try {
       await bulkAccept.mutateAsync({ bank_transaction_ids: exactMatches.map((q) => q.id) })
+      setBulkAccepted(true)
       feedback.success(`Bulk accepted ${exactMatches.length} exact matches`)
     } catch (err: unknown) {
       feedback.error("Bulk accept failed", err instanceof Error ? err.message : "Unknown error")
     }
   }, [bulkAccept, queueList, feedback])
+
+  const handleCreateEntry = useCallback(async () => {
+    if (!selectedLineId || !createAccountId) return
+    const desc = createDescription || selectedItem?.description || ""
+    try {
+      await createFromLine.mutateAsync({
+        lineId: selectedLineId,
+        account_id: createAccountId,
+        description: desc,
+        remember_rule: createRememberRule,
+      })
+      feedback.success("Ledger entry created and matched")
+      setCreateAccountId(0)
+      setCreateDescription("")
+      setCreateRememberRule(false)
+    } catch (err: unknown) {
+      feedback.error("Create entry failed", err instanceof Error ? err.message : "Unknown error")
+    }
+  }, [selectedLineId, createAccountId, createDescription, createRememberRule, createFromLine, selectedItem, feedback])
+
+  const handleCreateRule = useCallback(async (_lineId: number, pattern: string, accountId: number) => {
+    try {
+      await createBankRule.mutateAsync({
+        account_id: selectedAccountId,
+        name: pattern,
+        description_pattern: pattern,
+        match_account_id: accountId,
+        priority: 10,
+      })
+      feedback.success(`Rule saved — future "${pattern}" transactions will suggest this account`)
+    } catch (err: unknown) {
+      feedback.error("Save rule failed", err instanceof Error ? err.message : "Unknown error")
+    }
+  }, [createBankRule, selectedAccountId, feedback])
 
   // Keyboard shortcut handler
   useEffect(() => {
@@ -800,11 +924,60 @@ export function ReconciliationPage() {
           )}
         </div>
 
-        <InfoPanel title="Getting started" storageKey="recon-info" className="mb-3">
-          <p><strong>1.</strong> Import your bank statement first via <strong>Banking → Bank Statements</strong>, then select a bank account below and click <strong>"Auto-Match Transactions"</strong> to automatically match imported transactions against your ledger entries.</p>
-          <p><strong>2.</strong> Review the results in the left panel — matched items show a confidence score. Click any item to see details and candidate matches in the centre.</p>
-          <p><strong>3.</strong> Accept good matches with the <strong>Accept</strong> button or press <strong>a</strong>. Defer uncertain items with <strong>d</strong>, exclude duplicates with <strong>x</strong>.</p>
-          <p><strong>4.</strong> Use <strong>"Accept exact matches"</strong> to bulk-accept all high-confidence matches at once.</p>
+        <InfoPanel title="Reconciliation progress" storageKey="recon-info" className="mb-3">
+          <div className="space-y-2">
+            {/* Step 1: Import */}
+            <div className="flex items-start gap-2">
+              {(summary?.total_transactions ?? 0) > 0 ? (
+                <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+              ) : (
+                <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
+              )}
+              <p className="text-sm">
+                <strong>1. Import bank statements</strong> — via <strong>Banking → Bank Statements</strong>, then select your bank account below.
+              </p>
+            </div>
+
+            {/* Step 2: Auto-match */}
+            <div className="flex items-start gap-2">
+              {(summary?.auto_matched ?? 0) > 0 ? (
+                <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+              ) : (summary?.total_transactions ?? 0) > 0 ? (
+                <Clock className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+              ) : (
+                <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
+              )}
+              <p className="text-sm">
+                <strong>2. Run auto-match</strong> — click <strong>"Auto-Match Transactions"</strong> to find ledger entries for your bank lines.
+              </p>
+            </div>
+
+            {/* Step 3: Review */}
+            <div className="flex items-start gap-2">
+              {(summary?.manually_matched ?? 0) > 0 && (summary?.needs_review ?? 0) === 0 ? (
+                <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+              ) : (summary?.manually_matched ?? 0) > 0 ? (
+                <Clock className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+              ) : (
+                <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
+              )}
+              <p className="text-sm">
+                <strong>3. Review matches</strong> — accept suggestions with <strong>Accept</strong> or press <strong>a</strong>. Defer uncertain items with <strong>d</strong>, exclude duplicates with <strong>x</strong>.
+              </p>
+            </div>
+
+            {/* Step 4: Bulk accept */}
+            <div className="flex items-start gap-2">
+              {bulkAccepted ? (
+                <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+              ) : (
+                <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
+              )}
+              <p className="text-sm">
+                <strong>4. Accept exact matches</strong> — use <strong>"Accept exact matches"</strong> to bulk-accept all high-confidence matches at once.
+              </p>
+            </div>
+          </div>
         </InfoPanel>
 
         <div className="flex items-end gap-4 flex-wrap">
@@ -1099,24 +1272,77 @@ export function ReconciliationPage() {
                       ))}
                     </>
                   ) : (
-                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                      <div className="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center mb-3">
-                        <AlertTriangle className="h-5 w-5 text-amber-400" />
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 text-amber-600 mb-2">
+                        <AlertTriangle className="h-4 w-4 shrink-0" />
+                        <p className="text-xs">No matching ledger entries found. Create a new entry below.</p>
                       </div>
-                      <h3 className="text-sm font-medium text-gray-700 mb-1">No candidates found</h3>
-                      <p className="text-xs text-gray-400 mb-4">
-                        The matching pipeline found no ledger entries for this transaction.
-                      </p>
-                      <div className="flex flex-col gap-2 w-full max-w-xs">
-                        <Button variant="primary" size="sm" disabled>
-                          Create new entry
-                        </Button>
-                        <Button variant="secondary" size="sm" disabled>
-                          Mark as bank fee
-                        </Button>
-                        <Button variant="secondary" size="sm" disabled>
-                          Mark as internal transfer
-                        </Button>
+
+                      <div className="border border-gray-300 rounded-lg p-4 space-y-3">
+                        <h3 className="text-sm font-medium text-gray-700">Create ledger entry</h3>
+                        <p className="text-xs text-gray-500">
+                          Create a journal entry from this bank transaction and match it automatically.
+                        </p>
+
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">GL Account</label>
+                          <select
+                            value={createAccountId}
+                            onChange={(e) => setCreateAccountId(Number(e.target.value))}
+                            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          >
+                            <option value={0}>Select account...</option>
+                            <optgroup label="Income">
+                              {incomeExpenseAccounts
+                                .filter((a) => a.category === "I")
+                                .map((a) => (
+                                  <option key={a.id} value={a.id}>
+                                    {a.accno} — {a.description}
+                                  </option>
+                                ))}
+                            </optgroup>
+                            <optgroup label="Expense">
+                              {incomeExpenseAccounts
+                                .filter((a) => a.category === "E")
+                                .map((a) => (
+                                  <option key={a.id} value={a.id}>
+                                    {a.accno} — {a.description}
+                                  </option>
+                                ))}
+                            </optgroup>
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+                          <input
+                            type="text"
+                            value={createDescription || selectedItem?.description || ""}
+                            onChange={(e) => setCreateDescription(e.target.value)}
+                            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          />
+                        </div>
+
+                        <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={createRememberRule}
+                            onChange={(e) => setCreateRememberRule(e.target.checked)}
+                            className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                          />
+                          Remember this rule for future transactions
+                        </label>
+
+                        <div className="flex gap-2">
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            disabled={!createAccountId || createFromLine.isPending}
+                            onClick={handleCreateEntry}
+                          >
+                            {createFromLine.isPending ? "Creating..." : "Create & Match"}
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -1130,12 +1356,15 @@ export function ReconciliationPage() {
             {selectedItem ? (
               <DetailInspector
                 item={selectedItem}
+                accounts={allAccounts}
                 onDefer={handleDefer}
                 onExclude={handleExclude}
                 onUndo={handleUndo}
+                onCreateRule={handleCreateRule}
                 deferring={deferLine.isPending}
                 excluding={excludeLine.isPending}
                 undoing={undoAction.isPending}
+                creatingRule={createBankRule.isPending}
               />
             ) : (
               <div className="flex flex-col items-center justify-center flex-1 px-6 py-12 text-center">

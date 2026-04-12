@@ -232,3 +232,35 @@ export function useRunPipeline() {
     onSuccess: () => qc.invalidateQueries({ queryKey: RECON_KEY }),
   })
 }
+
+export function useCreateFromLine() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      lineId,
+      ...body
+    }: {
+      lineId: number
+      account_id: number
+      description: string
+      remember_rule: boolean
+    }) => api.post(`/reconciliation/lines/${lineId}/create`, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: RECON_KEY }),
+  })
+}
+
+export interface CreateRuleRequest {
+  account_id: number
+  name: string
+  description_pattern: string
+  match_account_id: number
+  priority?: number
+}
+
+export function useCreateBankRule() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (body: CreateRuleRequest) => api.post("/bank-import/rules", body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: RECON_KEY }),
+  })
+}
