@@ -48,6 +48,7 @@ import { EmployeesPage } from "@/domains/payroll/pages/EmployeesPage"
 import { CreateEmployeePage } from "@/domains/payroll/pages/CreateEmployeePage"
 import { EmployeeDetailPage } from "@/domains/payroll/pages/EmployeeDetailPage"
 import { PayRunsPage } from "@/domains/payroll/pages/PayRunsPage"
+import { CalendarPage } from "@/domains/calendar/pages/CalendarPage"
 
 export const router = createBrowserRouter([
   // Login page (no layout wrapper, no auth required)
@@ -59,6 +60,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <DashboardPage /> },
       { path: "books-health", element: <BooksHealthPage /> },
+      { path: "calendar", element: <CalendarPage /> },
 
       // Chart of Accounts
       { path: "accounts", element: <AccountsPage /> },
