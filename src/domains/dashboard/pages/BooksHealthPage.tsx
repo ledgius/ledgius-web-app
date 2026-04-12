@@ -433,7 +433,7 @@ export function BooksHealthPage() {
   const header = (
     <div className="flex items-start justify-between gap-4">
       <div>
-        <h1 className="text-xl font-semibold text-gray-900">Books Health</h1>
+        <h1 className="text-xl font-semibold text-gray-900">Health Check</h1>
         <p className="mt-0.5 text-sm text-gray-500">How clean are your books?</p>
       </div>
       <div className="flex items-center gap-3 shrink-0">

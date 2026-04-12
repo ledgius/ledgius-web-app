@@ -46,7 +46,7 @@ const financeSections: NavSection[] = [
     title: "",
     items: [
       { to: "/", label: "Dashboard", icon: LayoutDashboard },
-      { to: "/books-health", label: "Books Health", icon: HeartPulse },
+      { to: "/books-health", label: "Health Check", icon: HeartPulse },
       { to: "/calendar", label: "Calendar", icon: Calendar },
     ],
   },
@@ -140,7 +140,7 @@ const tasksSections: NavSection[] = [
     title: "",
     items: [
       { to: "/", label: "Dashboard", icon: LayoutDashboard },
-      { to: "/books-health", label: "Books Health", icon: HeartPulse },
+      { to: "/books-health", label: "Health Check", icon: HeartPulse },
       { to: "/calendar", label: "Calendar", icon: Calendar },
     ],
   },
