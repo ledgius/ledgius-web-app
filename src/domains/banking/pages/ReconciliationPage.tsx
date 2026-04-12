@@ -38,7 +38,6 @@ import {
   Circle,
   Zap,
   Filter,
-  ArrowUpDown,
   Search,
   RefreshCw,
   X,
@@ -1454,7 +1453,7 @@ export function ReconciliationPage() {
                 <input
                   ref={searchRef}
                   type="text"
-                  placeholder="Filter... (/)"
+                  placeholder="Search transactions..."
                   onFocus={() => setSearchFocused(true)}
                   onBlur={() => setSearchFocused(false)}
                   className={cn(
@@ -1463,8 +1462,8 @@ export function ReconciliationPage() {
                   )}
                 />
               </div>
-              {/* Filter chips */}
-              <div className="flex gap-1">
+              {/* Filter chips + sort buttons on one row */}
+              <div className="flex items-center gap-1 flex-wrap">
                 {(["all", "unmatched", "needs_review", "exception"] as QueueFilter[]).map((f) => (
                   <button
                     key={f}
@@ -1480,19 +1479,23 @@ export function ReconciliationPage() {
                     {f === "all" ? "All" : f === "unmatched" ? "Unmatched" : f === "needs_review" ? "Review" : "Exceptions"}
                   </button>
                 ))}
-              </div>
-              {/* Sort */}
-              <div className="flex items-center gap-1">
-                <ArrowUpDown className="h-3 w-3 text-gray-400" />
-                <select
-                  value={sort}
-                  onChange={(e) => setSort(e.target.value as QueueSort)}
-                  className="flex-1 text-xs border-0 bg-transparent text-gray-600 focus:outline-none cursor-pointer"
-                >
-                  <option value="risk_first">Risk first</option>
-                  <option value="aged_first">Aged first</option>
-                  <option value="amount_first">Amount first</option>
-                </select>
+                <span className="w-px h-4 bg-gray-300 mx-0.5" />
+                {(["risk_first", "aged_first", "amount_first"] as QueueSort[]).map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => setSort(s)}
+                    title={s === "risk_first" ? "Sort by highest risk first" : s === "aged_first" ? "Sort by oldest first" : "Sort by largest amount first"}
+                    className={cn(
+                      "px-2 py-0.5 rounded-full text-xs font-medium border transition-colors",
+                      sort === s
+                        ? "bg-primary-100 text-primary-700 border-primary-300"
+                        : "bg-white text-gray-500 border-gray-300 hover:border-gray-400"
+                    )}
+                  >
+                    {s === "risk_first" ? "Risk" : s === "aged_first" ? "Oldest" : "Amount"}
+                  </button>
+                ))}
               </div>
             </div>
 
