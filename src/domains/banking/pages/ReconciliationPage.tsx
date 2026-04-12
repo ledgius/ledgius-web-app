@@ -37,6 +37,7 @@ import {
   ArrowUpDown,
   Search,
   RefreshCw,
+  X,
 } from "lucide-react"
 
 // ── Status helpers ────────────────────────────────────────────────────────────
@@ -583,6 +584,7 @@ export function ReconciliationPage() {
   const [sort, setSort] = useState<QueueSort>("risk_first")
   const [filter, setFilter] = useState<QueueFilter>("all")
   const [searchFocused, setSearchFocused] = useState(false)
+  const [pipelineMessage, setPipelineMessage] = useState<{ type: "success" | "info" | "error"; text: string } | null>(null)
   const searchRef = useRef<HTMLInputElement>(null)
 
   // Data queries
@@ -662,10 +664,20 @@ export function ReconciliationPage() {
   const handleRunPipeline = useCallback(async () => {
     if (!selectedAccountId) return
     try {
-      await runPipeline.mutateAsync({ account_id: selectedAccountId })
-      feedback.success("Pipeline started — matching is running in the background")
+      const result = await runPipeline.mutateAsync({ account_id: selectedAccountId })
+      const r = result as Record<string, number> | undefined
+      if (r && (r.pass1_matched || r.pass2_matched || r.pass3_matched || r.pass4_generated || r.pass5_suggested)) {
+        const total = (r.pass1_matched ?? 0) + (r.pass2_matched ?? 0) + (r.pass3_matched ?? 0) + (r.pass4_generated ?? 0) + (r.pass5_suggested ?? 0)
+        const msg = `Auto-matching complete — ${total} transaction${total !== 1 ? "s" : ""} matched. ${r.needs_review ?? 0} need review.`
+        feedback.success(msg)
+        setPipelineMessage({ type: "success", text: msg })
+      } else {
+        const msg = "No new matches found. Import bank transactions first (via Data Import), then come back and run auto-match."
+        feedback.info(msg)
+        setPipelineMessage({ type: "info", text: msg })
+      }
     } catch (err: unknown) {
-      feedback.error("Pipeline failed", err instanceof Error ? err.message : "Unknown error")
+      feedback.error("Auto-matching failed", err instanceof Error ? err.message : "Unknown error")
     }
   }, [runPipeline, selectedAccountId, feedback])
 
@@ -867,6 +879,21 @@ export function ReconciliationPage() {
               Choose a bank account from the selector above to open the reconciliation workstation.
             </p>
           </div>
+        </div>
+      )}
+
+      {/* ── Pipeline result banner ──────────────────────────────────────────── */}
+      {pipelineMessage && (
+        <div className={cn(
+          "mb-3 px-4 py-3 rounded-lg border text-sm flex items-center justify-between",
+          pipelineMessage.type === "success" && "bg-green-50 border-green-200 text-green-800",
+          pipelineMessage.type === "info" && "bg-blue-50 border-blue-200 text-blue-800",
+          pipelineMessage.type === "error" && "bg-red-50 border-red-200 text-red-800",
+        )}>
+          <span>{pipelineMessage.text}</span>
+          <button type="button" onClick={() => setPipelineMessage(null)} className="ml-3 text-current opacity-50 hover:opacity-100">
+            <X className="h-4 w-4" />
+          </button>
         </div>
       )}
 
