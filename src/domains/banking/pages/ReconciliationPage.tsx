@@ -4,7 +4,7 @@ import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { Button, Combobox, Skeleton, Badge, InfoPanel } from "@/components/primitives"
 import { useFeedback } from "@/components/feedback"
-import { useAccounts, type Account } from "@/domains/account/hooks/useAccounts"
+import { useAccounts } from "@/domains/account/hooks/useAccounts"
 import { formatCurrency, formatDate, cn } from "@/shared/lib/utils"
 import {
   useReconQueue,
@@ -569,60 +569,16 @@ function DetailInspector({
 
         {/* ── Rules tab ── */}
         {tab === "rules" && (
-          <>
-            <p className="text-xs text-gray-500 mb-3">
-              Create a matching rule so future transactions with a similar description are automatically classified to the right account.
-            </p>
-
-            <div className="space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Description pattern</label>
-                <input
-                  type="text"
-                  value={rulePattern}
-                  onChange={(e) => setRulePattern(e.target.value)}
-                  className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                />
-                <p className="text-[10px] text-gray-400 mt-1">
-                  Transactions containing this text will match. Extracted from the bank description — edit to make more or less specific.
-                </p>
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Target GL account</label>
-                <Combobox
-                  options={accounts
-                    .filter((a) => a.category === "E" || a.category === "I")
-                    .map((a) => ({
-                      value: a.id,
-                      label: `${a.accno} — ${a.description}`,
-                      detail: a.category === "I" ? "Income" : "Expense",
-                    }))}
-                  value={ruleAccountId || null}
-                  onChange={(v) => setRuleAccountId(v ? Number(v) : 0)}
-                  placeholder="Search accounts..."
-                />
-              </div>
-              <Button
-                size="sm"
-                variant="primary"
-                disabled={!rulePattern || !ruleAccountId || creatingRule}
-                onClick={() => {
-                  if (rulePattern && ruleAccountId) {
-                    onCreateRule(item.id, rulePattern, ruleAccountId)
-                  }
-                }}
-              >
-                {creatingRule ? "Saving..." : "Save Rule"}
-              </Button>
-            </div>
-
-            <div className="border-t border-gray-200 pt-3 mt-4">
-              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">How rules work</h4>
-              <p className="text-[10px] text-gray-400 leading-relaxed">
-                When you run Auto-Match, the system checks each bank transaction against your rules. If the description contains the pattern text, the transaction is automatically classified to the target account. Rules are checked in priority order.
-              </p>
-            </div>
-          </>
+          <RuleCreationPanel
+            item={item}
+            accounts={accounts}
+            rulePattern={rulePattern}
+            onPatternChange={setRulePattern}
+            ruleAccountId={ruleAccountId}
+            onAccountChange={setRuleAccountId}
+            creating={creatingRule}
+            onSave={(pattern, accountId) => onCreateRule(item.id, pattern, accountId)}
+          />
         )}
 
         {/* ── Audit tab ── */}
@@ -663,10 +619,184 @@ function DetailInspector({
   )
 }
 
+// ── Rule Creation Panel with live pattern matching and amount limits ──────────
+
+function highlightPattern(text: string, pattern: string): React.ReactNode {
+  if (!pattern || !text) return <span className="text-xs text-gray-600">{text}</span>
+  const idx = text.toLowerCase().indexOf(pattern.toLowerCase())
+  if (idx === -1) return <span className="text-xs text-gray-600">{text}</span>
+  return (
+    <span className="text-xs text-gray-600">
+      {text.slice(0, idx)}
+      <mark className="bg-yellow-200 text-yellow-900 rounded px-0.5">{text.slice(idx, idx + pattern.length)}</mark>
+      {text.slice(idx + pattern.length)}
+    </span>
+  )
+}
+
+interface RuleCreationPanelProps {
+  item: QueueItem
+  accounts: { id: number; accno: string; description: string | null; category: string }[]
+  rulePattern: string
+  onPatternChange: (v: string) => void
+  ruleAccountId: number
+  onAccountChange: (v: number) => void
+  creating: boolean
+  onSave: (pattern: string, accountId: number) => void
+}
+
+function RuleCreationPanel({
+  item, accounts, rulePattern, onPatternChange,
+  ruleAccountId, onAccountChange, creating, onSave,
+}: RuleCreationPanelProps) {
+  const [amountMode, setAmountMode] = useState<"any" | "exact" | "range">("any")
+  const [amountExact, setAmountExact] = useState("")
+  const [amountMin, setAmountMin] = useState("")
+  const [amountMax, setAmountMax] = useState("")
+
+  const sampleDescription = item.description ?? ""
+  const patternMatches = rulePattern
+    ? sampleDescription.toLowerCase().includes(rulePattern.toLowerCase())
+    : false
+
+  return (
+    <>
+      <p className="text-xs text-gray-500 mb-3">
+        Create a rule so future transactions matching this pattern are automatically classified.
+      </p>
+
+      <div className="space-y-3">
+        {/* Sample transaction */}
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+          <p className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide mb-1">Sample transaction</p>
+          <div className="font-mono text-xs text-gray-700 break-all leading-relaxed">
+            {highlightPattern(sampleDescription, rulePattern)}
+          </div>
+          <div className="flex items-center gap-3 mt-2 text-[10px] text-gray-400">
+            <span>{item.trans_date}</span>
+            <span className={cn("font-mono font-medium", item.amount < 0 ? "text-red-600" : "text-green-600")}>
+              ${Math.abs(item.amount).toFixed(2)}
+            </span>
+          </div>
+        </div>
+
+        {/* Pattern input */}
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Description pattern</label>
+          <input
+            type="text"
+            value={rulePattern}
+            onChange={(e) => onPatternChange(e.target.value)}
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+          />
+          <div className="flex items-center gap-2 mt-1">
+            {rulePattern && (
+              <span className={cn(
+                "text-[10px] font-medium",
+                patternMatches ? "text-green-600" : "text-red-500"
+              )}>
+                {patternMatches ? "Pattern matches sample" : "Pattern does not match sample"}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Amount qualifier */}
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1.5">Amount filter (optional)</label>
+          <div className="flex gap-1.5 mb-2">
+            {(["any", "exact", "range"] as const).map((m) => (
+              <button
+                key={m}
+                type="button"
+                onClick={() => setAmountMode(m)}
+                className={cn(
+                  "px-2 py-0.5 rounded-full text-xs font-medium border transition-colors",
+                  amountMode === m
+                    ? "bg-gray-900 text-white border-gray-900"
+                    : "bg-white text-gray-500 border-gray-300 hover:border-gray-400"
+                )}
+              >
+                {m === "any" ? "Any amount" : m === "exact" ? "Exact amount" : "Amount range"}
+              </button>
+            ))}
+          </div>
+          {amountMode === "exact" && (
+            <div>
+              <input
+                type="number"
+                step="0.01"
+                value={amountExact}
+                onChange={(e) => setAmountExact(e.target.value)}
+                placeholder={Math.abs(item.amount).toFixed(2)}
+                className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+          )}
+          {amountMode === "range" && (
+            <div className="flex gap-2 items-center">
+              <input
+                type="number"
+                step="0.01"
+                value={amountMin}
+                onChange={(e) => setAmountMin(e.target.value)}
+                placeholder="Min"
+                className="flex-1 border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+              <span className="text-xs text-gray-400">to</span>
+              <input
+                type="number"
+                step="0.01"
+                value={amountMax}
+                onChange={(e) => setAmountMax(e.target.value)}
+                placeholder="Max"
+                className="flex-1 border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Target account */}
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Target GL account</label>
+          <Combobox
+            options={accounts
+              .filter((a) => a.category === "E" || a.category === "I")
+              .map((a) => ({
+                value: a.id,
+                label: `${a.accno} — ${a.description}`,
+                detail: a.category === "I" ? "Income" : "Expense",
+              }))}
+            value={ruleAccountId || null}
+            onChange={(v) => onAccountChange(v ? Number(v) : 0)}
+            placeholder="Search accounts..."
+          />
+        </div>
+
+        <Button
+          size="sm"
+          variant="primary"
+          disabled={!rulePattern || !ruleAccountId || creating}
+          onClick={() => onSave(rulePattern, ruleAccountId)}
+        >
+          {creating ? "Saving..." : "Save Rule"}
+        </Button>
+      </div>
+
+      <div className="border-t border-gray-200 pt-3 mt-4">
+        <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">How rules work</h4>
+        <p className="text-[10px] text-gray-400 leading-relaxed">
+          When you run Auto-Match, the system checks each bank transaction against your rules. If the description contains the pattern text (and amount matches if specified), the transaction is automatically classified to the target account.
+        </p>
+      </div>
+    </>
+  )
+}
+
 // ── Create Entry Form with smart filtering, search, and past matches ─────────
 
 interface CreateEntryFormProps {
-  accounts: Account[]
+  accounts: { id: number; accno: string; description: string | null; category: string }[]
   selectedItem: QueueItem
   accountId: number
   onAccountChange: (id: number) => void
@@ -683,7 +813,7 @@ function CreateEntryForm({
   description, onDescriptionChange, rememberRule, onRememberRuleChange,
   creating, onSubmit,
 }: CreateEntryFormProps) {
-  const [accountSearch, setAccountSearch] = useState("")
+
   const [showIncome, setShowIncome] = useState(true)
   const [showExpense, setShowExpense] = useState(true)
   const [showPastMatches, setShowPastMatches] = useState(false)
@@ -710,14 +840,10 @@ function CreateEntryForm({
     return () => document.removeEventListener("mousedown", handleClick)
   }, [showPastMatches])
 
-  // Filter accounts by search text and category toggles
+  // Filter accounts by category toggles (Combobox handles text search internally)
   const filteredAccounts = accounts.filter((a) => {
     if (a.category === "I" && !showIncome) return false
     if (a.category === "E" && !showExpense) return false
-    if (accountSearch) {
-      const q = accountSearch.toLowerCase()
-      return a.accno.toLowerCase().includes(q) || (a.description?.toLowerCase().includes(q) ?? false)
-    }
     return true
   })
 
@@ -769,28 +895,16 @@ function CreateEntryForm({
         </div>
 
         {/* Searchable account selector */}
-        <div className="relative">
-          <input
-            type="text"
-            value={accountSearch}
-            onChange={(e) => setAccountSearch(e.target.value)}
-            placeholder="Type to search accounts..."
-            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 mb-1"
-          />
-          <select
-            value={accountId}
-            onChange={(e) => { onAccountChange(Number(e.target.value)); setAccountSearch("") }}
-            size={Math.min(filteredAccounts.length + 1, 8)}
-            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-          >
-            <option value={0}>Select account...</option>
-            {filteredAccounts.map((a) => (
-              <option key={a.id} value={a.id}>
-                {a.category === "I" ? "↑" : "↓"} {a.accno} — {a.description}
-              </option>
-            ))}
-          </select>
-        </div>
+        <Combobox
+          options={filteredAccounts.map((a) => ({
+            value: a.id,
+            label: `${a.accno} — ${a.description}`,
+            detail: a.category === "I" ? "Income" : "Expense",
+          }))}
+          value={accountId || null}
+          onChange={(v) => onAccountChange(v ? Number(v) : 0)}
+          placeholder="Search accounts..."
+        />
 
         {/* Past matches button + popup */}
         {accountId > 0 && (
