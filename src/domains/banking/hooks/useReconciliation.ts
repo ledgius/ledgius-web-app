@@ -41,33 +41,16 @@ export interface QueueItem {
 }
 
 export interface ReconciliationSummary {
-  bank_account_id: number
-  period_start: string
-  period_end: string
-  statement_opening_balance: number
-  statement_closing_balance: number
-  reconciled_amount: number
-  reconciled_count: number
-  unreconciled_count: number
-  unreconciled_amount: number
-  balance_difference: number
-  auto_matched_count: number
-  manual_matched_count: number
-  exception_count: number
-  exception_by_priority: Record<string, number>
-  aged_exceptions: Record<string, number>
-  rule_hit_rate: number
-  false_positive_override_rate: number
-  close_ready: boolean
-  close_blockers: string[]
-  period_status: string
-  // Derived convenience fields used by UI
-  total: number
-  imported: number
+  account_id: number
+  total_imported: number
   auto_matched: number
+  manually_matched: number
   needs_review: number
+  deferred: number
+  excluded: number
   exception: number
-  resolved: number
+  unprocessed: number
+  total_transactions: number
 }
 
 export interface ReconciliationException {

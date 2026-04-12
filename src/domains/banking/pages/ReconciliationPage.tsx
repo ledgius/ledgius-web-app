@@ -610,10 +610,9 @@ export function ReconciliationPage() {
   }))
 
   // Progress metrics from summary
-  const total = summary ? (summary.reconciled_count + summary.unreconciled_count) : queueList.length
-  const reconciled = summary?.reconciled_count ?? 0
+  const total = summary?.total_transactions ?? queueList.length
+  const reconciled = (summary?.auto_matched ?? 0) + (summary?.manually_matched ?? 0)
   const progressPct = total > 0 ? Math.round((reconciled / total) * 100) : 0
-  const balanceDiff = summary?.balance_difference ?? 0
 
   // Keyboard navigation
   const selectedIndex = selectedLineId !== null ? queueList.findIndex((q) => q.id === selectedLineId) : -1
@@ -822,8 +821,8 @@ export function ReconciliationPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between text-xs mb-1">
                   <span className="text-gray-600 font-medium">{reconciled} of {total} reconciled ({progressPct}%)</span>
-                  <span className={cn("font-medium", summary.close_ready ? "text-green-600" : "text-amber-600")}>
-                    {summary.close_ready ? "Close ready" : (summary.period_status ?? "open").replace(/_/g, " ")}
+                  <span className={cn("font-medium", (summary.unprocessed ?? 0) === 0 ? "text-green-600" : "text-amber-600")}>
+                    {(summary.unprocessed ?? 0) === 0 && (summary.needs_review ?? 0) === 0 ? "All matched" : "In progress"}
                   </span>
                 </div>
                 <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
@@ -835,16 +834,14 @@ export function ReconciliationPage() {
               </div>
             </div>
             <div className="flex items-center gap-4 text-xs text-gray-600 shrink-0">
-              <span>Opening: <strong className="font-mono">{formatCurrency(summary.statement_opening_balance)}</strong></span>
-              <span>Closing: <strong className="font-mono">{formatCurrency(summary.statement_closing_balance)}</strong></span>
-              <span className={cn("font-medium", balanceDiff === 0 ? "text-green-700" : "text-red-700")}>
-                Difference: <strong className="font-mono">{formatCurrency(balanceDiff)}</strong>
-              </span>
+              <span>Matched: <strong className="font-mono">{reconciled}</strong></span>
+              <span>Unprocessed: <strong className="font-mono">{summary.unprocessed ?? 0}</strong></span>
+              <span>Review: <strong className="font-mono">{summary.needs_review ?? 0}</strong></span>
             </div>
-            {summary.exception_count > 0 && (
+            {(summary.exception ?? 0) > 0 && (
               <Badge variant="danger" className="shrink-0">
                 <AlertTriangle className="h-3 w-3 mr-1" />
-                {summary.exception_count} exceptions
+                {summary.exception} exceptions
               </Badge>
             )}
           </div>
