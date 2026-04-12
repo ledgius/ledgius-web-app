@@ -141,8 +141,8 @@ export function BankStatementsPage() {
     setUploadResult(null)
 
     const ext = file.name.split(".").pop()?.toLowerCase()
-    if (!ext || !["ofx", "csv", "qif"].includes(ext)) {
-      feedback.error("Unsupported file type", `Expected .ofx, .csv, or .qif — got .${ext ?? "unknown"}`)
+    if (!ext || !["ofx", "qbo", "qfx", "csv", "qif"].includes(ext)) {
+      feedback.error("Unsupported file type", `Expected .ofx, .qbo, .csv, or .qif — got .${ext ?? "unknown"}`)
       return
     }
 
@@ -150,12 +150,13 @@ export function BankStatementsPage() {
     const reader = new FileReader()
     reader.onload = async () => {
       const base64 = (reader.result as string).split(",")[1] || btoa(reader.result as string)
-      const format = ext === "ofx" ? "ofx" : ext === "qif" ? "qif" : "csv"
+      const formatMap: Record<string, string> = { ofx: "ofx", qbo: "qbo", qfx: "ofx", csv: "csv", qif: "qif" }
+      const format = formatMap[ext] ?? "csv"
       try {
         const batch = await importFile.mutateAsync({
           account_id: selectedAccountId,
           file_name: file.name,
-          file_format: format,
+          format: format,
           content: base64,
         })
         const result = batch as { total_rows?: number; matched_rows?: number; duplicates_skipped?: number }
@@ -309,11 +310,11 @@ export function BankStatementsPage() {
               <Upload className="h-4 w-4 mr-1.5" />
               {uploading ? "Uploading…" : "Choose File"}
             </Button>
-            <span className="text-xs text-gray-400">or drag and drop below — .ofx, .csv, or .qif</span>
+            <span className="text-xs text-gray-400">or drag and drop below — .ofx, .qbo, .csv, or .qif</span>
             <input
               ref={fileInputRef}
               type="file"
-              accept=".ofx,.csv,.qif,text/csv,application/x-ofx,application/vnd.intu.qfx"
+              accept=".ofx,.qbo,.qfx,.csv,.qif,text/csv,application/x-ofx"
               onChange={handleFileChange}
               className="hidden"
             />

@@ -82,7 +82,7 @@ export function useUnmatchedTransactions(accountId: number) {
 export function useImportBankFile() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: { account_id: number; file_name: string; file_format: string; content: string }) =>
+    mutationFn: (data: { account_id: number; file_name: string; format: string; content: string }) =>
       api.post("/bank-import", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["bank"] }),
   })
