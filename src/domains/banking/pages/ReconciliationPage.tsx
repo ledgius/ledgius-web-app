@@ -990,6 +990,7 @@ export function ReconciliationPage() {
   const [selectedLineId, setSelectedLineId] = useState<number | null>(null)
   const [sort, setSort] = useState<QueueSort>("risk_first")
   const [filter, setFilter] = useState<QueueFilter>("all")
+  const [searchText, setSearchText] = useState("")
   const [searchFocused, setSearchFocused] = useState(false)
   const [pipelineMessage, setPipelineMessage] = useState<{ type: "success" | "info" | "error"; text: string } | null>(null)
   const searchRef = useRef<HTMLInputElement>(null)
@@ -1018,7 +1019,19 @@ export function ReconciliationPage() {
 
   const candidates = candidatesData?.candidates ?? []
   const selectedItem = queue?.find((q) => q.id === selectedLineId) ?? null
-  const queueList = queue ?? []
+  const queueRaw = queue ?? []
+  const queueList = searchText
+    ? queueRaw.filter((q) => {
+        const s = searchText.toLowerCase()
+        return (
+          (q.description ?? "").toLowerCase().includes(s) ||
+          (q.reference ?? "").toLowerCase().includes(s) ||
+          (q.counterparty_name ?? "").toLowerCase().includes(s) ||
+          (q.normalized_description ?? "").toLowerCase().includes(s) ||
+          String(q.amount ?? "").includes(s)
+        )
+      })
+    : queueRaw
 
   const allAccounts = accounts ?? []
   const bankAccounts = allAccounts.filter((a) => a.category === "A")
@@ -1458,6 +1471,8 @@ export function ReconciliationPage() {
                   ref={searchRef}
                   type="text"
                   placeholder="Search transactions..."
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
                   onFocus={() => setSearchFocused(true)}
                   onBlur={() => setSearchFocused(false)}
                   className={cn(
