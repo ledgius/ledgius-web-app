@@ -42,11 +42,12 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="bg-white border rounded-lg p-8 w-full max-w-sm shadow-sm">
-        <div className="flex justify-center mb-4">
+      <div className="bg-white border border-gray-100 rounded-2xl p-8 w-full max-w-sm shadow-xl shadow-gray-200/60">
+        <div className="flex justify-center mb-3">
           <img src="/brand/logo/ledgius-400x120-transparent.png" alt="Ledgius" className="h-10 w-auto" />
         </div>
-        <p className="text-sm text-gray-500 mb-6 text-center">Sign in to your account</p>
+        <p className="text-sm text-gray-500 mb-1 text-center">Sign in to your account</p>
+        <p className="text-xs text-primary-600/70 mb-6 text-center italic">Your books are in good hands. Let's get things done.</p>
 
         {error && <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-md">{error}</div>}
 
