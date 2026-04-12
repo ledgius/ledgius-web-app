@@ -1252,9 +1252,9 @@ export function ReconciliationPage() {
         </div>
         <p className="text-sm text-gray-500 mt-0.5">Match your bank statement to your books</p>
 
-        <InfoPanel title="Reconciliation progress" storageKey="recon-info" className="mb-3">
+        <InfoPanel title="How to use this page" storageKey="recon-info" className="mb-3">
           <div className="space-y-2">
-            {/* Step 1: Import */}
+            {/* Pre-requisite */}
             <div className="flex items-start gap-2">
               {(summary?.total_transactions ?? 0) > 0 ? (
                 <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
@@ -1262,11 +1262,11 @@ export function ReconciliationPage() {
                 <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
               )}
               <p className="text-sm">
-                <strong>1. Import bank statements</strong> — via <strong>Banking → Bank Statements</strong>, then select your bank account below.
+                <strong>Pre-requisite:</strong> Import bank statements via <strong>Banking → Bank Statements</strong> before using this page.
               </p>
             </div>
 
-            {/* Step 2: Auto-match */}
+            {/* Step 1: Select account + auto-match */}
             <div className="flex items-start gap-2">
               {(summary?.auto_matched ?? 0) > 0 ? (
                 <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
@@ -1276,11 +1276,11 @@ export function ReconciliationPage() {
                 <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
               )}
               <p className="text-sm">
-                <strong>2. Run auto-match</strong> — click <strong>"Auto-Match Transactions"</strong> to find ledger entries for your bank lines.
+                <strong>1. Select a bank account</strong> from the dropdown above, then click the <strong>"Auto-Match Transactions"</strong> button to find matches.
               </p>
             </div>
 
-            {/* Step 3: Review */}
+            {/* Step 2: Work through items */}
             <div className="flex items-start gap-2">
               {(summary?.manually_matched ?? 0) > 0 && (summary?.needs_review ?? 0) === 0 ? (
                 <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
@@ -1290,11 +1290,11 @@ export function ReconciliationPage() {
                 <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
               )}
               <p className="text-sm">
-                <strong>3. Review matches</strong> — accept suggestions with <strong>Accept</strong> or press <strong>a</strong>. Defer uncertain items with <strong>d</strong>, exclude duplicates with <strong>x</strong>.
+                <strong>2. Click a transaction</strong> in the left panel. The centre shows match candidates — click <strong>"Create & Match"</strong> to create a ledger entry. Use the <strong>Rules</strong> tab on the right to save patterns for future auto-matching.
               </p>
             </div>
 
-            {/* Step 4: Bulk accept */}
+            {/* Step 3: Bulk accept */}
             <div className="flex items-start gap-2">
               {bulkAccepted ? (
                 <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
@@ -1302,7 +1302,7 @@ export function ReconciliationPage() {
                 <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
               )}
               <p className="text-sm">
-                <strong>4. Accept exact matches</strong> — use <strong>"Accept exact matches"</strong> to bulk-accept all high-confidence matches at once.
+                <strong>3. Bulk actions:</strong> use the <strong>"Accept exact matches"</strong> button to accept all high-confidence matches at once. Use <strong>Defer</strong> or <strong>Exclude</strong> in the right panel Actions tab for items you want to skip.
               </p>
             </div>
           </div>
