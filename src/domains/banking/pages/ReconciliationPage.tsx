@@ -273,7 +273,7 @@ function CandidateCard({
 }
 
 // Right pane detail tabs
-type DetailTab = "details" | "actions" | "audit"
+type DetailTab = "details" | "actions" | "rules" | "audit"
 
 function DetailInspector({
   item,
@@ -332,6 +332,7 @@ function DetailInspector({
   const tabs: { key: DetailTab; label: string }[] = [
     { key: "details", label: "Details" },
     { key: "actions", label: "Actions" },
+    { key: "rules", label: "Rules" },
     { key: "audit", label: "Audit" },
   ]
 
@@ -563,52 +564,65 @@ function DetailInspector({
               )}
             </div>
 
-            {/* Create matching rule */}
-            <div className="border-t border-gray-200 pt-3 mt-3">
-              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Create Rule</h4>
-              <p className="text-xs text-gray-400 mb-2">
-                Always classify transactions matching this pattern to a specific account.
-              </p>
-              <div className="space-y-2">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Pattern (from description)</label>
-                  <input
-                    type="text"
-                    value={rulePattern}
-                    onChange={(e) => setRulePattern(e.target.value)}
-                    className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Target Account</label>
-                  <select
-                    value={ruleAccountId}
-                    onChange={(e) => setRuleAccountId(Number(e.target.value))}
-                    className="w-full border border-gray-300 rounded px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  >
-                    <option value={0}>Select account...</option>
-                    {accounts
-                      .filter((a) => a.category === "E" || a.category === "I")
-                      .map((a) => (
-                        <option key={a.id} value={a.id}>
-                          {a.accno} — {a.description}
-                        </option>
-                      ))}
-                  </select>
-                </div>
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  disabled={!rulePattern || !ruleAccountId || creatingRule}
-                  onClick={() => {
-                    if (rulePattern && ruleAccountId) {
-                      onCreateRule(item.id, rulePattern, ruleAccountId)
-                    }
-                  }}
-                >
-                  Save Rule
-                </Button>
+          </>
+        )}
+
+        {/* ── Rules tab ── */}
+        {tab === "rules" && (
+          <>
+            <p className="text-xs text-gray-500 mb-3">
+              Create a matching rule so future transactions with a similar description are automatically classified to the right account.
+            </p>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Description pattern</label>
+                <input
+                  type="text"
+                  value={rulePattern}
+                  onChange={(e) => setRulePattern(e.target.value)}
+                  className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                />
+                <p className="text-[10px] text-gray-400 mt-1">
+                  Transactions containing this text will match. Extracted from the bank description — edit to make more or less specific.
+                </p>
               </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Target GL account</label>
+                <select
+                  value={ruleAccountId}
+                  onChange={(e) => setRuleAccountId(Number(e.target.value))}
+                  className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                >
+                  <option value={0}>Select account...</option>
+                  {accounts
+                    .filter((a) => a.category === "E" || a.category === "I")
+                    .map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.accno} — {a.description}
+                      </option>
+                    ))}
+                </select>
+              </div>
+              <Button
+                size="sm"
+                variant="primary"
+                disabled={!rulePattern || !ruleAccountId || creatingRule}
+                onClick={() => {
+                  if (rulePattern && ruleAccountId) {
+                    onCreateRule(item.id, rulePattern, ruleAccountId)
+                  }
+                }}
+              >
+                {creatingRule ? "Saving..." : "Save Rule"}
+              </Button>
+            </div>
+
+            <div className="border-t border-gray-200 pt-3 mt-4">
+              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">How rules work</h4>
+              <p className="text-[10px] text-gray-400 leading-relaxed">
+                When you run Auto-Match, the system checks each bank transaction against your rules. If the description contains the pattern text, the transaction is automatically classified to the target account. Rules are checked in priority order.
+              </p>
             </div>
           </>
         )}
@@ -1095,7 +1109,7 @@ export function ReconciliationPage() {
         <div className="flex-1 min-h-0 flex gap-0 border border-gray-300 rounded-lg overflow-hidden bg-white">
 
           {/* ── Left pane: Bank Line Queue ───────────────────────────────────── */}
-          <div className="w-72 shrink-0 flex flex-col border-r border-gray-300 min-h-0">
+          <div className="w-96 shrink-0 flex flex-col border-r border-gray-300 min-h-0">
             {/* Filter / sort bar */}
             <div className="shrink-0 border-b border-gray-300 px-3 py-2 space-y-2 bg-gray-50">
               {/* Search */}
@@ -1352,7 +1366,7 @@ export function ReconciliationPage() {
           </div>
 
           {/* ── Right pane: Detail Inspector ─────────────────────────────────── */}
-          <div className="w-80 shrink-0 flex flex-col min-h-0">
+          <div className="w-96 shrink-0 flex flex-col min-h-0">
             {selectedItem ? (
               <DetailInspector
                 item={selectedItem}
