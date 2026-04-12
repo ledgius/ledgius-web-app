@@ -472,7 +472,7 @@ export function Layout() {
         <div className="flex-1 flex flex-col min-h-0">
           <main className="flex-1 overflow-auto">
             <div className="p-6">
-              {mode === "tasks" && <SessionPlanner />}
+              {mode === "tasks" && location.pathname === "/" && <SessionPlanner />}
               <Outlet />
             </div>
           </main>
