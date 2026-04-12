@@ -84,7 +84,8 @@ function evidenceChipClass(chip: string): string {
   return "bg-gray-50 text-gray-600 border-gray-200"
 }
 
-function formatEvidenceLabel(chip: string): string {
+function formatEvidenceLabel(chip: string | undefined): string {
+  if (!chip) return ""
   return chip
     .replace(/_/g, " ")
     .replace(/\b\w/g, (c) => c.toUpperCase())
@@ -550,7 +551,7 @@ function DetailInspector({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-0.5">
                         <span className="text-xs font-medium text-gray-700 capitalize">
-                          {event.event_type.replace(/_/g, " ")}
+                          {(event.event_type ?? "").replace(/_/g, " ")}
                         </span>
                         <span className="text-xs text-gray-400">{formatDate(event.created_at)}</span>
                       </div>
@@ -822,7 +823,7 @@ export function ReconciliationPage() {
                 <div className="flex items-center justify-between text-xs mb-1">
                   <span className="text-gray-600 font-medium">{reconciled} of {total} reconciled ({progressPct}%)</span>
                   <span className={cn("font-medium", summary.close_ready ? "text-green-600" : "text-amber-600")}>
-                    {summary.close_ready ? "Close ready" : summary.period_status.replace(/_/g, " ")}
+                    {summary.close_ready ? "Close ready" : (summary.period_status ?? "open").replace(/_/g, " ")}
                   </span>
                 </div>
                 <div className="h-2 w-full bg-gray-200 rounded-full overflow-hidden">
