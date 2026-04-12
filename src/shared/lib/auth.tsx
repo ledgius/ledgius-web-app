@@ -129,15 +129,25 @@ export function getAuthToken(): string | null {
 }
 
 let _currentToken: string | null = null
+let _refreshToken: string | null = null
 
 export function setAuthToken(token: string | null) {
   _currentToken = token
 }
 
-// Hook to sync token to module-level variable.
+export function getRefreshToken(): string | null {
+  return _refreshToken
+}
+
+export function setRefreshTokenValue(token: string | null) {
+  _refreshToken = token
+}
+
+// Hook to sync tokens to module-level variables.
 export function useAuthTokenSync() {
-  const { accessToken } = useAuth()
+  const { accessToken, refreshToken } = useAuth()
   useEffect(() => {
     setAuthToken(accessToken)
-  }, [accessToken])
+    setRefreshTokenValue(refreshToken)
+  }, [accessToken, refreshToken])
 }

@@ -1262,18 +1262,22 @@ export function ReconciliationPage() {
               ) : (
                 <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
               )}
-              <p className="text-sm">
+              <p className="text-xs">
                 {(() => {
-                  const batches = importBatches ?? []
-                  const latestBatch = batches.length > 0
-                    ? batches.reduce((a, b) => new Date(a.imported_at) > new Date(b.imported_at) ? a : b)
+                  const batches = (importBatches ?? []) as Array<{imported_at: string; total_rows: number; status: string}>
+                  const completeBatches = batches.filter(b => b.status === "complete")
+                  const latestBatch = completeBatches.length > 0
+                    ? completeBatches.reduce((a, b) => new Date(a.imported_at) > new Date(b.imported_at) ? a : b)
                     : null
+                  const totalImported = completeBatches.reduce((sum, b) => sum + (b.total_rows ?? 0), 0)
                   if (latestBatch) {
-                    const daysAgo = Math.floor((Date.now() - new Date(latestBatch.imported_at).getTime()) / (1000 * 60 * 60 * 24))
+                    const importDate = new Date(latestBatch.imported_at)
+                    const diffMs = Date.now() - importDate.getTime()
+                    const daysAgo = Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)))
                     const timeLabel = daysAgo === 0 ? "today" : daysAgo === 1 ? "yesterday" : `${daysAgo} days ago`
                     return (
                       <>
-                        <strong>Pre-requisite:</strong> Bank statement last imported <strong>{timeLabel}</strong> ({latestBatch.total_rows} transactions).{" "}
+                        <strong>Pre-requisite:</strong> Bank statement last imported <strong>{timeLabel}</strong> ({totalImported} transactions total).{" "}
                         <a href="/bank-statements" className="text-primary-600 hover:text-primary-800 underline">Import more</a>
                       </>
                     )
@@ -1296,7 +1300,7 @@ export function ReconciliationPage() {
               ) : (
                 <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
               )}
-              <p className="text-sm">
+              <p className="text-xs">
                 <strong>1. Select a bank account</strong> from the dropdown above, then click the <strong>"Auto-Match Transactions"</strong> button to find matches.
               </p>
             </div>
@@ -1310,7 +1314,7 @@ export function ReconciliationPage() {
               ) : (
                 <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
               )}
-              <p className="text-sm">
+              <p className="text-xs">
                 <strong>2. Click a transaction</strong> in the left panel. The centre shows match candidates — click <strong>"Create & Match"</strong> to create a ledger entry. Use the <strong>Rules</strong> tab on the right to save patterns for future auto-matching.
               </p>
             </div>
@@ -1322,7 +1326,7 @@ export function ReconciliationPage() {
               ) : (
                 <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
               )}
-              <p className="text-sm">
+              <p className="text-xs">
                 <strong>3. Bulk actions:</strong> use the <strong>"Accept exact matches"</strong> button to accept all high-confidence matches at once. Use <strong>Defer</strong> or <strong>Exclude</strong> in the right panel Actions tab for items you want to skip.
               </p>
             </div>

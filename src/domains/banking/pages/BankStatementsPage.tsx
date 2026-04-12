@@ -1,6 +1,6 @@
 // Spec references: R-0019, A-0019
 import { useState, useRef, useCallback } from "react"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, Link } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell } from "@/components/layout"
@@ -263,7 +263,7 @@ export function BankStatementsPage() {
         <p><strong>1.</strong> Select a bank account below</p>
         <p><strong>2.</strong> Upload a bank statement file (OFX or CSV from your internet banking)</p>
         <p><strong>3.</strong> Review imported transactions — check for duplicates and verify totals</p>
-        <p><strong>4.</strong> Go to <a href="/banking" className="text-primary-600 hover:text-primary-800 underline font-semibold">Reconciliation</a> to match transactions to your ledger</p>
+        <p><strong>4.</strong> Go to <Link to="/banking" className="text-primary-600 hover:text-primary-800 underline font-semibold">Reconciliation</Link> to match transactions to your ledger</p>
       </InfoPanel>
 
       {/* Bank account selector */}
