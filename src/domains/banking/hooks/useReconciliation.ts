@@ -228,7 +228,7 @@ export function useRunPipeline() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (body: RunPipelineRequest) =>
-      api.post("/reconciliation/run-pipeline", body),
+      api.post(`/reconciliation/run-pipeline?account_id=${body.account_id}`, {}),
     onSuccess: () => qc.invalidateQueries({ queryKey: RECON_KEY }),
   })
 }

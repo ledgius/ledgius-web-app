@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
-import { Button, Combobox, Skeleton, Badge } from "@/components/primitives"
+import { Button, Combobox, Skeleton, Badge, InfoPanel } from "@/components/primitives"
 import { useFeedback } from "@/components/feedback"
 import { useAccounts } from "@/domains/account/hooks/useAccounts"
 import { formatCurrency, formatDate, cn } from "@/shared/lib/utils"
@@ -861,6 +861,16 @@ export function ReconciliationPage() {
             </p>
           </div>
         </div>
+      )}
+
+      {/* ── Getting started info ────────────────────────────────────────────── */}
+      {selectedAccountId > 0 && (
+        <InfoPanel title="How bank reconciliation works" storageKey="recon-info" className="mx-0">
+          <p><strong>1. Run Pipeline</strong> — automatically matches bank transactions to your ledger using 5 passes: exact IDs, date/amount tolerance, multi-entry composition, bank rules, and scored suggestions.</p>
+          <p><strong>2. Review matches</strong> — click a bank line on the left to see candidate matches in the centre. Accept, split, or create new entries.</p>
+          <p><strong>3. Handle exceptions</strong> — defer items for later, exclude duplicates, or escalate unusual transactions.</p>
+          <p>Use keyboard shortcuts: <strong>j/k</strong> navigate, <strong>a</strong> accept, <strong>d</strong> defer, <strong>x</strong> exclude, <strong>u</strong> undo.</p>
+        </InfoPanel>
       )}
 
       {/* ── Three-pane workstation ────────────────────────────────────────────── */}
