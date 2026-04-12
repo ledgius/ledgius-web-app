@@ -885,10 +885,10 @@ export function ReconciliationPage() {
       {/* ── Pipeline result banner ──────────────────────────────────────────── */}
       {pipelineMessage && (
         <div className={cn(
-          "mb-3 px-4 py-3 rounded-lg border text-sm flex items-center justify-between",
-          pipelineMessage.type === "success" && "bg-gray-50 border-gray-200 text-gray-800",
-          pipelineMessage.type === "info" && "bg-gray-50 border-gray-200 text-gray-800",
-          pipelineMessage.type === "error" && "bg-red-50 border-red-200 text-red-800",
+          "mb-3 px-4 py-3 rounded-lg border border-l-[3px] text-sm flex items-center justify-between",
+          pipelineMessage.type === "success" && "bg-gray-50 border-gray-200 border-l-green-400 text-gray-800",
+          pipelineMessage.type === "info" && "bg-gray-50 border-gray-200 border-l-amber-400 text-gray-800",
+          pipelineMessage.type === "error" && "bg-red-50 border-red-200 border-l-red-500 text-red-800",
         )}>
           <span>{pipelineMessage.text}</span>
           <button type="button" onClick={() => setPipelineMessage(null)} className="ml-3 text-current opacity-50 hover:opacity-100">
