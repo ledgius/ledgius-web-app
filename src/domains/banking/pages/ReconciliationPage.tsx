@@ -887,7 +887,7 @@ export function ReconciliationPage() {
                 />
               </div>
               {/* Filter chips */}
-              <div className="flex gap-1 flex-wrap">
+              <div className="flex gap-1">
                 {(["all", "unmatched", "needs_review", "exception"] as QueueFilter[]).map((f) => (
                   <button
                     key={f}
