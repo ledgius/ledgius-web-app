@@ -886,8 +886,8 @@ export function ReconciliationPage() {
       {pipelineMessage && (
         <div className={cn(
           "mb-3 px-4 py-3 rounded-lg border text-sm flex items-center justify-between",
-          pipelineMessage.type === "success" && "bg-green-50 border-green-200 text-green-800",
-          pipelineMessage.type === "info" && "bg-blue-50 border-blue-200 text-blue-800",
+          pipelineMessage.type === "success" && "bg-gray-50 border-gray-200 text-gray-800",
+          pipelineMessage.type === "info" && "bg-gray-50 border-gray-200 text-gray-800",
           pipelineMessage.type === "error" && "bg-red-50 border-red-200 text-red-800",
         )}>
           <span>{pipelineMessage.text}</span>
