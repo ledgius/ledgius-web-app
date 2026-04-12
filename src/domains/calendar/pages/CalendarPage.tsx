@@ -394,15 +394,7 @@ function DayPanel({ day, itemsByDay, onClose }: DayPanelProps) {
   const today = new Date()
 
   return (
-    <>
-      {/* Backdrop (mobile) */}
-      <div
-        className="fixed inset-0 bg-black/20 z-30 lg:hidden"
-        onClick={onClose}
-      />
-
-      {/* Slide-out panel */}
-      <div className="fixed right-0 top-0 bottom-0 w-full max-w-sm lg:w-96 bg-white border-l border-gray-300 shadow-xl z-40 flex flex-col">
+      <div className="w-80 shrink-0 bg-white border border-gray-300 rounded-lg shadow-sm flex flex-col max-h-[calc(100vh-12rem)] overflow-hidden">
         {/* Panel header */}
         <div className="shrink-0 px-4 py-3 border-b border-gray-200 flex items-center justify-between">
           <div>
@@ -469,7 +461,6 @@ function DayPanel({ day, itemsByDay, onClose }: DayPanelProps) {
           )}
         </div>
       </div>
-    </>
   )
 }
 
@@ -580,76 +571,80 @@ export function CalendarPage() {
 
   return (
     <PageShell header={header}>
-      {isLoading ? (
-        <CalendarSkeleton />
-      ) : (
-        <div className="grid grid-cols-7 gap-px bg-gray-200 rounded-lg overflow-hidden border border-gray-300">
-          {/* Day-of-week headers */}
-          {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d, i) => (
-            <div
-              key={d}
-              className={cn(
-                "bg-gray-50 px-2 py-2 text-center border-b border-gray-200",
-                i >= 5 && "bg-gray-50/60"
-              )}
-            >
-              <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{d}</span>
-            </div>
-          ))}
-
-          {/* Day cells */}
-          {grid.map((day, idx) => {
-            const key = toDateKey(day)
-            const dayItems = itemsByDay[key] ?? []
-            const isThisMonth = day.getMonth() === month
-            const isToday = isSameDay(day, today)
-            const isSelected = selectedDay ? isSameDay(day, selectedDay) : false
-            const isWeekend = idx % 7 >= 5 // Sat or Sun column
-            const isPastDay = day < today && !isToday
-            const hasOverdue = dayItems.some((i) => i.overdue)
-            const allDone = dayItems.length > 0 && dayItems.every((i) => i.done)
-
-            return (
-              <div
-                key={key + "-" + idx}
-                onClick={() => handleDayClick(day)}
-                className={cn(
-                  "bg-white min-h-[5rem] p-2 cursor-pointer transition-colors select-none",
-                  "hover:bg-gray-50",
-                  isWeekend && "bg-gray-50/40",
-                  !isThisMonth && "opacity-30",
-                  isToday && "bg-primary-50 border-primary-200",
-                  hasOverdue && isPastDay && "bg-red-50/30",
-                  allDone && isPastDay && "bg-green-50/20",
-                  isSelected && "ring-2 ring-primary-500 ring-inset z-10 relative"
-                )}
-              >
-                {/* Day number */}
-                <div className="flex items-start justify-between">
-                  <span className={cn(
-                    "text-sm font-medium",
-                    isToday
-                      ? "h-6 w-6 rounded-full bg-primary-600 text-white flex items-center justify-center text-xs font-semibold"
-                      : isThisMonth ? "text-gray-900" : "text-gray-400"
-                  )}>
-                    {day.getDate()}
-                  </span>
+      <div className="flex gap-4 min-h-0">
+        {/* Calendar grid — shrinks when panel is open */}
+        <div className={cn("flex-1 min-w-0 transition-all duration-200")}>
+          {isLoading ? (
+            <CalendarSkeleton />
+          ) : (
+            <div className="grid grid-cols-7 gap-px bg-gray-200 rounded-lg overflow-hidden border border-gray-300">
+              {/* Day-of-week headers */}
+              {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d, i) => (
+                <div
+                  key={d}
+                  className={cn(
+                    "bg-gray-50 px-2 py-2 text-center border-b border-gray-200",
+                    i >= 5 && "bg-gray-50/60"
+                  )}
+                >
+                  <span className="text-xs font-semibold text-gray-400 uppercase tracking-wider">{d}</span>
                 </div>
+              ))}
 
-                {/* Category dots */}
-                <DayDots items={dayItems} />
-              </div>
-            )
-          })}
+              {/* Day cells */}
+              {grid.map((day, idx) => {
+                const key = toDateKey(day)
+                const dayItems = itemsByDay[key] ?? []
+                const isThisMonth = day.getMonth() === month
+                const isToday = isSameDay(day, today)
+                const isSelected = selectedDay ? isSameDay(day, selectedDay) : false
+                const isWeekend = idx % 7 >= 5
+                const isPastDay = day < today && !isToday
+                const hasOverdue = dayItems.some((i) => i.overdue)
+                const allDone = dayItems.length > 0 && dayItems.every((i) => i.done)
+
+                return (
+                  <div
+                    key={key + "-" + idx}
+                    onClick={() => handleDayClick(day)}
+                    className={cn(
+                      "bg-white min-h-[5rem] p-2 cursor-pointer transition-colors select-none",
+                      "hover:bg-gray-50",
+                      isWeekend && "bg-gray-50/40",
+                      !isThisMonth && "opacity-30",
+                      isToday && "bg-primary-50 border-primary-200",
+                      hasOverdue && isPastDay && "bg-red-50/30",
+                      allDone && isPastDay && "bg-green-50/20",
+                      isSelected && "ring-2 ring-primary-500 ring-inset z-10 relative"
+                    )}
+                  >
+                    <div className="flex items-start justify-between">
+                      <span className={cn(
+                        "text-sm font-medium",
+                        isToday
+                          ? "h-6 w-6 rounded-full bg-primary-600 text-white flex items-center justify-center text-xs font-semibold"
+                          : isThisMonth ? "text-gray-900" : "text-gray-400"
+                      )}>
+                        {day.getDate()}
+                      </span>
+                    </div>
+                    <DayDots items={dayItems} />
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </div>
-      )}
 
-      {/* Day detail slide-out */}
-      <DayPanel
-        day={selectedDay}
-        itemsByDay={itemsByDay}
-        onClose={() => setSelectedDay(null)}
-      />
+        {/* Day detail panel — inline, pushes grid to shrink */}
+        {selectedDay && (
+          <DayPanel
+            day={selectedDay}
+            itemsByDay={itemsByDay}
+            onClose={() => setSelectedDay(null)}
+          />
+        )}
+      </div>
     </PageShell>
   )
 }
