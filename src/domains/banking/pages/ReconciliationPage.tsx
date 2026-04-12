@@ -5,6 +5,7 @@ import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { Button, Combobox, Skeleton, Badge, InfoPanel } from "@/components/primitives"
 import { useFeedback } from "@/components/feedback"
 import { useAccounts } from "@/domains/account/hooks/useAccounts"
+import { useImportBatches } from "@/domains/banking/hooks/useBanking"
 import { formatCurrency, formatDate, cn } from "@/shared/lib/utils"
 import {
   useReconQueue,
@@ -1004,6 +1005,7 @@ export function ReconciliationPage() {
   const { data: queue, isLoading: queueLoading, error: queueError } = useReconQueue(selectedAccountId, sort, filter)
   const { data: candidatesData, isLoading: candidatesLoading } = useReconCandidates(selectedLineId)
   const { data: summary } = useReconSummary(selectedAccountId)
+  const { data: importBatches } = useImportBatches(selectedAccountId)
 
   // Mutations
   const matchLine = useMatchLine()
@@ -1262,7 +1264,27 @@ export function ReconciliationPage() {
                 <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
               )}
               <p className="text-sm">
-                <strong>Pre-requisite:</strong> Import bank statements via <a href="/bank-statements" className="text-primary-600 hover:text-primary-800 underline font-semibold">Bank Statements</a> before using this page.
+                {(() => {
+                  const batches = importBatches ?? []
+                  const latestBatch = batches.length > 0
+                    ? batches.reduce((a, b) => new Date(a.imported_at) > new Date(b.imported_at) ? a : b)
+                    : null
+                  if (latestBatch) {
+                    const daysAgo = Math.floor((Date.now() - new Date(latestBatch.imported_at).getTime()) / (1000 * 60 * 60 * 24))
+                    const timeLabel = daysAgo === 0 ? "today" : daysAgo === 1 ? "yesterday" : `${daysAgo} days ago`
+                    return (
+                      <>
+                        <strong>Pre-requisite:</strong> Bank statement last imported <strong>{timeLabel}</strong> ({latestBatch.total_rows} transactions).{" "}
+                        <a href="/bank-statements" className="text-primary-600 hover:text-primary-800 underline">Import more</a>
+                      </>
+                    )
+                  }
+                  return (
+                    <>
+                      <strong>Pre-requisite:</strong> Import bank statements via <a href="/bank-statements" className="text-primary-600 hover:text-primary-800 underline font-semibold">Bank Statements</a> before using this page.
+                    </>
+                  )
+                })()}
               </p>
             </div>
 
