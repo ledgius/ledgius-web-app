@@ -666,15 +666,26 @@ export function ReconciliationPage() {
     try {
       const result = await runPipeline.mutateAsync({ account_id: selectedAccountId })
       const r = result as Record<string, number> | undefined
-      if (r && (r.pass1_matched || r.pass2_matched || r.pass3_matched || r.pass4_generated || r.pass5_suggested)) {
-        const total = (r.pass1_matched ?? 0) + (r.pass2_matched ?? 0) + (r.pass3_matched ?? 0) + (r.pass4_generated ?? 0) + (r.pass5_suggested ?? 0)
-        const msg = `Auto-matching complete — ${total} transaction${total !== 1 ? "s" : ""} matched. ${r.needs_review ?? 0} need review.`
+      const matched = (r?.pass1_matched ?? 0) + (r?.pass2_matched ?? 0) + (r?.pass3_matched ?? 0) + (r?.pass4_generated ?? 0) + (r?.pass5_suggested ?? 0)
+      const review = r?.needs_review ?? 0
+      const total = (r?.total_processed ?? 0)
+
+      if (matched > 0) {
+        const msg = `Auto-matching complete — ${matched} transaction${matched !== 1 ? "s" : ""} matched.${review > 0 ? ` ${review} need manual review.` : ""}`
         feedback.success(msg)
         setPipelineMessage({ type: "success", text: msg })
-      } else {
-        const msg = "No matches found. Import your bank statements first (Banking → Bank Statements), then come back here to run auto-match."
+      } else if (review > 0) {
+        const msg = `${review} transaction${review !== 1 ? "s" : ""} processed — no automatic matches found. These are now in the Review queue on the left. Click each one to manually match or create a ledger entry.`
         feedback.info(msg)
         setPipelineMessage({ type: "info", text: msg })
+      } else if (total === 0) {
+        const msg = "No transactions to process. Import your bank statements first (Banking → Bank Statements)."
+        feedback.info(msg)
+        setPipelineMessage({ type: "info", text: msg })
+      } else {
+        const msg = "Auto-matching complete — all transactions already processed."
+        feedback.success(msg)
+        setPipelineMessage({ type: "success", text: msg })
       }
     } catch (err: unknown) {
       feedback.error("Auto-matching failed", err instanceof Error ? err.message : "Unknown error")
@@ -833,7 +844,7 @@ export function ReconciliationPage() {
       </div>
 
       {/* ── Summary bar ──────────────────────────────────────────────────────── */}
-      {selectedAccountId > 0 && summary && (
+      {selectedAccountId > 0 && !queueLoading && summary && (
         <div className="shrink-0 mb-4 border border-gray-300 rounded-lg bg-white px-4 py-3">
           <div className="flex items-center gap-6 flex-wrap">
             <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -898,7 +909,15 @@ export function ReconciliationPage() {
       )}
 
       {/* ── Three-pane workstation ────────────────────────────────────────────── */}
-      {selectedAccountId > 0 && (
+      {selectedAccountId > 0 && queueLoading && (
+        <div className="flex-1 min-h-0 flex items-center justify-center">
+          <div className="text-center py-16">
+            <Skeleton className="h-8 w-48 mx-auto mb-3" />
+            <Skeleton className="h-4 w-64 mx-auto" />
+          </div>
+        </div>
+      )}
+      {selectedAccountId > 0 && !queueLoading && (
         <div className="flex-1 min-h-0 flex gap-0 border border-gray-300 rounded-lg overflow-hidden bg-white">
 
           {/* ── Left pane: Bank Line Queue ───────────────────────────────────── */}
