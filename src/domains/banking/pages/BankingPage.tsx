@@ -55,7 +55,7 @@ export function BankingPage() {
         const batch = await importFile.mutateAsync({
           account_id: selectedAccount,
           file_name: file.name,
-          file_format: format,
+          format: format,
           content: base64,
         })
         const result = batch as { total_rows?: number; matched_rows?: number }
