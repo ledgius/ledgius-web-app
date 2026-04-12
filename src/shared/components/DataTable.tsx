@@ -1,3 +1,4 @@
+import { AlertCircle } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import { Skeleton } from "@/components/primitives"
 
@@ -14,6 +15,7 @@ interface DataTableProps<T> {
   onRowClick?: (row: T) => void
   emptyMessage?: string
   loading?: boolean
+  error?: Error | null
 }
 
 export function DataTable<T>({
@@ -22,7 +24,19 @@ export function DataTable<T>({
   onRowClick,
   emptyMessage = "No data",
   loading = false,
+  error = null,
 }: DataTableProps<T>) {
+  // Error state — show prominently, never hide behind empty table
+  if (error) {
+    return (
+      <div className="border border-red-200 rounded-lg bg-red-50 px-4 py-6 text-center">
+        <AlertCircle className="h-6 w-6 text-red-400 mx-auto mb-2" />
+        <p className="text-sm font-medium text-red-800 mb-1">Failed to load data</p>
+        <p className="text-xs text-red-600">{error.message}</p>
+      </div>
+    )
+  }
+
   // While loading, show skeleton — no table flash
   if (loading) {
     return <Skeleton variant="table" rows={8} columns={columns.length} />

@@ -182,7 +182,7 @@ export function ProductsPage() {
   const [search, setSearch] = useState("")
   const [typeFilter, setTypeFilter] = useState("")
   const [createOpen, setCreateOpen] = useState(false)
-  const { data: products, isLoading } = useProducts(typeFilter, search)
+  const { data: products, isLoading, error } = useProducts(typeFilter, search)
   const navigate = useNavigate()
 
   const header = (
@@ -223,6 +223,7 @@ export function ProductsPage() {
         columns={columns}
         data={products ?? []}
         loading={isLoading}
+        error={error}
         emptyMessage="No products or services found."
         onRowClick={(row) => navigate(`/products/${row.id}`)}
       />

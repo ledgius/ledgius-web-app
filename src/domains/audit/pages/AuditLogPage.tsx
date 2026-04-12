@@ -18,7 +18,7 @@ export function AuditLogPage() {
   usePageHelp(pageHelpContent.auditLog)
   usePagePolicies(["platform"])
   const [entityType, setEntityType] = useState("")
-  const { data: entries, isLoading } = useAuditLog(entityType || undefined)
+  const { data: entries, isLoading, error } = useAuditLog(entityType || undefined)
 
   const header = (
     <div>
@@ -42,7 +42,7 @@ export function AuditLogPage() {
 
   return (
     <PageShell header={header}>
-      <DataTable columns={columns} data={entries ?? []} loading={isLoading} emptyMessage="No audit entries." />
+      <DataTable columns={columns} data={entries ?? []} loading={isLoading} error={error} emptyMessage="No audit entries." />
     </PageShell>
   )
 }

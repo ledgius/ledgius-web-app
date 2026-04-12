@@ -70,14 +70,14 @@ export function ReportsPage() {
 }
 
 function TrialBalance() {
-  const { data, isLoading } = useTrialBalance()
+  const { data, isLoading, error } = useTrialBalance()
   const columns = [
     { key: "accno", header: "Code", className: "font-mono w-20" },
     { key: "description", header: "Account" },
     { key: "debit", header: "Debit", className: "text-right font-mono", render: (r: TrialBalanceLine) => r.debit !== "0" ? formatCurrency(r.debit) : "" },
     { key: "credit", header: "Credit", className: "text-right font-mono", render: (r: TrialBalanceLine) => r.credit !== "0" ? formatCurrency(r.credit) : "" },
   ]
-  return <DataTable columns={columns} data={data ?? []} loading={isLoading} />
+  return <DataTable columns={columns} data={data ?? []} loading={isLoading} error={error} />
 }
 
 function ProfitLoss({ from, to, onFromChange, onToChange }: { from: string; to: string; onFromChange: (v: string) => void; onToChange: (v: string) => void }) {

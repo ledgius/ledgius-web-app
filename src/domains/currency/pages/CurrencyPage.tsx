@@ -11,7 +11,7 @@ export function CurrencyPage() {
   usePageHelp(pageHelpContent.currency)
   usePagePolicies(["reporting"])
   const { data: currencies } = useCurrencies()
-  const { data: rates, isLoading } = useExchangeRates()
+  const { data: rates, isLoading, error: ratesError } = useExchangeRates()
   const createRate = useCreateRate()
   const [showForm, setShowForm] = useState(false)
   const [fromCurr, setFromCurr] = useState("")
@@ -84,7 +84,7 @@ export function CurrencyPage() {
           <DataTable columns={currColumns} data={currencies ?? []} emptyMessage="No currencies." />
         </PageSection>
         <PageSection title="Recent Exchange Rates">
-          <DataTable columns={rateColumns} data={rates ?? []} loading={isLoading} emptyMessage="No exchange rates." />
+          <DataTable columns={rateColumns} data={rates ?? []} loading={isLoading} error={ratesError} emptyMessage="No exchange rates." />
         </PageSection>
       </div>
     </PageShell>

@@ -62,7 +62,7 @@ const columns: Column<SuperRate>[] = [
 export function SuperRatesPage() {
   usePageHelp(pageHelpContent.superRates)
   usePagePolicies(["payroll"])
-  const { data: rates, isLoading } = useSuperRates()
+  const { data: rates, isLoading, error } = useSuperRates()
 
   const header = (
     <div>
@@ -75,7 +75,7 @@ export function SuperRatesPage() {
 
   return (
     <PageShell header={header}>
-      <DataTable columns={columns} data={rates ?? []} loading={isLoading} emptyMessage="No super guarantee rates configured." />
+      <DataTable columns={columns} data={rates ?? []} loading={isLoading} error={error} emptyMessage="No super guarantee rates configured." />
     </PageShell>
   )
 }

@@ -27,7 +27,7 @@ const columns = [
 export function ReceiptsPage() {
   usePageHelp(pageHelpContent.receipts)
   usePagePolicies(["receipt"])
-  const { data: receipts, isLoading } = useReceipts()
+  const { data: receipts, isLoading, error: fetchError } = useReceipts()
   const { data: customers } = useCustomers()
   const { data: accounts } = useAccounts()
   const { data: invoices } = useInvoices()
@@ -177,7 +177,7 @@ export function ReceiptsPage() {
         </PageSection>
       )}
 
-      <DataTable columns={columns} data={receipts ?? []} loading={isLoading} emptyMessage="No receipts recorded yet." />
+      <DataTable columns={columns} data={receipts ?? []} loading={isLoading} error={fetchError} emptyMessage="No receipts recorded yet." />
     </PageShell>
   )
 }

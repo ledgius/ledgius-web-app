@@ -121,7 +121,7 @@ function InlineCustomerForm({ onClose }: { onClose: () => void }) {
 export function CustomersPage() {
   usePageHelp(pageHelpContent.customers)
   usePagePolicies(["contact"])
-  const { data: customers, isLoading } = useCustomers()
+  const { data: customers, isLoading, error } = useCustomers()
   const navigate = useNavigate()
   const [search, setSearch] = useState("")
   const [createOpen, setCreateOpen] = useState(false)
@@ -166,6 +166,7 @@ export function CustomersPage() {
         columns={columns}
         data={filtered}
         loading={isLoading}
+        error={error}
         emptyMessage="No customers. Click 'New Customer' to add your first customer."
         onRowClick={(row) => navigate(`/contacts/${row.id}`)}
       />

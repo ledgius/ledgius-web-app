@@ -30,7 +30,7 @@ export function GLPage() {
 
   const { data: accounts } = useAccounts()
   const postJournal = usePostJournal()
-  const { data: pending, isLoading: pendingLoading } = usePendingApprovals()
+  const { data: pending, isLoading: pendingLoading, error: pendingError } = usePendingApprovals()
   const approveTransaction = useApproveTransaction()
   const yearEndClose = useYearEndClose()
 
@@ -245,7 +245,7 @@ export function GLPage() {
       )}
 
       <PageSection title="Pending Approvals">
-        <DataTable columns={pendingColumns} data={pending ?? []} loading={pendingLoading} emptyMessage="No transactions pending approval." />
+        <DataTable columns={pendingColumns} data={pending ?? []} loading={pendingLoading} error={pendingError} emptyMessage="No transactions pending approval." />
       </PageSection>
 
       {showYearEnd && (

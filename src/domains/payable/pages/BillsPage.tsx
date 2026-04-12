@@ -40,7 +40,7 @@ const columns: Column<BillSummary>[] = [
 export function BillsPage() {
   usePageHelp(pageHelpContent.bills)
   usePagePolicies(["payable", "tax"])
-  const { data: bills, isLoading } = useBills()
+  const { data: bills, isLoading, error } = useBills()
   const navigate = useNavigate()
 
   const header = (
@@ -64,6 +64,7 @@ export function BillsPage() {
         columns={columns}
         data={bills ?? []}
         loading={isLoading}
+        error={error}
         emptyMessage="No bills recorded. Create a new bill to get started."
         onRowClick={(row) => navigate(`/bills/${row.trans_id}`)}
       />

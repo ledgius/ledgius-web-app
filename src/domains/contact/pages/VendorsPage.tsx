@@ -121,7 +121,7 @@ function InlineVendorForm({ onClose }: { onClose: () => void }) {
 export function VendorsPage() {
   usePageHelp(pageHelpContent.vendors)
   usePagePolicies(["contact"])
-  const { data: vendors, isLoading } = useVendors()
+  const { data: vendors, isLoading, error } = useVendors()
   const navigate = useNavigate()
   const [search, setSearch] = useState("")
   const [createOpen, setCreateOpen] = useState(false)
@@ -166,6 +166,7 @@ export function VendorsPage() {
         columns={columns}
         data={filtered}
         loading={isLoading}
+        error={error}
         emptyMessage="No vendors. Click 'New Vendor' to add your first vendor."
         onRowClick={(row) => navigate(`/contacts/${row.id}`)}
       />

@@ -27,7 +27,7 @@ const columns = [
 export function PaymentsPage() {
   usePageHelp(pageHelpContent.payments)
   usePagePolicies(["payment"])
-  const { data: payments, isLoading } = usePayments()
+  const { data: payments, isLoading, error: fetchError } = usePayments()
   const { data: vendors } = useVendors()
   const { data: accounts } = useAccounts()
   const { data: bills } = useBills()
@@ -147,7 +147,7 @@ export function PaymentsPage() {
         </PageSection>
       )}
 
-      <DataTable columns={columns} data={payments ?? []} loading={isLoading} emptyMessage="No payments recorded yet." />
+      <DataTable columns={columns} data={payments ?? []} loading={isLoading} error={fetchError} emptyMessage="No payments recorded yet." />
     </PageShell>
   )
 }

@@ -22,7 +22,7 @@ const columns = [
 export function TaxCodesPage() {
   usePageHelp(pageHelpContent.taxCodes)
   usePagePolicies(["tax"])
-  const { data: codes, isLoading } = useTaxCodes()
+  const { data: codes, isLoading, error } = useTaxCodes()
 
   const header = (
     <div>
@@ -35,7 +35,7 @@ export function TaxCodesPage() {
 
   return (
     <PageShell header={header}>
-      <DataTable columns={columns} data={codes ?? []} loading={isLoading} emptyMessage="No tax codes configured." />
+      <DataTable columns={columns} data={codes ?? []} loading={isLoading} error={error} emptyMessage="No tax codes configured." />
     </PageShell>
   )
 }

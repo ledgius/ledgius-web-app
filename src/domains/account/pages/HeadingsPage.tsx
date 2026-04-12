@@ -18,7 +18,7 @@ const columns = [
 export function HeadingsPage() {
   usePageHelp(pageHelpContent.accountHeadings)
   usePagePolicies(["account"])
-  const { data: headings, isLoading } = useAccountHeadings()
+  const { data: headings, isLoading, error: fetchError } = useAccountHeadings()
   const createHeading = useCreateHeading()
   const [showForm, setShowForm] = useState(false)
   const [accno, setAccno] = useState("")
@@ -61,7 +61,7 @@ export function HeadingsPage() {
           </div>
         </PageSection>
       )}
-      <DataTable columns={columns} data={headings ?? []} loading={isLoading} emptyMessage="No headings." />
+      <DataTable columns={columns} data={headings ?? []} loading={isLoading} error={fetchError} emptyMessage="No headings." />
     </PageShell>
   )
 }

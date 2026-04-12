@@ -115,7 +115,7 @@ export function BankStatementsPage() {
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null)
 
   const { data: accounts, isLoading: accountsLoading } = useAccounts()
-  const { data: batches, isLoading: batchesLoading } = useImportBatches(selectedAccountId)
+  const { data: batches, isLoading: batchesLoading, error: batchesError } = useImportBatches(selectedAccountId)
   const { data: unmatched } = useUnmatchedTransactions(selectedAccountId)
   const importFile = useImportBankFile()
 
@@ -354,6 +354,7 @@ export function BankStatementsPage() {
             columns={batchColumns}
             data={batches ?? []}
             loading={batchesLoading}
+            error={batchesError}
             emptyMessage="No imports yet — upload a statement file above to get started"
           />
 

@@ -23,7 +23,7 @@ const columns = [
 export function PayRunsPage() {
   usePageHelp(pageHelpContent.payRuns)
   usePagePolicies(["payroll", "tax"])
-  const { data: runs, isLoading } = usePayRuns()
+  const { data: runs, isLoading, error: fetchError } = usePayRuns()
   const { data: employees } = useEmployees()
   const processPayRun = useProcessPayRun()
 
@@ -143,7 +143,7 @@ export function PayRunsPage() {
         </PageSection>
       )}
 
-      <DataTable columns={columns} data={runs ?? []} loading={isLoading} emptyMessage="No pay runs processed yet." />
+      <DataTable columns={columns} data={runs ?? []} loading={isLoading} error={fetchError} emptyMessage="No pay runs processed yet." />
     </PageShell>
   )
 }

@@ -98,11 +98,11 @@ export function BankingPage() {
   // Filter to bank/cash accounts (category A with functional link containing "Cash" or common bank accnos)
   const bankAccounts = accounts?.filter(a => a.category === "A") ?? []
 
-  const { data: uncleared, isLoading: unclearedLoading } = useUnclearedTransactions(selectedAccount)
+  const { data: uncleared, isLoading: unclearedLoading, error: unclearedError } = useUnclearedTransactions(selectedAccount)
   const { data: status } = useReconciliationStatus(selectedAccount, statementBalance || undefined)
-  const { data: unmatched, isLoading: unmatchedLoading } = useUnmatchedTransactions(selectedAccount)
-  const { data: batches, isLoading: batchesLoading } = useImportBatches(selectedAccount)
-  const { data: bankRules, isLoading: rulesLoading } = useBankRules(selectedAccount)
+  const { data: unmatched, isLoading: unmatchedLoading, error: unmatchedError } = useUnmatchedTransactions(selectedAccount)
+  const { data: batches, isLoading: batchesLoading, error: batchesError } = useImportBatches(selectedAccount)
+  const { data: bankRules, isLoading: rulesLoading, error: rulesError } = useBankRules(selectedAccount)
 
   const unclearedColumns: Column<UnclearedTransaction>[] = [
     { key: "transdate", header: "Date", render: (row) => formatDate(row.transdate) },
@@ -308,13 +308,13 @@ export function BankingPage() {
           </div>
 
           {tab === "uncleared" && (
-            <DataTable columns={unclearedColumns} data={uncleared ?? []} loading={unclearedLoading} emptyMessage="No uncleared transactions." />
+            <DataTable columns={unclearedColumns} data={uncleared ?? []} loading={unclearedLoading} error={unclearedError} emptyMessage="No uncleared transactions." />
           )}
           {tab === "unmatched" && (
-            <DataTable columns={unmatchedColumns} data={unmatched ?? []} loading={unmatchedLoading} emptyMessage="No unmatched imports." />
+            <DataTable columns={unmatchedColumns} data={unmatched ?? []} loading={unmatchedLoading} error={unmatchedError} emptyMessage="No unmatched imports." />
           )}
           {tab === "history" && (
-            <DataTable columns={batchColumns} data={batches ?? []} loading={batchesLoading} emptyMessage="No import history." />
+            <DataTable columns={batchColumns} data={batches ?? []} loading={batchesLoading} error={batchesError} emptyMessage="No import history." />
           )}
           {tab === "rules" && (
             <DataTable columns={[
@@ -324,7 +324,7 @@ export function BankingPage() {
               { key: "priority", header: "Priority", className: "w-16 text-right" },
               { key: "enabled", header: "Enabled", className: "w-16 text-center",
                 render: (r: BankRule) => r.enabled ? <span className="text-green-600 text-xs">Yes</span> : <span className="text-gray-400 text-xs">No</span> },
-            ]} data={bankRules ?? []} loading={rulesLoading} emptyMessage="No matching rules configured." />
+            ]} data={bankRules ?? []} loading={rulesLoading} error={rulesError} emptyMessage="No matching rules configured." />
           )}
         </>
       )}

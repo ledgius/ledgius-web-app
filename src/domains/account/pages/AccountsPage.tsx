@@ -141,7 +141,7 @@ function InlineAccountForm({ onClose }: { onClose: () => void }) {
 export function AccountsPage() {
   usePageHelp(pageHelpContent.chartOfAccounts)
   usePagePolicies(["account"])
-  const { data: accounts, isLoading } = useAccounts()
+  const { data: accounts, isLoading, error } = useAccounts()
   const navigate = useNavigate()
   const [search, setSearch] = useState("")
   const [showInactive, setShowInactive] = useState(false)
@@ -217,6 +217,7 @@ export function AccountsPage() {
         columns={columns}
         data={filtered}
         loading={isLoading}
+        error={error}
         onRowClick={(row) => navigate(`/accounts/${row.id}/edit`)}
         emptyMessage={
           showInactive

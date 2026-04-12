@@ -42,7 +42,7 @@ const columns: Column<InvoiceSummary>[] = [
 export function InvoicesPage() {
   usePageHelp(pageHelpContent.invoices)
   usePagePolicies(["receivable", "tax"])
-  const { data: invoices, isLoading } = useInvoices()
+  const { data: invoices, isLoading, error } = useInvoices()
   const navigate = useNavigate()
   const [search, setSearch] = useState("")
 
@@ -81,6 +81,7 @@ export function InvoicesPage() {
         columns={columns}
         data={filtered}
         loading={isLoading}
+        error={error}
         emptyMessage="No invoices in this period. Create a new invoice or adjust your filters."
         onRowClick={(row) => navigate(`/invoices/${row.trans_id}`)}
       />

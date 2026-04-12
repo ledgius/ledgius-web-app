@@ -94,7 +94,7 @@ function getFYLabel(dateStr: string): string {
 export function PAYGConfigPage() {
   usePageHelp(pageHelpContent.paygConfig)
   usePagePolicies(["payroll"])
-  const { data: brackets, isLoading } = usePAYGBrackets()
+  const { data: brackets, isLoading, error } = usePAYGBrackets()
   const [selectedFY, setSelectedFY] = useState<string | null>(null)
 
   const fyGroups = useMemo(() => {
@@ -145,7 +145,7 @@ export function PAYGConfigPage() {
         </div>
       </PageSection>
 
-      <DataTable columns={columns} data={activeBrackets} loading={isLoading} emptyMessage="No brackets for this period." />
+      <DataTable columns={columns} data={activeBrackets} loading={isLoading} error={error} emptyMessage="No brackets for this period." />
     </PageShell>
   )
 }

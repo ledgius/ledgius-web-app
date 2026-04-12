@@ -30,6 +30,7 @@ import {
   XCircle,
   ChevronRight,
   AlertTriangle,
+  AlertCircle,
   CheckCircle2,
   Circle,
   Zap,
@@ -588,7 +589,7 @@ export function ReconciliationPage() {
   const searchRef = useRef<HTMLInputElement>(null)
 
   // Data queries
-  const { data: queue, isLoading: queueLoading } = useReconQueue(selectedAccountId, sort, filter)
+  const { data: queue, isLoading: queueLoading, error: queueError } = useReconQueue(selectedAccountId, sort, filter)
   const { data: candidatesData, isLoading: candidatesLoading } = useReconCandidates(selectedLineId)
   const { data: summary } = useReconSummary(selectedAccountId)
 
@@ -974,7 +975,12 @@ export function ReconciliationPage() {
 
             {/* Queue list */}
             <div className="flex-1 overflow-y-auto">
-              {queueLoading ? (
+              {queueError ? (
+                <div className="p-4 text-center">
+                  <AlertCircle className="h-5 w-5 text-red-400 mx-auto mb-2" />
+                  <p className="text-sm text-red-700">{queueError.message}</p>
+                </div>
+              ) : queueLoading ? (
                 <div className="p-3 space-y-3">
                   {Array.from({ length: 8 }).map((_, i) => (
                     <div key={i} className="space-y-2">

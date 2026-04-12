@@ -40,7 +40,7 @@ const columns: Column<InvoiceSummary>[] = [
 export function CreditNoteListPage() {
   usePageHelp(pageHelpContent.creditNotes)
   usePagePolicies(["receivable", "tax"])
-  const { data: invoices, isLoading } = useInvoices()
+  const { data: invoices, isLoading, error } = useInvoices()
   const navigate = useNavigate()
 
   // Filter to credit notes only (is_return would be ideal but we don't have it in the summary —
@@ -68,6 +68,7 @@ export function CreditNoteListPage() {
         columns={columns}
         data={creditNotes}
         loading={isLoading}
+        error={error}
         emptyMessage="No credit notes issued. Click '+ New Credit Note' to issue one against an existing invoice."
         onRowClick={(row) => navigate(`/invoices/${row.trans_id}`)}
       />

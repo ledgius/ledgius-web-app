@@ -19,7 +19,7 @@ const columns = [
 export function RecurringPage() {
   usePageHelp(pageHelpContent.recurring)
   usePagePolicies(["journal"])
-  const { data: schedules, isLoading } = useRecurringSchedules()
+  const { data: schedules, isLoading, error: fetchError } = useRecurringSchedules()
   const createRecurring = useCreateRecurring()
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState("")
@@ -94,7 +94,7 @@ export function RecurringPage() {
           </div>
         </PageSection>
       )}
-      <DataTable columns={columns} data={schedules ?? []} loading={isLoading} emptyMessage="No recurring schedules." />
+      <DataTable columns={columns} data={schedules ?? []} loading={isLoading} error={fetchError} emptyMessage="No recurring schedules." />
     </PageShell>
   )
 }

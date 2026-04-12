@@ -7,7 +7,7 @@ import { useTemplates, useDeleteTemplate, type TransactionTemplate } from "../ho
 export function TemplatesPage() {
   usePageHelp(pageHelpContent.templates)
   usePagePolicies(["journal"])
-  const { data: templates, isLoading } = useTemplates()
+  const { data: templates, isLoading, error } = useTemplates()
   const deleteTemplate = useDeleteTemplate()
 
   const columns = [
@@ -33,7 +33,7 @@ export function TemplatesPage() {
 
   return (
     <PageShell header={header}>
-      <DataTable columns={columns} data={templates ?? []} loading={isLoading} emptyMessage="No saved templates." />
+      <DataTable columns={columns} data={templates ?? []} loading={isLoading} error={error} emptyMessage="No saved templates." />
     </PageShell>
   )
 }

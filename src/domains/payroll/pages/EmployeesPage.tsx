@@ -220,7 +220,7 @@ function InlineEmployeeForm({ onClose }: { onClose: () => void }) {
 export function EmployeesPage() {
   usePageHelp(pageHelpContent.employees)
   usePagePolicies(["payroll"])
-  const { data: employees, isLoading } = useEmployees()
+  const { data: employees, isLoading, error } = useEmployees()
   const navigate = useNavigate()
   const [createOpen, setCreateOpen] = useState(false)
 
@@ -254,6 +254,7 @@ export function EmployeesPage() {
         columns={columns}
         data={employees ?? []}
         loading={isLoading}
+        error={error}
         emptyMessage="No employees. Click '+ New Employee' to add your first employee."
         onRowClick={(row) => navigate(`/employees/${row.id}`)}
       />
