@@ -589,20 +589,18 @@ function DetailInspector({
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Target GL account</label>
-                <select
-                  value={ruleAccountId}
-                  onChange={(e) => setRuleAccountId(Number(e.target.value))}
-                  className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                >
-                  <option value={0}>Select account...</option>
-                  {accounts
+                <Combobox
+                  options={accounts
                     .filter((a) => a.category === "E" || a.category === "I")
-                    .map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.accno} — {a.description}
-                      </option>
-                    ))}
-                </select>
+                    .map((a) => ({
+                      value: a.id,
+                      label: `${a.accno} — ${a.description}`,
+                      detail: a.category === "I" ? "Income" : "Expense",
+                    }))}
+                  value={ruleAccountId || null}
+                  onChange={(v) => setRuleAccountId(v ? Number(v) : 0)}
+                  placeholder="Search accounts..."
+                />
               </div>
               <Button
                 size="sm"
