@@ -107,6 +107,23 @@ export function useBankRules(accountId: number) {
   })
 }
 
+export function useDeleteBankRule() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (ruleId: number) => api.delete(`/bank-import/rules/${ruleId}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["bank"] }),
+  })
+}
+
+export function useUpdateRulePriority() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ ruleId, priority }: { ruleId: number; priority: number }) =>
+      api.patch(`/bank-import/rules/${ruleId}/priority`, { priority }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["bank"] }),
+  })
+}
+
 export function useMatchTransaction() {
   const qc = useQueryClient()
   return useMutation({

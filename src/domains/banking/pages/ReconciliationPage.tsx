@@ -26,7 +26,7 @@ import {
   type QueueFilter,
   type QueueSort,
 } from "../hooks/useReconciliation"
-import { useBankRules, type BankRule } from "@/domains/banking/hooks/useBanking"
+import { useBankRules, useDeleteBankRule, useUpdateRulePriority, type BankRule } from "@/domains/banking/hooks/useBanking"
 import {
   Play,
   CheckCheck,
@@ -43,6 +43,9 @@ import {
   Search,
   RefreshCw,
   X,
+  Trash2,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react"
 
 // ── Pattern extraction ────────────────────────────────────────────────────────
@@ -1004,6 +1007,7 @@ export function ReconciliationPage() {
   const [centerTab, setCenterTab] = useState<"allocation" | "rules">("allocation")
   const [rulePattern, setRulePattern] = useState("")
   const [ruleAccountId, setRuleAccountId] = useState<number>(0)
+  const [deletingRuleId, setDeletingRuleId] = useState<number | null>(null)
 
   // Data queries
   const { data: queue, isLoading: queueLoading, error: queueError } = useReconQueue(selectedAccountId, sort, filter)
@@ -1021,6 +1025,8 @@ export function ReconciliationPage() {
   const runPipeline = useRunPipeline()
   const createFromLine = useCreateFromLine()
   const createBankRule = useCreateBankRule()
+  const deleteBankRule = useDeleteBankRule()
+  const updateRulePriority = useUpdateRulePriority()
 
   const candidates = candidatesData?.candidates ?? []
   const selectedItem = queue?.find((q) => q.id === selectedLineId) ?? null
@@ -1742,9 +1748,12 @@ export function ReconciliationPage() {
 
                   {/* Existing rules list */}
                   <div>
-                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
-                      Existing Rules {bankRules && bankRules.length > 0 && `(${bankRules.length})`}
-                    </h3>
+                    <div className="flex items-baseline justify-between mb-1">
+                      <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                        Existing Rules {bankRules && bankRules.length > 0 && `(${bankRules.length})`}
+                      </h3>
+                    </div>
+                    <p className="text-[10px] text-gray-400 mb-3">Rules are listed in priority order — first match wins</p>
                     {rulesLoading ? (
                       <div className="space-y-2">
                         <Skeleton className="h-10 w-full" />
@@ -1754,59 +1763,130 @@ export function ReconciliationPage() {
                     ) : !bankRules || bankRules.length === 0 ? (
                       <p className="text-xs text-gray-400 text-center py-4">No rules yet. Create one above to auto-classify future transactions.</p>
                     ) : (
-                      <div className="border border-gray-200 rounded-lg overflow-hidden">
-                        <table className="w-full text-xs">
-                          <thead>
-                            <tr className="bg-gray-50 border-b border-gray-200">
-                              <th className="text-left px-3 py-2 font-medium text-gray-500">Name / Pattern</th>
-                              <th className="text-left px-3 py-2 font-medium text-gray-500">Target Account</th>
-                              <th className="text-right px-3 py-2 font-medium text-gray-500">Priority</th>
-                              <th className="text-right px-3 py-2 font-medium text-gray-500">Enabled</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-100">
-                            {(bankRules as BankRule[]).map((rule) => {
-                              const targetAccount = allAccounts.find((a) => a.id === rule.match_account_id)
-                              return (
-                                <tr
-                                  key={rule.id}
-                                  className="hover:bg-gray-50 cursor-pointer transition-colors"
-                                  onClick={() => {
-                                    setRulePattern(rule.description_pattern ?? "")
-                                    setRuleAccountId(rule.match_account_id)
-                                  }}
-                                >
-                                  <td className="px-3 py-2.5">
-                                    <p className="font-medium text-gray-800 truncate max-w-[160px]">{rule.name}</p>
-                                    {rule.description_pattern && rule.description_pattern !== rule.name && (
-                                      <p className="text-gray-400 font-mono truncate max-w-[160px]">{rule.description_pattern}</p>
-                                    )}
-                                  </td>
-                                  <td className="px-3 py-2.5">
-                                    {targetAccount ? (
-                                      <span className="text-gray-700 truncate max-w-[140px] block">
-                                        {targetAccount.accno} — {targetAccount.description}
-                                      </span>
-                                    ) : (
-                                      <span className="text-gray-400">—</span>
-                                    )}
-                                  </td>
-                                  <td className="px-3 py-2.5 text-right tabular-nums text-gray-600">{rule.priority}</td>
-                                  <td className="px-3 py-2.5 text-right">
-                                    <span className={cn(
-                                      "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium",
-                                      rule.enabled
-                                        ? "bg-green-50 text-green-700 border border-green-200"
-                                        : "bg-gray-100 text-gray-400 border border-gray-200"
-                                    )}>
-                                      {rule.enabled ? "Yes" : "No"}
-                                    </span>
-                                  </td>
-                                </tr>
-                              )
-                            })}
-                          </tbody>
-                        </table>
+                      <div className="border border-gray-200 rounded-lg overflow-hidden divide-y divide-gray-100">
+                        {(bankRules as BankRule[]).map((rule, idx) => {
+                          const targetAccount = allAccounts.find((a) => a.id === rule.match_account_id)
+                          const patternMatches = selectedItem &&
+                            rule.description_pattern &&
+                            (selectedItem.description ?? "").toLowerCase().includes(rule.description_pattern.toLowerCase())
+                          const isConfirmingDelete = deletingRuleId === rule.id
+                          const sortedRules = bankRules as BankRule[]
+                          const isFirst = idx === 0
+                          const isLast = idx === sortedRules.length - 1
+
+                          return (
+                            <div
+                              key={rule.id}
+                              className={cn(
+                                "flex items-center gap-2 px-3 py-2.5 text-xs hover:bg-gray-50 transition-colors",
+                                isConfirmingDelete && "bg-red-50"
+                              )}
+                            >
+                              {/* Match indicator */}
+                              <div className="w-4 shrink-0">
+                                {patternMatches ? (
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-green-500" />
+                                ) : (
+                                  <span className="w-3.5 h-3.5 block" />
+                                )}
+                              </div>
+
+                              {/* Rule info — clickable to populate editor */}
+                              <div
+                                className="flex-1 min-w-0 cursor-pointer"
+                                onClick={() => {
+                                  setRulePattern(rule.description_pattern ?? "")
+                                  setRuleAccountId(rule.match_account_id)
+                                }}
+                              >
+                                <p className="font-medium text-gray-800 truncate">{rule.name}</p>
+                                {rule.description_pattern && rule.description_pattern !== rule.name && (
+                                  <p className="text-gray-400 font-mono truncate text-[10px]">{rule.description_pattern}</p>
+                                )}
+                              </div>
+
+                              {/* Target account */}
+                              <div className="w-[120px] shrink-0 hidden xl:block">
+                                {targetAccount ? (
+                                  <span className="text-gray-600 truncate block text-[10px]">
+                                    {targetAccount.accno} — {targetAccount.description}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-400 text-[10px]">—</span>
+                                )}
+                              </div>
+
+                              {/* Enabled badge */}
+                              <span className={cn(
+                                "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium shrink-0",
+                                rule.enabled
+                                  ? "bg-green-50 text-green-700 border border-green-200"
+                                  : "bg-gray-100 text-gray-400 border border-gray-200"
+                              )}>
+                                {rule.enabled ? "Yes" : "No"}
+                              </span>
+
+                              {/* Inline delete confirmation */}
+                              {isConfirmingDelete ? (
+                                <div className="flex items-center gap-1 shrink-0">
+                                  <span className="text-[10px] text-red-600 font-medium">Delete?</span>
+                                  <button
+                                    className="text-[10px] px-1.5 py-0.5 rounded bg-red-600 text-white hover:bg-red-700 transition-colors"
+                                    onClick={() => {
+                                      deleteBankRule.mutate(rule.id)
+                                      setDeletingRuleId(null)
+                                    }}
+                                  >
+                                    Confirm
+                                  </button>
+                                  <button
+                                    className="text-[10px] px-1.5 py-0.5 rounded bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors"
+                                    onClick={() => setDeletingRuleId(null)}
+                                  >
+                                    Cancel
+                                  </button>
+                                </div>
+                              ) : (
+                                <div className="flex items-center gap-0.5 shrink-0">
+                                  {/* Priority up */}
+                                  <button
+                                    disabled={isFirst || updateRulePriority.isPending}
+                                    className="p-0.5 rounded text-gray-400 hover:text-gray-600 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+                                    title="Move up (higher priority)"
+                                    onClick={() => {
+                                      const above = sortedRules[idx - 1]
+                                      updateRulePriority.mutate({ ruleId: rule.id, priority: above.priority })
+                                      updateRulePriority.mutate({ ruleId: above.id, priority: rule.priority })
+                                    }}
+                                  >
+                                    <ChevronUp className="w-3.5 h-3.5" />
+                                  </button>
+                                  {/* Priority down */}
+                                  <button
+                                    disabled={isLast || updateRulePriority.isPending}
+                                    className="p-0.5 rounded text-gray-400 hover:text-gray-600 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+                                    title="Move down (lower priority)"
+                                    onClick={() => {
+                                      const below = sortedRules[idx + 1]
+                                      updateRulePriority.mutate({ ruleId: rule.id, priority: below.priority })
+                                      updateRulePriority.mutate({ ruleId: below.id, priority: rule.priority })
+                                    }}
+                                  >
+                                    <ChevronDown className="w-3.5 h-3.5" />
+                                  </button>
+                                  {/* Delete */}
+                                  <button
+                                    className="p-0.5 rounded text-red-400 hover:text-red-600 transition-colors ml-1"
+                                    title="Delete rule"
+                                    onClick={() => setDeletingRuleId(rule.id)}
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })}
                       </div>
                     )}
                   </div>
