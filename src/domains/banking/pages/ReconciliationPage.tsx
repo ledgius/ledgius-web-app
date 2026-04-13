@@ -1341,7 +1341,7 @@ export function ReconciliationPage() {
                 <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
               )}
               <p className="text-xs">
-                <strong>3. Bulk actions:</strong> use the <strong>"Accept exact matches"</strong> button to accept all high-confidence matches at once. Use <strong>Defer</strong> or <strong>Exclude</strong> in the right panel Actions tab for items you want to skip.
+                <strong>3. Bulk actions:</strong> after defining rules and re-running auto-match, the <strong>"Accept exact matches"</strong> button accepts all high-confidence matches at once. Use <strong>Defer</strong> or <strong>Exclude</strong> in the right panel Actions tab for items you want to skip.
               </p>
             </div>
           </div>
@@ -1367,6 +1367,7 @@ export function ReconciliationPage() {
               size="sm"
               onClick={handleRunPipeline}
               disabled={!selectedAccountId || runPipeline.isPending}
+              title="Run the matching pipeline: checks each bank transaction against your ledger entries and rules. Matches by exact references first, then by amount and date, then by rules you've defined."
             >
               <Play className="h-3.5 w-3.5" />
               {runPipeline.isPending ? "Matching..." : "Auto-Match Transactions"}
@@ -1376,6 +1377,10 @@ export function ReconciliationPage() {
               size="sm"
               onClick={handleBulkAccept}
               disabled={!selectedAccountId || exactMatchCount === 0 || bulkAccept.isPending}
+              title={exactMatchCount > 0
+                ? `Accept ${exactMatchCount} high-confidence matches (auto-matched with confidence ≥ 95%). These were matched by the pipeline using exact references, amounts, or rules you defined.`
+                : "No auto-matched items yet. Run Auto-Match first, or create rules via the Rules tab — the pipeline will auto-match transactions matching your rules on the next run."
+              }
             >
               <CheckCheck className="h-3.5 w-3.5" />
               Accept exact matches {exactMatchCount > 0 && `(${exactMatchCount})`}
