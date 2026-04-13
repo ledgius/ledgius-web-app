@@ -72,7 +72,10 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
       }
     }
 
-    // Refresh failed — redirect to login
+    // Refresh failed — clear auth state and redirect to login
+    try { sessionStorage.removeItem("ledgius_auth") } catch {}
+    setAuthToken(null)
+    setRefreshTokenValue(null)
     window.location.href = "/login"
     throw new Error("Session expired — redirecting to login")
   }

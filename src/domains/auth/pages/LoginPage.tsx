@@ -5,7 +5,7 @@ import { useAuth, setAuthToken, setRefreshTokenValue } from "@/shared/lib/auth"
 const API_BASE = "/api/v1"
 
 export function LoginPage() {
-  const { login, isLoading, tenants, switchTenant, isAuthenticated, currentTenantId } = useAuth()
+  const { login, isLoading, tenants, switchTenant, isAuthenticated, currentTenantId, accessToken, logout } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const [email, setEmail] = useState("")
@@ -50,10 +50,32 @@ export function LoginPage() {
     }
   }
 
-  // After login, check if we need tenant selection or redirect to dashboard.
+  // On mount: if we landed on /login without SSO params, clear stale auth
+  // to prevent redirect loops from expired tokens in sessionStorage.
+  useEffect(() => {
+    const hasSSO = searchParams.has("access_token") || searchParams.has("sso_error")
+    if (!hasSSO && isAuthenticated) {
+      // Validate the stored token by making a lightweight API call
+      fetch("/api/v1/auth/me", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      }).then(res => {
+        if (res.ok) {
+          // Token is valid — navigate to app
+          navigate("/", { replace: true })
+        } else {
+          // Token expired — clear and stay on login
+          logout()
+        }
+      }).catch(() => {
+        logout()
+      })
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // After fresh login, navigate to dashboard.
   useEffect(() => {
     if (isAuthenticated && currentTenantId) {
-      navigate("/")
+      navigate("/", { replace: true })
     } else if (isAuthenticated && !currentTenantId && tenants.length > 1) {
       setShowTenantPicker(true)
     }
