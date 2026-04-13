@@ -45,8 +45,26 @@ const initialState: AuthState = {
   isAuthenticated: false,
 }
 
+function loadPersistedState(): AuthState {
+  try {
+    const saved = sessionStorage.getItem("ledgius_auth")
+    if (saved) return JSON.parse(saved)
+  } catch {}
+  return initialState
+}
+
+function persistState(s: AuthState) {
+  try {
+    if (s.isAuthenticated) {
+      sessionStorage.setItem("ledgius_auth", JSON.stringify(s))
+    } else {
+      sessionStorage.removeItem("ledgius_auth")
+    }
+  } catch {}
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<AuthState>(initialState)
+  const [state, setState] = useState<AuthState>(loadPersistedState)
   const [isLoading, setIsLoading] = useState(false)
 
   const login = useCallback(async (email: string, password: string) => {
@@ -62,7 +80,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw new Error(err.message)
       }
       const data = await res.json()
-      setState({
+      const newState: AuthState = {
         user: data.user,
         currentTenantId: data.tenants?.length === 1 ? data.tenants[0].tenant_id : null,
         currentRole: data.tenants?.length === 1 ? data.tenants[0].role : null,
@@ -70,7 +88,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         accessToken: data.access_token,
         refreshToken: data.refresh_token,
         isAuthenticated: true,
-      })
+      }
+      setState(newState)
+      persistState(newState)
     } finally {
       setIsLoading(false)
     }
@@ -91,14 +111,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (!res.ok) throw new Error("Failed to switch tenant")
       const data = await res.json()
       const membership = data.tenants?.find((t: TenantMembership) => t.tenant_id === tenantId)
-      setState(prev => ({
-        ...prev,
-        currentTenantId: tenantId,
-        currentRole: membership?.role ?? null,
-        accessToken: data.access_token,
-        refreshToken: data.refresh_token,
-        tenants: data.tenants ?? prev.tenants,
-      }))
+      setState(prev => {
+        const newState = {
+          ...prev,
+          currentTenantId: tenantId,
+          currentRole: membership?.role ?? null,
+          accessToken: data.access_token,
+          refreshToken: data.refresh_token,
+          tenants: data.tenants ?? prev.tenants,
+        }
+        persistState(newState)
+        return newState
+      })
     } finally {
       setIsLoading(false)
     }
@@ -106,6 +130,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(() => {
     setState(initialState)
+    persistState(initialState)
   }, [])
 
   return (
