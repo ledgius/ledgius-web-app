@@ -140,14 +140,9 @@ export function AppHeader({ onSearchOpen, onFeedbackOpen }: AppHeaderProps & { o
 
       {/* ── Center: Time Context (hidden on mobile) ── */}
       <div className="hidden md:flex flex-1 items-center justify-center gap-4 text-xs text-gray-500 relative" ref={calendarRef}>
-        <button
-          type="button"
-          onClick={() => navigate("/reports")}
-          className="font-medium text-gray-700 hover:text-primary-700 transition-colors"
-          title="View financial reports for this period"
-        >
+        <span className="font-medium text-gray-700">
           {getFinancialYear(now)}
-        </button>
+        </span>
         <span className="text-gray-300" aria-hidden="true">&middot;</span>
         <span>{getQuarter(now)} | {now.toLocaleDateString("en-AU", { month: "long" })}</span>
         <span className="text-gray-300" aria-hidden="true">&middot;</span>
