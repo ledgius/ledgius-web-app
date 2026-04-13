@@ -631,6 +631,9 @@ function RuleCreationPanel({
   item, accounts, rulePattern, onPatternChange,
   ruleAccountId, onAccountChange, creating, onSave,
 }: RuleCreationPanelProps) {
+  const [showRuleIncome, setShowRuleIncome] = useState(true)
+  const [showRuleExpense, setShowRuleExpense] = useState(true)
+  const [showRuleOther, setShowRuleOther] = useState(false)
   const [amountMode, setAmountMode] = useState<"any" | "exact" | "range">("any")
   const [amountExact, setAmountExact] = useState("")
   const [amountMin, setAmountMin] = useState("")
@@ -738,17 +741,42 @@ function RuleCreationPanel({
           )}
         </div>
 
-        {/* Target account */}
+        {/* Target account with category filters */}
         <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Target GL account</label>
+          <label className="block text-xs font-medium text-gray-600 mb-1.5">Target GL account</label>
+          <div className="flex items-center gap-2 mb-2">
+            <button type="button" onClick={() => setShowRuleIncome(!showRuleIncome)}
+              className={cn("px-2 py-0.5 rounded-full text-xs font-medium border transition-colors",
+                showRuleIncome ? "bg-green-50 border-green-300 text-green-700" : "bg-white border-gray-300 text-gray-400")}>
+              Income
+            </button>
+            <button type="button" onClick={() => setShowRuleExpense(!showRuleExpense)}
+              className={cn("px-2 py-0.5 rounded-full text-xs font-medium border transition-colors",
+                showRuleExpense ? "bg-red-50 border-red-300 text-red-700" : "bg-white border-gray-300 text-gray-400")}>
+              Expense
+            </button>
+            <button type="button" onClick={() => setShowRuleOther(!showRuleOther)}
+              className={cn("px-2 py-0.5 rounded-full text-xs font-medium border transition-colors",
+                showRuleOther ? "bg-blue-50 border-blue-300 text-blue-700" : "bg-white border-gray-300 text-gray-400")}>
+              Other
+            </button>
+          </div>
           <Combobox
             options={accounts
-              .filter((a) => a.category === "E" || a.category === "I")
-              .map((a) => ({
-                value: a.id,
-                label: `${a.accno} — ${a.description}`,
-                detail: a.category === "I" ? "Income" : "Expense",
-              }))}
+              .filter((a) => {
+                if (a.category === "I" && !showRuleIncome) return false
+                if (a.category === "E" && !showRuleExpense) return false
+                if (!["I", "E"].includes(a.category) && !showRuleOther) return false
+                return true
+              })
+              .map((a) => {
+                const catLabels: Record<string, string> = { A: "Asset", L: "Liability", Q: "Equity", I: "Income", E: "Expense" }
+                return {
+                  value: a.id,
+                  label: `${a.accno} — ${a.description}`,
+                  detail: catLabels[a.category] ?? a.category,
+                }
+              })}
             value={ruleAccountId || null}
             onChange={(v) => onAccountChange(v ? Number(v) : 0)}
             placeholder="Search accounts..."
@@ -1429,12 +1457,12 @@ export function ReconciliationPage() {
               </div>
             </div>
             <div className="flex items-center gap-4 text-xs text-gray-600 shrink-0">
-              <span title="Bank transactions successfully matched to ledger entries (auto or manual)">Matched: <strong className="font-mono">{reconciled}</strong></span>
-              <span title="Newly imported bank transactions not yet processed by the matching pipeline">Unprocessed: <strong className="font-mono">{summary.unprocessed ?? 0}</strong></span>
-              <span title="Transactions the pipeline could not auto-match — need manual review, create entry, or define a rule">Review: <strong className="font-mono">{summary.needs_review ?? 0}</strong></span>
+              <span title="Bank transactions successfully matched to ledger entries (auto or manual)" className="cursor-help border-b border-dashed border-gray-400 hover:border-gray-600 hover:text-gray-900 transition-colors">Matched: <strong className="font-mono">{reconciled}</strong></span>
+              <span title="Newly imported bank transactions not yet processed by the matching pipeline" className="cursor-help border-b border-dashed border-gray-400 hover:border-gray-600 hover:text-gray-900 transition-colors">Unprocessed: <strong className="font-mono">{summary.unprocessed ?? 0}</strong></span>
+              <span title="Transactions the pipeline could not auto-match — need manual review, create entry, or define a rule" className="cursor-help border-b border-dashed border-gray-400 hover:border-gray-600 hover:text-gray-900 transition-colors">Review: <strong className="font-mono">{summary.needs_review ?? 0}</strong></span>
             </div>
             {(summary.exception ?? 0) > 0 && (
-              <Badge variant="danger" className="shrink-0" title="Transactions flagged as problems — duplicates, ambiguous matches, or items needing investigation">
+              <Badge variant="danger" className="shrink-0 cursor-help" title="Transactions flagged as problems — duplicates, ambiguous matches, or items needing investigation">
                 <AlertTriangle className="h-3 w-3 mr-1" />
                 {summary.exception} exceptions
               </Badge>
