@@ -1484,21 +1484,30 @@ export function ReconciliationPage() {
               </div>
               {/* Filter chips + sort buttons on one row */}
               <div className="flex items-center gap-1 flex-wrap">
-                {(["all", "unmatched", "needs_review", "exception"] as QueueFilter[]).map((f) => (
-                  <button
-                    key={f}
-                    type="button"
-                    onClick={() => setFilter(f)}
-                    className={cn(
-                      "px-2 py-0.5 rounded-full text-xs font-medium border transition-colors",
-                      filter === f
-                        ? "bg-gray-900 text-white border-gray-900"
-                        : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"
-                    )}
-                  >
-                    {f === "all" ? "All" : f === "unmatched" ? "Unmatched" : f === "needs_review" ? "Review" : "Exceptions"}
-                  </button>
-                ))}
+                {(["all", "unmatched", "needs_review", "exception"] as QueueFilter[]).map((f) => {
+                  const filterTips: Record<string, string> = {
+                    all: "Show all bank transactions regardless of status",
+                    unmatched: "Show only newly imported transactions not yet processed",
+                    needs_review: "Show transactions that need manual review — no auto-match found",
+                    exception: "Show flagged transactions — duplicates, ambiguous matches, or issues",
+                  }
+                  return (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => setFilter(f)}
+                      title={filterTips[f]}
+                      className={cn(
+                        "px-2 py-0.5 rounded-full text-xs font-medium border transition-colors",
+                        filter === f
+                          ? "bg-gray-900 text-white border-gray-900"
+                          : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"
+                      )}
+                    >
+                      {f === "all" ? "All" : f === "unmatched" ? "Unmatched" : f === "needs_review" ? "Review" : "Exceptions"}
+                    </button>
+                  )
+                })}
                 <span className="w-px h-4 bg-gray-300 mx-0.5" />
                 {(["risk_first", "aged_first", "amount_first"] as QueueSort[]).map((s) => (
                   <button
