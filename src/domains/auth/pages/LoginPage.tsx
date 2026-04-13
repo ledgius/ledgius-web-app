@@ -50,16 +50,14 @@ export function LoginPage() {
     }
   }
 
-  // After login, check if we need tenant selection.
-  if (isAuthenticated && !currentTenantId && tenants.length > 1 && !showTenantPicker) {
-    setShowTenantPicker(true)
-  }
-
-  // If authenticated with a tenant, redirect to dashboard.
-  if (isAuthenticated && currentTenantId) {
-    navigate("/")
-    return null
-  }
+  // After login, check if we need tenant selection or redirect to dashboard.
+  useEffect(() => {
+    if (isAuthenticated && currentTenantId) {
+      navigate("/")
+    } else if (isAuthenticated && !currentTenantId && tenants.length > 1) {
+      setShowTenantPicker(true)
+    }
+  }, [isAuthenticated, currentTenantId, tenants, navigate])
 
   const handleSelectTenant = async (tenantId: string) => {
     try {
