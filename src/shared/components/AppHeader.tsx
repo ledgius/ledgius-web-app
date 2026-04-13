@@ -9,7 +9,7 @@ import { useQuery } from "@tanstack/react-query"
 import { cn } from "@/shared/lib/utils"
 import { useAuth } from "@/shared/lib/auth"
 import { useHelpPanelToggle } from "@/components/workflow"
-import { FinancialCalendar, useCalendarBadge } from "@/components/workflow/FinancialCalendar"
+import { FinancialTimeline, useCalendarBadge } from "@/components/workflow/FinancialTimeline"
 import { api } from "@/shared/lib/api"
 import type { DashboardMetrics } from "@/domains/dashboard/hooks/useDashboard"
 
@@ -163,7 +163,7 @@ export function AppHeader({ onSearchOpen, onFeedbackOpen }: AppHeaderProps & { o
               ? "bg-primary-50 text-primary-700"
               : "hover:bg-gray-100 hover:text-gray-700"
           )}
-          title="Financial calendar — click to view tasks and events"
+          title="Financial timeline — click to view tasks and events"
         >
           {formatHeaderDate(now)}
           {overdueCount > 0 && (
@@ -173,7 +173,7 @@ export function AppHeader({ onSearchOpen, onFeedbackOpen }: AppHeaderProps & { o
             <span className="h-2 w-2 rounded-full bg-amber-400" />
           )}
         </button>
-        <FinancialCalendar isOpen={calendarOpen} onClose={() => setCalendarOpen(false)} />
+        <FinancialTimeline isOpen={calendarOpen} onClose={() => setCalendarOpen(false)} />
       </div>
       {/* Spacer on mobile when time context is hidden */}
       <div className="flex-1 md:hidden" />

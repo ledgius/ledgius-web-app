@@ -19,6 +19,7 @@ import { DebitNotesPage } from "@/domains/payable/pages/DebitNotesPage"
 import { ReceiptsPage } from "@/domains/receipt/pages/ReceiptsPage"
 import { PaymentsPage } from "@/domains/payment/pages/PaymentsPage"
 import { BankingPage } from "@/domains/banking/pages/BankingPage"
+import { ReconciliationPage } from "@/domains/banking/pages/ReconciliationPage"
 import { TransfersPage } from "@/domains/banking/pages/TransfersPage"
 import { ReportsPage } from "@/domains/reporting/pages/ReportsPage"
 import { BASPage } from "@/domains/tax/pages/BASPage"
@@ -28,6 +29,7 @@ import { ProductsPage } from "@/domains/product/pages/ProductsPage"
 import { CreateProductPage } from "@/domains/product/pages/CreateProductPage"
 import { TaxCodesPage } from "@/domains/taxcode/pages/TaxCodesPage"
 import { DashboardPage } from "@/domains/dashboard/pages/DashboardPage"
+import { BooksHealthPage } from "@/domains/dashboard/pages/BooksHealthPage"
 import { LoginPage } from "@/domains/auth/pages/LoginPage"
 import { EditAccountPage } from "@/domains/account/pages/EditAccountPage"
 import { EditProductPage } from "@/domains/product/pages/EditProductPage"
@@ -47,6 +49,7 @@ import { EmployeesPage } from "@/domains/payroll/pages/EmployeesPage"
 import { CreateEmployeePage } from "@/domains/payroll/pages/CreateEmployeePage"
 import { EmployeeDetailPage } from "@/domains/payroll/pages/EmployeeDetailPage"
 import { PayRunsPage } from "@/domains/payroll/pages/PayRunsPage"
+import { CalendarPage } from "@/domains/calendar/pages/CalendarPage"
 
 export const router = createBrowserRouter([
   // Login page (no layout wrapper, no auth required)
@@ -57,6 +60,8 @@ export const router = createBrowserRouter([
     element: <RequireAuth><Layout /></RequireAuth>,
     children: [
       { index: true, element: <DashboardPage /> },
+      { path: "books-health", element: <BooksHealthPage /> },
+      { path: "calendar", element: <CalendarPage /> },
 
       // Chart of Accounts
       { path: "accounts", element: <AccountsPage /> },
@@ -86,7 +91,8 @@ export const router = createBrowserRouter([
       { path: "payments", element: <PaymentsPage /> },
 
       // Cash & Banking
-      { path: "banking", element: <BankingPage /> },
+      { path: "banking", element: <ReconciliationPage /> },
+      { path: "banking/legacy", element: <BankingPage /> },
       { path: "transfers", element: <TransfersPage /> },
 
       // General Ledger
