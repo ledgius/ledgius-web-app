@@ -1075,10 +1075,11 @@ export function ReconciliationPage() {
   const allAccounts = accounts ?? []
   const bankAccounts = allAccounts.filter((a) => a.category === "A")
   const incomeExpenseAccounts = allAccounts.filter((a) => a.category === "E" || a.category === "I")
+  const catLabel: Record<string, string> = { A: "Asset", L: "Liability", Q: "Equity", I: "Income", E: "Expense" }
   const accountOptions = bankAccounts.map((a) => ({
     value: a.id,
     label: `${a.accno} — ${a.description}`,
-    detail: a.category,
+    detail: catLabel[a.category] ?? a.category,
   }))
 
   // Progress metrics from summary

@@ -164,10 +164,11 @@ export function BankingPage() {
     { key: "rules" as const, label: "Matching Rules" },
   ]
 
+  const catLabels: Record<string, string> = { A: "Asset", L: "Liability", Q: "Equity", I: "Income", E: "Expense" }
   const accountOptions = bankAccounts.map((a) => ({
     value: a.id,
     label: `${a.accno} — ${a.description}`,
-    detail: a.category,
+    detail: catLabels[a.category] ?? a.category,
   }))
 
   const selectedAccountName = bankAccounts.find((a) => a.id === selectedAccount)?.description

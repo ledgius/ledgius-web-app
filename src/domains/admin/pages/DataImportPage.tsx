@@ -91,10 +91,11 @@ export function DataImportPage() {
   const { data: ledgiusCustomers } = useCustomers()
   const { data: ledgiusVendors } = useVendors()
 
+  const catLabels: Record<string, string> = { A: "Asset", L: "Liability", Q: "Equity", I: "Income", E: "Expense" }
   const accountOptions = (ledgiusAccounts ?? []).map((a) => ({
     value: a.id,
     label: `${a.accno} — ${a.description ?? ""}`,
-    detail: a.category,
+    detail: catLabels[a.category] ?? a.category,
   }))
 
   const contactOptions = [
