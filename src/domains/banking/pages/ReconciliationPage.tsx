@@ -796,14 +796,17 @@ function CreateEntryForm({
   const [showIncome, setShowIncome] = useState(true)
   const [showExpense, setShowExpense] = useState(true)
   const [showPastMatches, setShowPastMatches] = useState(false)
+  const [rulePatternOverride, setRulePatternOverride] = useState("")
   const pastMatchesRef = useRef<HTMLDivElement>(null)
 
   // Smart default: positive amount = income first, negative = expense first
+  // Also derive a clean rule pattern from the description
   useEffect(() => {
     if (selectedItem) {
       const isCredit = (selectedItem?.amount ?? 0) > 0
       setShowIncome(isCredit)
       setShowExpense(!isCredit)
+      setRulePatternOverride(extractPattern(selectedItem.description ?? ""))
     }
   }, [selectedItem?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -933,15 +936,34 @@ function CreateEntryForm({
         />
       </div>
 
-      <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={rememberRule}
-          onChange={(e) => onRememberRuleChange(e.target.checked)}
-          className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-        />
-        Remember this rule for future transactions
-      </label>
+      <div className="border border-gray-200 rounded-lg overflow-hidden">
+        <label className="flex items-center gap-2 px-3 py-2 text-xs text-gray-600 cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+          <input
+            type="checkbox"
+            checked={rememberRule}
+            onChange={(e) => onRememberRuleChange(e.target.checked)}
+            className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+          />
+          <span>Also create a rule for future similar transactions</span>
+        </label>
+        {rememberRule && (
+          <div className="px-3 py-2 border-t border-gray-200 bg-white space-y-2">
+            <div>
+              <label className="block text-[10px] font-medium text-gray-500 mb-0.5">Rule pattern (editable)</label>
+              <input
+                type="text"
+                data-rule-pattern
+                value={rulePatternOverride}
+                onChange={(e) => setRulePatternOverride(e.target.value)}
+                className="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
+              />
+            </div>
+            <p className="text-[10px] text-gray-400">
+              Future transactions containing "<strong>{rulePatternOverride}</strong>" will auto-match to this account.
+            </p>
+          </div>
+        )}
+      </div>
 
       <div className="flex gap-2">
         <Button
@@ -1132,6 +1154,7 @@ export function ReconciliationPage() {
         account_id: createAccountId,
         description: desc,
         remember_rule: createRememberRule,
+        rule_pattern: createRememberRule ? (document.querySelector<HTMLInputElement>('[data-rule-pattern]')?.value ?? extractPattern(selectedItem?.description ?? "")) : "",
       })
       feedback.success("Ledger entry created and matched")
       setCreateAccountId(0)

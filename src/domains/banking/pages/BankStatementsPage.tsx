@@ -127,9 +127,11 @@ export function BankStatementsPage() {
     (a) => a.category === "A" && isBankAccount(a.accno, a.description)
   )
 
+  const categoryLabels: Record<string, string> = { A: "Asset", L: "Liability", Q: "Equity", I: "Income", E: "Expense" }
   const accountOptions = bankAccounts.map((a) => ({
     value: String(a.id),
     label: `${a.accno} — ${a.description ?? "Unnamed"}`,
+    detail: categoryLabels[a.category] ?? a.category,
   }))
 
   const unmatchedCount = unmatched?.length ?? 0

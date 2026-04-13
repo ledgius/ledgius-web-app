@@ -244,6 +244,7 @@ export function useCreateFromLine() {
       account_id: number
       description: string
       remember_rule: boolean
+      rule_pattern?: string
     }) => api.post(`/reconciliation/lines/${lineId}/create`, body),
     onSuccess: () => qc.invalidateQueries({ queryKey: RECON_KEY }),
   })
