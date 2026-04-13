@@ -19,6 +19,9 @@ import { formatDate, cn } from "@/shared/lib/utils"
 import {
   Upload,
   CheckCircle,
+  CheckCircle2,
+  Circle,
+  Clock,
   AlertCircle,
   ArrowRight,
   FileText,
@@ -259,11 +262,45 @@ export function BankStatementsPage() {
   return (
     <PageShell header={header}>
       {/* Info panel */}
-      <InfoPanel title="How to use Bank Statements" storageKey="bank-import-transactions-info">
-        <p><strong>1.</strong> Select a bank account below</p>
-        <p><strong>2.</strong> Upload a bank statement file (OFX or CSV from your internet banking)</p>
-        <p><strong>3.</strong> Review imported transactions — check for duplicates and verify totals</p>
-        <p><strong>4.</strong> Go to <Link to="/bank-reconciliation" className="text-primary-600 hover:text-primary-800 underline font-semibold">Reconciliation</Link> to match transactions to your ledger</p>
+      <InfoPanel title="How to import bank transactions" storageKey="bank-import-transactions-info">
+        <div className="space-y-2">
+          <div className="flex items-start gap-2">
+            {selectedAccountId > 0 ? (
+              <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+            ) : (
+              <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
+            )}
+            <p className="text-xs"><strong>1.</strong> Select a bank account below</p>
+          </div>
+          <div className="flex items-start gap-2">
+            {(batches ?? []).length > 0 ? (
+              <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+            ) : selectedAccountId > 0 ? (
+              <Clock className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+            ) : (
+              <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
+            )}
+            <p className="text-xs"><strong>2.</strong> Upload a bank statement file (OFX, CSV, QIF, or QBO from your internet banking)</p>
+          </div>
+          <div className="flex items-start gap-2">
+            {(batches ?? []).some((b: { status: string }) => b.status === "complete") ? (
+              <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+            ) : (batches ?? []).length > 0 ? (
+              <Clock className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+            ) : (
+              <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
+            )}
+            <p className="text-xs"><strong>3.</strong> Review imported transactions — check for duplicates and verify totals</p>
+          </div>
+          <div className="flex items-start gap-2">
+            {unmatchedCount === 0 && (batches ?? []).length > 0 ? (
+              <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+            ) : (
+              <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
+            )}
+            <p className="text-xs"><strong>4.</strong> Go to <Link to="/bank-reconciliation" className="text-primary-600 hover:text-primary-800 underline font-semibold">Reconciliation</Link> to match transactions to your ledger</p>
+          </div>
+        </div>
       </InfoPanel>
 
       {/* Bank account selector */}
