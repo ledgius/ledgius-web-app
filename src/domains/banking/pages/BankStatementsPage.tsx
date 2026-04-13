@@ -270,7 +270,7 @@ export function BankStatementsPage() {
             ) : (
               <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
             )}
-            <p className="text-xs"><strong>1.</strong> Select a bank account below</p>
+            <p className="text-xs"><strong>1. Select a bank account</strong> from the dropdown below.</p>
           </div>
           <div className="flex items-start gap-2">
             {(batches ?? []).length > 0 ? (
@@ -280,7 +280,7 @@ export function BankStatementsPage() {
             ) : (
               <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
             )}
-            <p className="text-xs"><strong>2.</strong> Upload a bank statement file (OFX, CSV, QIF, or QBO from your internet banking)</p>
+            <p className="text-xs"><strong>2. Upload a bank statement</strong> file using the <strong>"Choose File"</strong> button or drag and drop (OFX, CSV, QIF, or QBO).</p>
           </div>
           <div className="flex items-start gap-2">
             {(batches ?? []).some((b: { status: string }) => b.status === "complete") ? (
@@ -290,7 +290,7 @@ export function BankStatementsPage() {
             ) : (
               <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
             )}
-            <p className="text-xs"><strong>3.</strong> Review imported transactions — check for duplicates and verify totals</p>
+            <p className="text-xs"><strong>3. Review imported transactions</strong> in the Import History table below — check for duplicates and verify totals.</p>
           </div>
           <div className="flex items-start gap-2">
             {unmatchedCount === 0 && (batches ?? []).length > 0 ? (
@@ -298,7 +298,7 @@ export function BankStatementsPage() {
             ) : (
               <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
             )}
-            <p className="text-xs"><strong>4.</strong> Go to <Link to="/bank-reconciliation" className="text-primary-600 hover:text-primary-800 underline font-semibold">Reconciliation</Link> to match transactions to your ledger</p>
+            <p className="text-xs"><strong>4. Go to <Link to="/bank-reconciliation" className="text-primary-600 hover:text-primary-800 underline">Reconciliation</Link></strong> to match imported transactions against your ledger entries.</p>
           </div>
         </div>
       </InfoPanel>
