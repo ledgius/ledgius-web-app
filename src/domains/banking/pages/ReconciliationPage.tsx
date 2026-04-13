@@ -26,6 +26,7 @@ import {
   type QueueFilter,
   type QueueSort,
 } from "../hooks/useReconciliation"
+import { useBankRules, type BankRule } from "@/domains/banking/hooks/useBanking"
 import {
   Play,
   CheckCheck,
@@ -274,30 +275,24 @@ function CandidateCard({
 }
 
 // Right pane detail tabs
-type DetailTab = "details" | "actions" | "rules" | "audit"
+type DetailTab = "details" | "actions" | "audit"
 
 function DetailInspector({
   item,
-  accounts,
   onDefer,
   onExclude,
   onUndo,
-  onCreateRule,
   deferring,
   excluding,
   undoing,
-  creatingRule,
 }: {
   item: QueueItem
-  accounts: { id: number; accno: string; description: string | null; category: string }[]
   onDefer: (lineId: number, reasonCode: string, notes: string) => void
   onExclude: (lineId: number, reasonCode: string, notes: string) => void
   onUndo: (lineId: number) => void
-  onCreateRule: (lineId: number, pattern: string, accountId: number) => void
   deferring: boolean
   excluding: boolean
   undoing: boolean
-  creatingRule: boolean
 }) {
   const [tab, setTab] = useState<DetailTab>("details")
   const [deferReason, setDeferReason] = useState("")
@@ -306,8 +301,6 @@ function DetailInspector({
   const [excludeNotes, setExcludeNotes] = useState("")
   const [showDeferForm, setShowDeferForm] = useState(false)
   const [showExcludeForm, setShowExcludeForm] = useState(false)
-  const [rulePattern, setRulePattern] = useState(() => extractPattern(item.description ?? ""))
-  const [ruleAccountId, setRuleAccountId] = useState<number>(0)
 
   const { data: auditEvents, isLoading: auditLoading } = useReconAudit(tab === "audit" ? item.id : null)
 
@@ -333,7 +326,6 @@ function DetailInspector({
   const tabs: { key: DetailTab; label: string }[] = [
     { key: "details", label: "Details" },
     { key: "actions", label: "Actions" },
-    { key: "rules", label: "Rules" },
     { key: "audit", label: "Audit" },
   ]
 
@@ -566,20 +558,6 @@ function DetailInspector({
             </div>
 
           </>
-        )}
-
-        {/* ── Rules tab ── */}
-        {tab === "rules" && (
-          <RuleCreationPanel
-            item={item}
-            accounts={accounts}
-            rulePattern={rulePattern}
-            onPatternChange={setRulePattern}
-            ruleAccountId={ruleAccountId}
-            onAccountChange={setRuleAccountId}
-            creating={creatingRule}
-            onSave={(pattern, accountId) => onCreateRule(item.id, pattern, accountId)}
-          />
         )}
 
         {/* ── Audit tab ── */}
@@ -1001,12 +979,16 @@ export function ReconciliationPage() {
   const [createDescription, setCreateDescription] = useState<string>("")
   const [createRememberRule, setCreateRememberRule] = useState(false)
   const [bulkAccepted, setBulkAccepted] = useState(false)
+  const [centerTab, setCenterTab] = useState<"allocation" | "rules">("allocation")
+  const [rulePattern, setRulePattern] = useState("")
+  const [ruleAccountId, setRuleAccountId] = useState<number>(0)
 
   // Data queries
   const { data: queue, isLoading: queueLoading, error: queueError } = useReconQueue(selectedAccountId, sort, filter)
   const { data: candidatesData, isLoading: candidatesLoading } = useReconCandidates(selectedLineId)
   const { data: summary } = useReconSummary(selectedAccountId)
   const { data: importBatches } = useImportBatches(selectedAccountId)
+  const { data: bankRules, isLoading: rulesLoading } = useBankRules(selectedAccountId)
 
   // Mutations
   const matchLine = useMatchLine()
@@ -1159,6 +1141,14 @@ export function ReconciliationPage() {
       feedback.error("Create entry failed", err instanceof Error ? err.message : "Unknown error")
     }
   }, [selectedLineId, createAccountId, createDescription, createRememberRule, createFromLine, selectedItem, feedback])
+
+  // Reset rule pattern when selected item changes
+  useEffect(() => {
+    if (selectedItem) {
+      setRulePattern(extractPattern(selectedItem.description ?? ""))
+      setRuleAccountId(0)
+    }
+  }, [selectedItem?.id]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleCreateRule = useCallback(async (_lineId: number, pattern: string, accountId: number) => {
     try {
@@ -1329,7 +1319,7 @@ export function ReconciliationPage() {
                 <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
               )}
               <p className="text-xs">
-                <strong>2. Click a transaction</strong> in the left panel. The centre shows match candidates — click <strong>"Create & Match"</strong> to create a ledger entry. Use the <strong>Rules</strong> tab on the right to save patterns for future auto-matching.
+                <strong>2. Click a transaction</strong> in the left panel. The centre shows match candidates — click <strong>"Create & Match"</strong> to create a ledger entry. Switch to the <strong>Rules</strong> tab in the centre pane to save patterns for future auto-matching.
               </p>
             </div>
 
@@ -1574,114 +1564,232 @@ export function ReconciliationPage() {
             </div>
           </div>
 
-          {/* ── Center pane: Candidate Panel ─────────────────────────────────── */}
+          {/* ── Center pane: Allocation / Rules ──────────────────────────────── */}
           <div className="flex-1 min-w-0 flex flex-col min-h-0 border-r border-gray-300">
-            {!selectedLineId ? (
-              <div className="flex flex-col items-center justify-center flex-1 px-8 py-12 text-center">
-                <Filter className="h-10 w-10 text-gray-300 mb-3" />
-                <h3 className="text-sm font-medium text-gray-600 mb-1">Select a bank line</h3>
-                <p className="text-xs text-gray-400">
-                  Click a transaction in the left pane, or use <kbd className="px-1 py-0.5 rounded bg-gray-100 text-xs font-mono">j</kbd>/<kbd className="px-1 py-0.5 rounded bg-gray-100 text-xs font-mono">k</kbd> to navigate.
-                </p>
-              </div>
-            ) : (
-              <>
-                {/* Selected line summary */}
-                {selectedItem && (
-                  <div className="shrink-0 border-b border-gray-300 px-4 py-3 bg-gray-50">
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-xs text-gray-500 mb-0.5">{formatDate(selectedItem.trans_date)}</p>
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {selectedItem.normalized_description || selectedItem.description || "—"}
-                        </p>
-                        {selectedItem.counterparty_name && (
-                          <p className="text-xs text-gray-500 truncate">{selectedItem.counterparty_name}</p>
-                        )}
-                      </div>
-                      <div className="shrink-0 text-right">
-                        <p
-                          className={cn(
-                            "text-base font-mono font-semibold",
-                            (typeof (selectedItem?.amount ?? 0) === "number"
-                              ? (selectedItem?.amount ?? 0)
-                              : parseFloat(String((selectedItem?.amount ?? 0)))) >= 0
-                              ? "text-green-700"
-                              : "text-red-700"
-                          )}
-                        >
-                          {formatCurrency(
-                            typeof (selectedItem?.amount ?? 0) === "number"
-                              ? (selectedItem?.amount ?? 0)
-                              : parseFloat(String((selectedItem?.amount ?? 0)))
-                          )}
-                        </p>
-                        <Badge variant={getStatusConfig(selectedItem.reconciliation_status).badgeVariant} className="mt-1">
-                          {getStatusConfig(selectedItem.reconciliation_status).label}
-                        </Badge>
-                      </div>
-                    </div>
+            {/* Selected line summary (when a line is chosen) */}
+            {selectedItem && selectedLineId && (
+              <div className="shrink-0 border-b border-gray-300 px-4 py-3 bg-gray-50">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-xs text-gray-500 mb-0.5">{formatDate(selectedItem.trans_date)}</p>
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {selectedItem.normalized_description || selectedItem.description || "—"}
+                    </p>
+                    {selectedItem.counterparty_name && (
+                      <p className="text-xs text-gray-500 truncate">{selectedItem.counterparty_name}</p>
+                    )}
                   </div>
-                )}
+                  <div className="shrink-0 text-right">
+                    <p
+                      className={cn(
+                        "text-base font-mono font-semibold",
+                        (typeof (selectedItem?.amount ?? 0) === "number"
+                          ? (selectedItem?.amount ?? 0)
+                          : parseFloat(String((selectedItem?.amount ?? 0)))) >= 0
+                          ? "text-green-700"
+                          : "text-red-700"
+                      )}
+                    >
+                      {formatCurrency(
+                        typeof (selectedItem?.amount ?? 0) === "number"
+                          ? (selectedItem?.amount ?? 0)
+                          : parseFloat(String((selectedItem?.amount ?? 0)))
+                      )}
+                    </p>
+                    <Badge variant={getStatusConfig(selectedItem.reconciliation_status).badgeVariant} className="mt-1">
+                      {getStatusConfig(selectedItem.reconciliation_status).label}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            )}
 
-                {/* Candidates list */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                  {candidatesLoading ? (
-                    <div className="space-y-4">
-                      {Array.from({ length: 3 }).map((_, i) => (
-                        <div key={i} className="border border-gray-200 rounded-lg p-4 space-y-3">
-                          <Skeleton className="h-4 w-3/4" />
-                          <Skeleton className="h-3 w-1/2" />
-                          <Skeleton className="h-2 w-full" />
-                          <div className="flex gap-1">
-                            <Skeleton className="h-5 w-20" />
-                            <Skeleton className="h-5 w-16" />
-                          </div>
-                        </div>
-                      ))}
+            {/* Tab bar */}
+            <div className="shrink-0 border-b border-gray-300 px-4 py-2 bg-white flex gap-1">
+              {(["allocation", "rules"] as const).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setCenterTab(t)}
+                  className={cn(
+                    "px-3 py-1 rounded-full text-xs font-medium border transition-colors",
+                    centerTab === t
+                      ? "bg-gray-900 text-white border-gray-900"
+                      : "bg-white text-gray-500 border-gray-300 hover:border-gray-400 hover:text-gray-700"
+                  )}
+                >
+                  {t === "allocation" ? "Allocation" : "Rules"}
+                </button>
+              ))}
+            </div>
+
+            {/* Tab content */}
+            <div className="flex-1 overflow-y-auto">
+              {/* ── Allocation tab ── */}
+              {centerTab === "allocation" && (
+                <>
+                  {!selectedLineId ? (
+                    <div className="flex flex-col items-center justify-center h-full px-8 py-12 text-center">
+                      <Filter className="h-10 w-10 text-gray-300 mb-3" />
+                      <h3 className="text-sm font-medium text-gray-600 mb-1">Select a bank line</h3>
+                      <p className="text-xs text-gray-400">
+                        Click a transaction in the left pane, or use <kbd className="px-1 py-0.5 rounded bg-gray-100 text-xs font-mono">j</kbd>/<kbd className="px-1 py-0.5 rounded bg-gray-100 text-xs font-mono">k</kbd> to navigate.
+                      </p>
                     </div>
-                  ) : candidates.length > 0 ? (
-                    <>
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">
-                          {candidates.length} candidate{candidates.length !== 1 ? "s" : ""} ranked by confidence
-                        </h3>
-                        <span className="text-xs text-gray-400">Press 1–9 to accept by rank</span>
-                      </div>
-                      {candidates.map((candidate, idx) => (
-                        <CandidateCard
-                          key={candidate.entry_id}
-                          candidate={candidate}
-                          rank={idx + 1}
-                          onAccept={(c) => handleAcceptTopCandidate(selectedLineId, c)}
-                          accepting={matchLine.isPending}
-                        />
-                      ))}
-                    </>
                   ) : (
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2 text-amber-600 mb-2">
-                        <AlertTriangle className="h-4 w-4 shrink-0" />
-                        <p className="text-xs">No matching ledger entries found. Create a new entry below.</p>
-                      </div>
+                    <div className="p-4 space-y-4">
+                      {candidatesLoading ? (
+                        <div className="space-y-4">
+                          {Array.from({ length: 3 }).map((_, i) => (
+                            <div key={i} className="border border-gray-200 rounded-lg p-4 space-y-3">
+                              <Skeleton className="h-4 w-3/4" />
+                              <Skeleton className="h-3 w-1/2" />
+                              <Skeleton className="h-2 w-full" />
+                              <div className="flex gap-1">
+                                <Skeleton className="h-5 w-20" />
+                                <Skeleton className="h-5 w-16" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : candidates.length > 0 ? (
+                        <>
+                          <div className="flex items-center justify-between mb-2">
+                            <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+                              {candidates.length} candidate{candidates.length !== 1 ? "s" : ""} ranked by confidence
+                            </h3>
+                            <span className="text-xs text-gray-400">Press 1–9 to accept by rank</span>
+                          </div>
+                          {candidates.map((candidate, idx) => (
+                            <CandidateCard
+                              key={candidate.entry_id}
+                              candidate={candidate}
+                              rank={idx + 1}
+                              onAccept={(c) => handleAcceptTopCandidate(selectedLineId, c)}
+                              accepting={matchLine.isPending}
+                            />
+                          ))}
+                        </>
+                      ) : (
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-2 text-amber-600 mb-2">
+                            <AlertTriangle className="h-4 w-4 shrink-0" />
+                            <p className="text-xs">No matching ledger entries found. Create a new entry below.</p>
+                          </div>
 
-                      <CreateEntryForm
-                        accounts={incomeExpenseAccounts}
-                        selectedItem={selectedItem!}
-                        accountId={createAccountId}
-                        onAccountChange={setCreateAccountId}
-                        description={createDescription || selectedItem?.description || ""}
-                        onDescriptionChange={setCreateDescription}
-                        rememberRule={createRememberRule}
-                        onRememberRuleChange={setCreateRememberRule}
-                        creating={createFromLine.isPending}
-                        onSubmit={handleCreateEntry}
-                      />
+                          <CreateEntryForm
+                            accounts={incomeExpenseAccounts}
+                            selectedItem={selectedItem!}
+                            accountId={createAccountId}
+                            onAccountChange={setCreateAccountId}
+                            description={createDescription || selectedItem?.description || ""}
+                            onDescriptionChange={setCreateDescription}
+                            rememberRule={createRememberRule}
+                            onRememberRuleChange={setCreateRememberRule}
+                            creating={createFromLine.isPending}
+                            onSubmit={handleCreateEntry}
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
+                </>
+              )}
+
+              {/* ── Rules tab ── */}
+              {centerTab === "rules" && (
+                <div className="p-4 space-y-6">
+                  {/* Rule editor */}
+                  {selectedItem ? (
+                    <RuleCreationPanel
+                      item={selectedItem}
+                      accounts={allAccounts}
+                      rulePattern={rulePattern}
+                      onPatternChange={setRulePattern}
+                      ruleAccountId={ruleAccountId}
+                      onAccountChange={setRuleAccountId}
+                      creating={createBankRule.isPending}
+                      onSave={(pattern, accountId) => handleCreateRule(selectedItem.id, pattern, accountId)}
+                    />
+                  ) : (
+                    <div className="border border-dashed border-gray-300 rounded-lg p-4 text-center">
+                      <p className="text-xs text-gray-400">Select a bank transaction on the left to create a rule based on it, or browse existing rules below.</p>
+                    </div>
+                  )}
+
+                  {/* Existing rules list */}
+                  <div>
+                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+                      Existing Rules {bankRules && bankRules.length > 0 && `(${bankRules.length})`}
+                    </h3>
+                    {rulesLoading ? (
+                      <div className="space-y-2">
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                      </div>
+                    ) : !bankRules || bankRules.length === 0 ? (
+                      <p className="text-xs text-gray-400 text-center py-4">No rules yet. Create one above to auto-classify future transactions.</p>
+                    ) : (
+                      <div className="border border-gray-200 rounded-lg overflow-hidden">
+                        <table className="w-full text-xs">
+                          <thead>
+                            <tr className="bg-gray-50 border-b border-gray-200">
+                              <th className="text-left px-3 py-2 font-medium text-gray-500">Name / Pattern</th>
+                              <th className="text-left px-3 py-2 font-medium text-gray-500">Target Account</th>
+                              <th className="text-right px-3 py-2 font-medium text-gray-500">Priority</th>
+                              <th className="text-right px-3 py-2 font-medium text-gray-500">Enabled</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-100">
+                            {(bankRules as BankRule[]).map((rule) => {
+                              const targetAccount = allAccounts.find((a) => a.id === rule.match_account_id)
+                              return (
+                                <tr
+                                  key={rule.id}
+                                  className="hover:bg-gray-50 cursor-pointer transition-colors"
+                                  onClick={() => {
+                                    setRulePattern(rule.description_pattern ?? "")
+                                    setRuleAccountId(rule.match_account_id)
+                                  }}
+                                >
+                                  <td className="px-3 py-2.5">
+                                    <p className="font-medium text-gray-800 truncate max-w-[160px]">{rule.name}</p>
+                                    {rule.description_pattern && rule.description_pattern !== rule.name && (
+                                      <p className="text-gray-400 font-mono truncate max-w-[160px]">{rule.description_pattern}</p>
+                                    )}
+                                  </td>
+                                  <td className="px-3 py-2.5">
+                                    {targetAccount ? (
+                                      <span className="text-gray-700 truncate max-w-[140px] block">
+                                        {targetAccount.accno} — {targetAccount.description}
+                                      </span>
+                                    ) : (
+                                      <span className="text-gray-400">—</span>
+                                    )}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-right tabular-nums text-gray-600">{rule.priority}</td>
+                                  <td className="px-3 py-2.5 text-right">
+                                    <span className={cn(
+                                      "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-medium",
+                                      rule.enabled
+                                        ? "bg-green-50 text-green-700 border border-green-200"
+                                        : "bg-gray-100 text-gray-400 border border-gray-200"
+                                    )}>
+                                      {rule.enabled ? "Yes" : "No"}
+                                    </span>
+                                  </td>
+                                </tr>
+                              )
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </>
-            )}
+              )}
+            </div>
           </div>
 
           {/* ── Right pane: Detail Inspector ─────────────────────────────────── */}
@@ -1689,15 +1797,12 @@ export function ReconciliationPage() {
             {selectedItem ? (
               <DetailInspector
                 item={selectedItem}
-                accounts={allAccounts}
                 onDefer={handleDefer}
                 onExclude={handleExclude}
                 onUndo={handleUndo}
-                onCreateRule={handleCreateRule}
                 deferring={deferLine.isPending}
                 excluding={excludeLine.isPending}
                 undoing={undoAction.isPending}
-                creatingRule={createBankRule.isPending}
               />
             ) : (
               <div className="flex flex-col items-center justify-center flex-1 px-6 py-12 text-center">
