@@ -24,8 +24,8 @@ export function LoginPage() {
 
   // Handle SSO callback — tokens arrive in URL params
   useEffect(() => {
-    const accessToken = searchParams.get("access_token")
-    const refreshToken = searchParams.get("refresh_token")
+    const ssoAccessToken = searchParams.get("access_token")
+    const ssoRefreshToken = searchParams.get("refresh_token")
     const ssoError = searchParams.get("sso_error")
 
     if (ssoError) {
@@ -33,11 +33,26 @@ export function LoginPage() {
       return
     }
 
-    if (accessToken) {
-      setAuthToken(accessToken)
-      if (refreshToken) setRefreshTokenValue(refreshToken)
-      // Force page reload to pick up the new auth state
-      window.location.href = "/"
+    if (ssoAccessToken) {
+      const tenantId = searchParams.get("tenant_id") || null
+      const role = searchParams.get("role") || null
+      const userEmail = searchParams.get("user_email") || ""
+      const userName = searchParams.get("user_name") || ""
+      const userId = searchParams.get("user_id") || ""
+
+      const authState = {
+        user: { id: userId, email: userEmail, display_name: userName, is_platform_admin: false },
+        currentTenantId: tenantId,
+        currentRole: role,
+        tenants: tenantId ? [{ tenant_id: tenantId, role: role || "owner" }] : [],
+        accessToken: ssoAccessToken,
+        refreshToken: ssoRefreshToken,
+        isAuthenticated: true,
+      }
+      sessionStorage.setItem("ledgius_auth", JSON.stringify(authState))
+      setAuthToken(ssoAccessToken)
+      if (ssoRefreshToken) setRefreshTokenValue(ssoRefreshToken)
+      window.location.replace("/")
     }
   }, [searchParams])
 
