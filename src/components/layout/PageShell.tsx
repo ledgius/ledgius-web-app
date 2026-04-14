@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 import { cn } from "@/shared/lib/utils"
+import { PageLoader } from "@/components/primitives"
 
 /**
  * Standard accounting page composition shell.
@@ -25,6 +26,8 @@ export interface PageShellProps {
   activity?: ReactNode
   /** Layout mode: 'full' has aside beside content, 'stacked' puts aside below */
   layout?: "full" | "stacked"
+  /** Show branded loading spinner instead of content */
+  loading?: boolean
   className?: string
 }
 
@@ -35,8 +38,18 @@ export function PageShell({
   footer,
   activity,
   layout = aside ? "full" : "stacked",
+  loading = false,
   className,
 }: PageShellProps) {
+  if (loading) {
+    return (
+      <div className={cn("flex flex-col h-full min-h-0", className)}>
+        {header && <div className="shrink-0 mb-6">{header}</div>}
+        <PageLoader />
+      </div>
+    )
+  }
+
   return (
     <div className={cn("flex flex-col h-full min-h-0", className)}>
       {/* Header zone */}

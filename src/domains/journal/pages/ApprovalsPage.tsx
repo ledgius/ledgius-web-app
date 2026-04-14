@@ -64,7 +64,7 @@ export function ApprovalsPage() {
   )
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
       {message && (
         <div className="mb-4 p-3 bg-blue-50 text-blue-700 text-sm rounded-md">{message}</div>
       )}

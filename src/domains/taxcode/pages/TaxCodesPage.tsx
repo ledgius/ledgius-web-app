@@ -35,7 +35,7 @@ export function TaxCodesPage() {
   )
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
       <DataTable columns={columns} data={codes ?? []} loading={isLoading} error={error} emptyMessage="No tax codes configured." />
     </PageShell>
   )

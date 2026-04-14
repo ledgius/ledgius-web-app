@@ -209,7 +209,7 @@ export function AccountsPage() {
   )
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
       <InlineCreatePanel isOpen={createOpen} onClose={() => setCreateOpen(false)} title="New Account">
         <InlineAccountForm onClose={() => setCreateOpen(false)} />
       </InlineCreatePanel>

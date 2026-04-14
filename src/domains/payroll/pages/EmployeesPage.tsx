@@ -246,7 +246,7 @@ export function EmployeesPage() {
   )
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
       <InlineCreatePanel isOpen={createOpen} onClose={() => setCreateOpen(false)} title="New Employee">
         <InlineEmployeeForm onClose={() => setCreateOpen(false)} />
       </InlineCreatePanel>

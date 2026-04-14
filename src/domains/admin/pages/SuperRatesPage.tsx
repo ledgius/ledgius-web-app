@@ -75,7 +75,7 @@ export function SuperRatesPage() {
   )
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
       <DataTable columns={columns} data={rates ?? []} loading={isLoading} error={error} emptyMessage="No super guarantee rates configured." />
     </PageShell>
   )

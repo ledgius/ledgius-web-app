@@ -158,7 +158,7 @@ export function VendorsPage() {
   )
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
       <InlineCreatePanel isOpen={createOpen} onClose={() => setCreateOpen(false)} title="New Vendor">
         <InlineVendorForm onClose={() => setCreateOpen(false)} />
       </InlineCreatePanel>

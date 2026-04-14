@@ -98,7 +98,7 @@ export function ReceiptsPage() {
   )
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
       <InfoPanel title="Recording receipts" storageKey="receipts-info">
         <p><strong>1. Select customer and invoice</strong> — choose who paid and which invoice the payment is for.</p>
         <p><strong>2. Enter payment details</strong> — amount received, date, bank account, and payment reference.</p>

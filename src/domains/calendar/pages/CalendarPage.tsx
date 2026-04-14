@@ -573,7 +573,7 @@ export function CalendarPage() {
   )
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
       <div className="flex gap-4 min-h-0">
         {/* Calendar grid — shrinks when panel is open */}
         <div className={cn("flex-1 min-w-0 transition-all duration-200")}>

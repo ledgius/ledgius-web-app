@@ -77,7 +77,7 @@ export function InvoicesPage() {
   )
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
       <DataTable
         columns={columns}
         data={filtered}

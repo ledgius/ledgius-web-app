@@ -1,144 +1,169 @@
+import { lazy, Suspense } from "react"
 import { createBrowserRouter } from "react-router-dom"
 import { Layout } from "@/shared/components/Layout"
 import { RequireAuth } from "@/shared/components/RequireAuth"
-import { AccountsPage } from "@/domains/account/pages/AccountsPage"
-import { CreateAccountPage } from "@/domains/account/pages/CreateAccountPage"
-import { CustomersPage } from "@/domains/contact/pages/CustomersPage"
-import { VendorsPage } from "@/domains/contact/pages/VendorsPage"
-import { ContactDetailPage } from "@/domains/contact/pages/ContactDetailPage"
-import { CreateContactPage } from "@/domains/contact/pages/CreateContactPage"
-import { InvoicesPage } from "@/domains/receivable/pages/InvoicesPage"
-import { InvoiceDetailPage } from "@/domains/receivable/pages/InvoiceDetailPage"
-import { CreateInvoicePage } from "@/domains/receivable/pages/CreateInvoicePage"
-import { CreditNoteListPage } from "@/domains/receivable/pages/CreditNoteListPage"
-import { CreditNotesPage } from "@/domains/receivable/pages/CreditNotesPage"
-import { BillsPage } from "@/domains/payable/pages/BillsPage"
-import { BillDetailPage } from "@/domains/payable/pages/BillDetailPage"
-import { CreateBillPage } from "@/domains/payable/pages/CreateBillPage"
-import { DebitNotesPage } from "@/domains/payable/pages/DebitNotesPage"
-import { ReceiptsPage } from "@/domains/receipt/pages/ReceiptsPage"
-import { PaymentsPage } from "@/domains/payment/pages/PaymentsPage"
-import { BankingPage } from "@/domains/banking/pages/BankingPage"
-import { BankStatementsPage } from "@/domains/banking/pages/BankStatementsPage"
-import { ReconciliationPage } from "@/domains/banking/pages/ReconciliationPage"
-import { TransfersPage } from "@/domains/banking/pages/TransfersPage"
-import { ReportsPage } from "@/domains/reporting/pages/ReportsPage"
-import { BASPage } from "@/domains/tax/pages/BASPage"
-import { GLPage } from "@/domains/journal/pages/GLPage"
-import { ApprovalsPage } from "@/domains/journal/pages/ApprovalsPage"
-import { ProductsPage } from "@/domains/product/pages/ProductsPage"
-import { CreateProductPage } from "@/domains/product/pages/CreateProductPage"
-import { TaxCodesPage } from "@/domains/taxcode/pages/TaxCodesPage"
-import { DashboardPage } from "@/domains/dashboard/pages/DashboardPage"
-import { BooksHealthPage } from "@/domains/dashboard/pages/BooksHealthPage"
-import { LoginPage } from "@/domains/auth/pages/LoginPage"
-import { EditAccountPage } from "@/domains/account/pages/EditAccountPage"
-import { EditProductPage } from "@/domains/product/pages/EditProductPage"
-import { RecurringPage } from "@/domains/recurring/pages/RecurringPage"
-import { TemplatesPage } from "@/domains/template/pages/TemplatesPage"
-import { AuditLogPage } from "@/domains/audit/pages/AuditLogPage"
-import { HeadingsPage } from "@/domains/account/pages/HeadingsPage"
-import { PAYGConfigPage } from "@/domains/admin/pages/PAYGConfigPage"
-import { SuperRatesPage } from "@/domains/admin/pages/SuperRatesPage"
-import { UsersPage } from "@/domains/admin/pages/UsersPage"
-import { DataImportPage } from "@/domains/admin/pages/DataImportPage"
-import { FeedbackDashboardPage } from "@/domains/admin/pages/FeedbackDashboardPage"
-import { FeedbackStatusPage } from "@/domains/admin/pages/FeedbackStatusPage"
-import { JournalDetailPage } from "@/domains/journal/pages/JournalDetailPage"
-import { CurrencyPage } from "@/domains/currency/pages/CurrencyPage"
-import { EmployeesPage } from "@/domains/payroll/pages/EmployeesPage"
-import { CreateEmployeePage } from "@/domains/payroll/pages/CreateEmployeePage"
-import { EmployeeDetailPage } from "@/domains/payroll/pages/EmployeeDetailPage"
-import { PayRunsPage } from "@/domains/payroll/pages/PayRunsPage"
-import { CalendarPage } from "@/domains/calendar/pages/CalendarPage"
+import { PageLoader } from "@/components/primitives"
+
+// Lazy-load all page components — each becomes a separate chunk.
+// Pages only load when the user navigates to them.
+const LoginPage = lazy(() => import("@/domains/auth/pages/LoginPage").then(m => ({ default: m.LoginPage })))
+const DashboardPage = lazy(() => import("@/domains/dashboard/pages/DashboardPage").then(m => ({ default: m.DashboardPage })))
+const BooksHealthPage = lazy(() => import("@/domains/dashboard/pages/BooksHealthPage").then(m => ({ default: m.BooksHealthPage })))
+const CalendarPage = lazy(() => import("@/domains/calendar/pages/CalendarPage").then(m => ({ default: m.CalendarPage })))
+
+const AccountsPage = lazy(() => import("@/domains/account/pages/AccountsPage").then(m => ({ default: m.AccountsPage })))
+const CreateAccountPage = lazy(() => import("@/domains/account/pages/CreateAccountPage").then(m => ({ default: m.CreateAccountPage })))
+const EditAccountPage = lazy(() => import("@/domains/account/pages/EditAccountPage").then(m => ({ default: m.EditAccountPage })))
+const HeadingsPage = lazy(() => import("@/domains/account/pages/HeadingsPage").then(m => ({ default: m.HeadingsPage })))
+
+const CustomersPage = lazy(() => import("@/domains/contact/pages/CustomersPage").then(m => ({ default: m.CustomersPage })))
+const VendorsPage = lazy(() => import("@/domains/contact/pages/VendorsPage").then(m => ({ default: m.VendorsPage })))
+const ContactDetailPage = lazy(() => import("@/domains/contact/pages/ContactDetailPage").then(m => ({ default: m.ContactDetailPage })))
+const CreateContactPage = lazy(() => import("@/domains/contact/pages/CreateContactPage").then(m => ({ default: m.CreateContactPage })))
+
+const InvoicesPage = lazy(() => import("@/domains/receivable/pages/InvoicesPage").then(m => ({ default: m.InvoicesPage })))
+const InvoiceDetailPage = lazy(() => import("@/domains/receivable/pages/InvoiceDetailPage").then(m => ({ default: m.InvoiceDetailPage })))
+const CreateInvoicePage = lazy(() => import("@/domains/receivable/pages/CreateInvoicePage").then(m => ({ default: m.CreateInvoicePage })))
+const CreditNoteListPage = lazy(() => import("@/domains/receivable/pages/CreditNoteListPage").then(m => ({ default: m.CreditNoteListPage })))
+const CreditNotesPage = lazy(() => import("@/domains/receivable/pages/CreditNotesPage").then(m => ({ default: m.CreditNotesPage })))
+const ReceiptsPage = lazy(() => import("@/domains/receipt/pages/ReceiptsPage").then(m => ({ default: m.ReceiptsPage })))
+
+const BillsPage = lazy(() => import("@/domains/payable/pages/BillsPage").then(m => ({ default: m.BillsPage })))
+const BillDetailPage = lazy(() => import("@/domains/payable/pages/BillDetailPage").then(m => ({ default: m.BillDetailPage })))
+const CreateBillPage = lazy(() => import("@/domains/payable/pages/CreateBillPage").then(m => ({ default: m.CreateBillPage })))
+const DebitNotesPage = lazy(() => import("@/domains/payable/pages/DebitNotesPage").then(m => ({ default: m.DebitNotesPage })))
+const PaymentsPage = lazy(() => import("@/domains/payment/pages/PaymentsPage").then(m => ({ default: m.PaymentsPage })))
+
+const BankStatementsPage = lazy(() => import("@/domains/banking/pages/BankStatementsPage").then(m => ({ default: m.BankStatementsPage })))
+const ReconciliationPage = lazy(() => import("@/domains/banking/pages/ReconciliationPage").then(m => ({ default: m.ReconciliationPage })))
+const BankingPage = lazy(() => import("@/domains/banking/pages/BankingPage").then(m => ({ default: m.BankingPage })))
+const TransfersPage = lazy(() => import("@/domains/banking/pages/TransfersPage").then(m => ({ default: m.TransfersPage })))
+const CapturedReceiptsPage = lazy(() => import("@/domains/capture/pages/CapturedReceiptsPage").then(m => ({ default: m.CapturedReceiptsPage })))
+const LogbookPage = lazy(() => import("@/domains/mileage/pages/LogbookPage").then(m => ({ default: m.LogbookPage })))
+
+const GLPage = lazy(() => import("@/domains/journal/pages/GLPage").then(m => ({ default: m.GLPage })))
+const JournalDetailPage = lazy(() => import("@/domains/journal/pages/JournalDetailPage").then(m => ({ default: m.JournalDetailPage })))
+const ApprovalsPage = lazy(() => import("@/domains/journal/pages/ApprovalsPage").then(m => ({ default: m.ApprovalsPage })))
+
+const ProductsPage = lazy(() => import("@/domains/product/pages/ProductsPage").then(m => ({ default: m.ProductsPage })))
+const CreateProductPage = lazy(() => import("@/domains/product/pages/CreateProductPage").then(m => ({ default: m.CreateProductPage })))
+const EditProductPage = lazy(() => import("@/domains/product/pages/EditProductPage").then(m => ({ default: m.EditProductPage })))
+
+const RecurringPage = lazy(() => import("@/domains/recurring/pages/RecurringPage").then(m => ({ default: m.RecurringPage })))
+const TemplatesPage = lazy(() => import("@/domains/template/pages/TemplatesPage").then(m => ({ default: m.TemplatesPage })))
+const CurrencyPage = lazy(() => import("@/domains/currency/pages/CurrencyPage").then(m => ({ default: m.CurrencyPage })))
+
+const EmployeesPage = lazy(() => import("@/domains/payroll/pages/EmployeesPage").then(m => ({ default: m.EmployeesPage })))
+const CreateEmployeePage = lazy(() => import("@/domains/payroll/pages/CreateEmployeePage").then(m => ({ default: m.CreateEmployeePage })))
+const EmployeeDetailPage = lazy(() => import("@/domains/payroll/pages/EmployeeDetailPage").then(m => ({ default: m.EmployeeDetailPage })))
+const PayRunsPage = lazy(() => import("@/domains/payroll/pages/PayRunsPage").then(m => ({ default: m.PayRunsPage })))
+
+const PAYGConfigPage = lazy(() => import("@/domains/admin/pages/PAYGConfigPage").then(m => ({ default: m.PAYGConfigPage })))
+const SuperRatesPage = lazy(() => import("@/domains/admin/pages/SuperRatesPage").then(m => ({ default: m.SuperRatesPage })))
+const UsersPage = lazy(() => import("@/domains/admin/pages/UsersPage").then(m => ({ default: m.UsersPage })))
+const DataImportPage = lazy(() => import("@/domains/admin/pages/DataImportPage").then(m => ({ default: m.DataImportPage })))
+const FeedbackDashboardPage = lazy(() => import("@/domains/admin/pages/FeedbackDashboardPage").then(m => ({ default: m.FeedbackDashboardPage })))
+const FeedbackStatusPage = lazy(() => import("@/domains/admin/pages/FeedbackStatusPage").then(m => ({ default: m.FeedbackStatusPage })))
+
+const AuditLogPage = lazy(() => import("@/domains/audit/pages/AuditLogPage").then(m => ({ default: m.AuditLogPage })))
+const ReportsPage = lazy(() => import("@/domains/reporting/pages/ReportsPage").then(m => ({ default: m.ReportsPage })))
+const BASPage = lazy(() => import("@/domains/tax/pages/BASPage").then(m => ({ default: m.BASPage })))
+const TaxCodesPage = lazy(() => import("@/domains/taxcode/pages/TaxCodesPage").then(m => ({ default: m.TaxCodesPage })))
+
+// Wrap each lazy page in Suspense with the branded loading spinner.
+function S({ children }: { children: React.ReactNode }) {
+  return <Suspense fallback={<PageLoader />}>{children}</Suspense>
+}
 
 export const router = createBrowserRouter([
   // Login page (no layout wrapper, no auth required)
-  { path: "login", element: <LoginPage /> },
+  { path: "login", element: <S><LoginPage /></S> },
 
   // All other routes require authentication
   {
     element: <RequireAuth><Layout /></RequireAuth>,
     children: [
-      { index: true, element: <DashboardPage /> },
-      { path: "books-health", element: <BooksHealthPage /> },
-      { path: "calendar", element: <CalendarPage /> },
+      { index: true, element: <S><DashboardPage /></S> },
+      { path: "books-health", element: <S><BooksHealthPage /></S> },
+      { path: "calendar", element: <S><CalendarPage /></S> },
 
       // Chart of Accounts
-      { path: "accounts", element: <AccountsPage /> },
-      { path: "accounts/new", element: <CreateAccountPage /> },
-      { path: "accounts/:id/edit", element: <EditAccountPage /> },
-      { path: "headings", element: <HeadingsPage /> },
+      { path: "accounts", element: <S><AccountsPage /></S> },
+      { path: "accounts/new", element: <S><CreateAccountPage /></S> },
+      { path: "accounts/:id/edit", element: <S><EditAccountPage /></S> },
+      { path: "headings", element: <S><HeadingsPage /></S> },
 
       // Contacts
-      { path: "customers", element: <CustomersPage /> },
-      { path: "vendors", element: <VendorsPage /> },
-      { path: "contacts/new", element: <CreateContactPage /> },
-      { path: "contacts/:id", element: <ContactDetailPage /> },
+      { path: "customers", element: <S><CustomersPage /></S> },
+      { path: "vendors", element: <S><VendorsPage /></S> },
+      { path: "contacts/new", element: <S><CreateContactPage /></S> },
+      { path: "contacts/:id", element: <S><ContactDetailPage /></S> },
 
       // Accounts Receivable
-      { path: "invoices", element: <InvoicesPage /> },
-      { path: "invoices/new", element: <CreateInvoicePage /> },
-      { path: "invoices/:id", element: <InvoiceDetailPage /> },
-      { path: "credit-notes", element: <CreditNoteListPage /> },
-      { path: "credit-notes/new", element: <CreditNotesPage /> },
-      { path: "receipts", element: <ReceiptsPage /> },
+      { path: "invoices", element: <S><InvoicesPage /></S> },
+      { path: "invoices/new", element: <S><CreateInvoicePage /></S> },
+      { path: "invoices/:id", element: <S><InvoiceDetailPage /></S> },
+      { path: "credit-notes", element: <S><CreditNoteListPage /></S> },
+      { path: "credit-notes/new", element: <S><CreditNotesPage /></S> },
+      { path: "receipts", element: <S><ReceiptsPage /></S> },
 
       // Accounts Payable
-      { path: "bills", element: <BillsPage /> },
-      { path: "bills/new", element: <CreateBillPage /> },
-      { path: "bills/:id", element: <BillDetailPage /> },
-      { path: "debit-notes", element: <DebitNotesPage /> },
-      { path: "payments", element: <PaymentsPage /> },
+      { path: "bills", element: <S><BillsPage /></S> },
+      { path: "bills/new", element: <S><CreateBillPage /></S> },
+      { path: "bills/:id", element: <S><BillDetailPage /></S> },
+      { path: "debit-notes", element: <S><DebitNotesPage /></S> },
+      { path: "payments", element: <S><PaymentsPage /></S> },
 
       // Cash & Banking
-      { path: "bank-import-transactions", element: <BankStatementsPage /> },
-      { path: "bank-reconciliation", element: <ReconciliationPage /> },
-      { path: "bank-reconciliation/legacy", element: <BankingPage /> },
-      { path: "transfers", element: <TransfersPage /> },
+      { path: "bank-import-transactions", element: <S><BankStatementsPage /></S> },
+      { path: "bank-reconciliation", element: <S><ReconciliationPage /></S> },
+      { path: "captured-receipts", element: <S><CapturedReceiptsPage /></S> },
+      { path: "logbook", element: <S><LogbookPage /></S> },
+      { path: "bank-reconciliation/legacy", element: <S><BankingPage /></S> },
+      { path: "transfers", element: <S><TransfersPage /></S> },
 
       // General Ledger
-      { path: "gl", element: <GLPage /> },
-      { path: "gl/:id", element: <JournalDetailPage /> },
-      { path: "approvals", element: <ApprovalsPage /> },
+      { path: "gl", element: <S><GLPage /></S> },
+      { path: "gl/:id", element: <S><JournalDetailPage /></S> },
+      { path: "approvals", element: <S><ApprovalsPage /></S> },
 
       // Products & Services
-      { path: "products", element: <ProductsPage /> },
-      { path: "products/new", element: <CreateProductPage /> },
-      { path: "products/:id/edit", element: <EditProductPage /> },
+      { path: "products", element: <S><ProductsPage /></S> },
+      { path: "products/new", element: <S><CreateProductPage /></S> },
+      { path: "products/:id/edit", element: <S><EditProductPage /></S> },
 
       // Recurring & Templates
-      { path: "recurring", element: <RecurringPage /> },
-      { path: "templates", element: <TemplatesPage /> },
+      { path: "recurring", element: <S><RecurringPage /></S> },
+      { path: "templates", element: <S><TemplatesPage /></S> },
 
       // Currency
-      { path: "currencies", element: <CurrencyPage /> },
+      { path: "currencies", element: <S><CurrencyPage /></S> },
 
       // Payroll
-      { path: "employees", element: <EmployeesPage /> },
-      { path: "employees/new", element: <CreateEmployeePage /> },
-      { path: "employees/:id", element: <EmployeeDetailPage /> },
-      { path: "pay-runs", element: <PayRunsPage /> },
+      { path: "employees", element: <S><EmployeesPage /></S> },
+      { path: "employees/new", element: <S><CreateEmployeePage /></S> },
+      { path: "employees/:id", element: <S><EmployeeDetailPage /></S> },
+      { path: "pay-runs", element: <S><PayRunsPage /></S> },
 
       // Admin
-      { path: "payg-config", element: <PAYGConfigPage /> },
-      { path: "super-rates", element: <SuperRatesPage /> },
-      { path: "users", element: <UsersPage /> },
+      { path: "payg-config", element: <S><PAYGConfigPage /></S> },
+      { path: "super-rates", element: <S><SuperRatesPage /></S> },
+      { path: "users", element: <S><UsersPage /></S> },
 
       // Audit
-      { path: "audit-log", element: <AuditLogPage /> },
+      { path: "audit-log", element: <S><AuditLogPage /></S> },
 
       // Data Import
-      { path: "import", element: <DataImportPage /> },
+      { path: "import", element: <S><DataImportPage /></S> },
 
       // Platform Admin (feedback dashboard)
-      { path: "admin/feedback", element: <FeedbackDashboardPage /> },
-      { path: "feedback/:id", element: <FeedbackStatusPage /> },
+      { path: "admin/feedback", element: <S><FeedbackDashboardPage /></S> },
+      { path: "feedback/:id", element: <S><FeedbackStatusPage /></S> },
 
       // Reports & Tax
-      { path: "reports", element: <ReportsPage /> },
-      { path: "bas", element: <BASPage /> },
-      { path: "tax-codes", element: <TaxCodesPage /> },
+      { path: "reports", element: <S><ReportsPage /></S> },
+      { path: "bas", element: <S><BASPage /></S> },
+      { path: "tax-codes", element: <S><TaxCodesPage /></S> },
     ],
   },
 ])

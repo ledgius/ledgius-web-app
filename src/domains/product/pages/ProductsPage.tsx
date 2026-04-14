@@ -202,7 +202,7 @@ export function ProductsPage() {
   )
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
       <InlineCreatePanel isOpen={createOpen} onClose={() => setCreateOpen(false)} title="New Product / Service">
         <InlineProductForm onClose={() => setCreateOpen(false)} />
       </InlineCreatePanel>

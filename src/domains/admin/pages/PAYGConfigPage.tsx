@@ -123,7 +123,7 @@ export function PAYGConfigPage() {
   )
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
       <PageSection variant="plain">
         <p className="text-sm text-gray-500 mb-4">
           ATO Schedule 1 coefficients. Formula: <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">withholding = (a × weekly_earnings) − b</code>

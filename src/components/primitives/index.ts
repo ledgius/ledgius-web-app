@@ -17,3 +17,5 @@ export { InfoPanel } from "./InfoPanel"
 
 export { Combobox } from "./Combobox"
 export type { ComboboxProps, ComboboxOption } from "./Combobox"
+
+export { PageLoader } from "./PageLoader"

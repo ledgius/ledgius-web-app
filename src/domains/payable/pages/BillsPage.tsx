@@ -60,7 +60,7 @@ export function BillsPage() {
   )
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
       <DataTable
         columns={columns}
         data={bills ?? []}
