@@ -2,7 +2,7 @@ import { useState } from "react"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
-import { Button, Combobox } from "@/components/primitives"
+import { Button, Combobox, InfoPanel } from "@/components/primitives"
 import { DataTable } from "@/shared/components/DataTable"
 import { useReceipts, useCreateReceipt, type ReceiptSummary } from "../hooks/useReceipts"
 import { useCustomers } from "@/domains/contact/hooks/useContacts"
@@ -27,7 +27,7 @@ const columns = [
 export function ReceiptsPage() {
   usePageHelp(pageHelpContent.receipts)
   usePagePolicies(["receipt"])
-  const { data: receipts, isLoading } = useReceipts()
+  const { data: receipts, isLoading, error: fetchError } = useReceipts()
   const { data: customers } = useCustomers()
   const { data: accounts } = useAccounts()
   const { data: invoices } = useInvoices()
@@ -88,6 +88,7 @@ export function ReceiptsPage() {
         <h1 className="text-xl font-semibold text-gray-900">Receipts</h1>
         <span className="text-sm text-gray-500">{receipts?.length ?? 0} payments received</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Record payments received from customers</p>
       <div className="flex items-center gap-3 mt-3">
         <Button onClick={() => setShowForm(!showForm)}>
           {showForm ? "Cancel" : "New Receipt"}
@@ -97,7 +98,12 @@ export function ReceiptsPage() {
   )
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
+      <InfoPanel title="Recording receipts" storageKey="receipts-info">
+        <p><strong>1. Select customer and invoice</strong> — choose who paid and which invoice the payment is for.</p>
+        <p><strong>2. Enter payment details</strong> — amount received, date, bank account, and payment reference.</p>
+        <p><strong>3. Post</strong> — the receipt creates journal entries crediting your accounts receivable and debiting your bank account.</p>
+      </InfoPanel>
       {error && <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-md">{error}</div>}
       {success && <div className="mb-4 p-3 bg-green-50 text-green-700 text-sm rounded-md">{success}</div>}
 
@@ -172,8 +178,7 @@ export function ReceiptsPage() {
         </PageSection>
       )}
 
-      {isLoading ? <p className="text-gray-500">Loading...</p> :
-        <DataTable columns={columns} data={receipts ?? []} emptyMessage="No receipts recorded yet." />}
+      <DataTable columns={columns} data={receipts ?? []} loading={isLoading} error={fetchError} emptyMessage="No receipts recorded yet." />
     </PageShell>
   )
 }

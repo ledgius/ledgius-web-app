@@ -19,7 +19,7 @@ const columns = [
 export function RecurringPage() {
   usePageHelp(pageHelpContent.recurring)
   usePagePolicies(["journal"])
-  const { data: schedules, isLoading } = useRecurringSchedules()
+  const { data: schedules, isLoading, error: fetchError } = useRecurringSchedules()
   const createRecurring = useCreateRecurring()
   const [showForm, setShowForm] = useState(false)
   const [name, setName] = useState("")
@@ -56,6 +56,7 @@ export function RecurringPage() {
         <h1 className="text-xl font-semibold text-gray-900">Recurring Transactions</h1>
         <span className="text-sm text-gray-500">{schedules?.length ?? 0} schedules</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Transactions that repeat on a schedule</p>
       <div className="flex items-center gap-3 mt-3">
         <Button onClick={() => setShowForm(!showForm)}>
           {showForm ? "Cancel" : "New Schedule"}
@@ -65,7 +66,7 @@ export function RecurringPage() {
   )
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
       {error && <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-md">{error}</div>}
       {showForm && (
         <PageSection title="New Schedule">
@@ -94,7 +95,7 @@ export function RecurringPage() {
           </div>
         </PageSection>
       )}
-      {isLoading ? <p className="text-gray-500">Loading...</p> : <DataTable columns={columns} data={schedules ?? []} emptyMessage="No recurring schedules." />}
+      <DataTable columns={columns} data={schedules ?? []} loading={isLoading} error={fetchError} emptyMessage="No recurring schedules." />
     </PageShell>
   )
 }

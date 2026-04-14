@@ -1,7 +1,7 @@
 import { useState } from "react"
 import { usePageHelp } from "@/hooks/usePageHelp"
 import { PageShell, PageSection } from "@/components/layout"
-import { Button, InlineAlert, Badge, Combobox } from "@/components/primitives"
+import { Button, InlineAlert, Badge, Combobox, InfoPanel } from "@/components/primitives"
 import { StatusStepper, type StatusStep } from "@/components/financial"
 import { MoneyValue } from "@/components/financial"
 import { useFeedback } from "@/components/feedback"
@@ -91,10 +91,11 @@ export function DataImportPage() {
   const { data: ledgiusCustomers } = useCustomers()
   const { data: ledgiusVendors } = useVendors()
 
+  const catLabels: Record<string, string> = { A: "Asset", L: "Liability", Q: "Equity", I: "Income", E: "Expense" }
   const accountOptions = (ledgiusAccounts ?? []).map((a) => ({
     value: a.id,
     label: `${a.accno} — ${a.description ?? ""}`,
-    detail: a.category,
+    detail: catLabels[a.category] ?? a.category,
   }))
 
   const contactOptions = [
@@ -216,6 +217,7 @@ export function DataImportPage() {
         <h1 className="text-xl font-semibold text-gray-900">Data Import</h1>
         <span className="text-sm text-gray-500">Migrate from another accounting system</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Bring in data from another accounting system</p>
       {batch && (
         <div className="flex items-center gap-2 mt-3">
           {isCommitted ? (
@@ -238,6 +240,12 @@ export function DataImportPage() {
   if (!batch) {
     return (
       <PageShell header={header}>
+        <InfoPanel title="How data import works" storageKey="import-info">
+          <p><strong>1. Choose source</strong> — select MYOB, Xero, or Generic CSV. MYOB AO and CeeData formats are auto-detected.</p>
+          <p><strong>2. Upload files</strong> — upload your transaction file and optionally a Chart of Accounts file to enrich account types.</p>
+          <p><strong>3. Analyse &amp; map</strong> — review staged accounts, contacts, and transactions. Map accounts to your Ledgius chart of accounts.</p>
+          <p><strong>4. Preview &amp; commit</strong> — verify the data looks correct, then commit to import into your ledger.</p>
+        </InfoPanel>
         <PageSection title="Choose Import Source">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {sourceOptions.map((src) => (

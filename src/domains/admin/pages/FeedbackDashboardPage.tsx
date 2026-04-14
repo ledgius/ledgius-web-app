@@ -117,6 +117,7 @@ export function FeedbackDashboardPage() {
         <h1 className="text-xl font-semibold text-gray-900">Feedback Dashboard</h1>
         <span className="text-sm text-gray-500">Platform administration</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Review and respond to user feedback</p>
     </div>
   )
 

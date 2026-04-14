@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, InlineCreatePanel } from "@/components/layout"
-import { Button, Skeleton, InlineAlert } from "@/components/primitives"
+import { Button, InlineAlert } from "@/components/primitives"
 import { MoneyValue } from "@/components/financial"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { SearchFilter } from "@/shared/components/SearchFilter"
@@ -121,7 +121,7 @@ function InlineCustomerForm({ onClose }: { onClose: () => void }) {
 export function CustomersPage() {
   usePageHelp(pageHelpContent.customers)
   usePagePolicies(["contact"])
-  const { data: customers, isLoading } = useCustomers()
+  const { data: customers, isLoading, error } = useCustomers()
   const navigate = useNavigate()
   const [search, setSearch] = useState("")
   const [createOpen, setCreateOpen] = useState(false)
@@ -143,6 +143,7 @@ export function CustomersPage() {
         <h1 className="text-xl font-semibold text-gray-900">Customers</h1>
         <span className="text-sm text-gray-500">Accounts Receivable &middot; {filtered.length} contacts</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">People and businesses who buy from you</p>
       <div className="flex items-center gap-3 mt-3">
         <Button onClick={() => setCreateOpen(!createOpen)} variant={createOpen ? "secondary" : "primary"}>
           <Plus className="h-4 w-4" />
@@ -157,21 +158,19 @@ export function CustomersPage() {
   )
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
       <InlineCreatePanel isOpen={createOpen} onClose={() => setCreateOpen(false)} title="New Customer">
         <InlineCustomerForm onClose={() => setCreateOpen(false)} />
       </InlineCreatePanel>
 
-      {isLoading ? (
-        <Skeleton variant="table" rows={8} columns={5} />
-      ) : (
-        <DataTable
-          columns={columns}
-          data={filtered}
-          emptyMessage="No customers. Click 'New Customer' to add your first customer."
-          onRowClick={(row) => navigate(`/contacts/${row.id}`)}
-        />
-      )}
+      <DataTable
+        columns={columns}
+        data={filtered}
+        loading={isLoading}
+        error={error}
+        emptyMessage="No customers. Click 'New Customer' to add your first customer."
+        onRowClick={(row) => navigate(`/contacts/${row.id}`)}
+      />
     </PageShell>
   )
 }

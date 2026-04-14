@@ -27,7 +27,7 @@ const columns = [
 export function PaymentsPage() {
   usePageHelp(pageHelpContent.payments)
   usePagePolicies(["payment"])
-  const { data: payments, isLoading } = usePayments()
+  const { data: payments, isLoading, error: fetchError } = usePayments()
   const { data: vendors } = useVendors()
   const { data: accounts } = useAccounts()
   const { data: bills } = useBills()
@@ -72,6 +72,7 @@ export function PaymentsPage() {
         <h1 className="text-xl font-semibold text-gray-900">Payments</h1>
         <span className="text-sm text-gray-500">{payments?.length ?? 0} payments made</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Record payments made to suppliers</p>
       <div className="flex items-center gap-3 mt-3">
         <Button onClick={() => setShowForm(!showForm)}>
           {showForm ? "Cancel" : "New Payment"}
@@ -81,7 +82,7 @@ export function PaymentsPage() {
   )
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
       {error && <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-md">{error}</div>}
       {success && <div className="mb-4 p-3 bg-green-50 text-green-700 text-sm rounded-md">{success}</div>}
 
@@ -147,8 +148,7 @@ export function PaymentsPage() {
         </PageSection>
       )}
 
-      {isLoading ? <p className="text-gray-500">Loading...</p> :
-        <DataTable columns={columns} data={payments ?? []} emptyMessage="No payments recorded yet." />}
+      <DataTable columns={columns} data={payments ?? []} loading={isLoading} error={fetchError} emptyMessage="No payments recorded yet." />
     </PageShell>
   )
 }

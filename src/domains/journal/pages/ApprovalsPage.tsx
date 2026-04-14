@@ -9,7 +9,7 @@ import { useState } from "react"
 export function ApprovalsPage() {
   usePageHelp(pageHelpContent.approvals)
   usePagePolicies(["journal"])
-  const { data: pending, isLoading } = usePendingApprovals()
+  const { data: pending, isLoading, error } = usePendingApprovals()
   const approveTransaction = useApproveTransaction()
   const rejectTransaction = useRejectTransaction()
   const [message, setMessage] = useState("")
@@ -59,19 +59,16 @@ export function ApprovalsPage() {
         <h1 className="text-xl font-semibold text-gray-900">Transaction Approvals</h1>
         <span className="text-sm text-gray-500">{pending?.length ?? 0} pending</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Review and approve pending transactions</p>
     </div>
   )
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
       {message && (
         <div className="mb-4 p-3 bg-blue-50 text-blue-700 text-sm rounded-md">{message}</div>
       )}
-      {isLoading ? (
-        <p className="text-gray-500">Loading...</p>
-      ) : (
-        <DataTable columns={columns} data={pending ?? []} emptyMessage="No transactions pending approval." />
-      )}
+      <DataTable columns={columns} data={pending ?? []} loading={isLoading} error={error} emptyMessage="No transactions pending approval." />
 
       {rejectId && (
         <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">

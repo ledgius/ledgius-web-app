@@ -2,7 +2,6 @@ import { useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { PageShell } from "@/components/layout"
 import { Button } from "@/components/primitives"
-import { Skeleton } from "@/components/primitives"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { SearchFilter } from "@/shared/components/SearchFilter"
 import { StatusPill, MoneyValue, DateValue } from "@/components/financial"
@@ -43,7 +42,7 @@ const columns: Column<InvoiceSummary>[] = [
 export function InvoicesPage() {
   usePageHelp(pageHelpContent.invoices)
   usePagePolicies(["receivable", "tax"])
-  const { data: invoices, isLoading } = useInvoices()
+  const { data: invoices, isLoading, error } = useInvoices()
   const navigate = useNavigate()
   const [search, setSearch] = useState("")
 
@@ -63,6 +62,7 @@ export function InvoicesPage() {
         <h1 className="text-xl font-semibold text-gray-900">Invoices</h1>
         <span className="text-sm text-gray-500">Accounts Receivable &middot; {filtered.length} records</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Money your customers owe you</p>
       <div className="flex items-center gap-3 mt-3">
         <Button onClick={() => navigate("/invoices/new")}>
           <Plus className="h-4 w-4" />
@@ -77,17 +77,15 @@ export function InvoicesPage() {
   )
 
   return (
-    <PageShell header={header}>
-      {isLoading ? (
-        <Skeleton variant="table" rows={8} columns={6} />
-      ) : (
-        <DataTable
-          columns={columns}
-          data={filtered}
-          emptyMessage="No invoices in this period. Create a new invoice or adjust your filters."
-          onRowClick={(row) => navigate(`/invoices/${row.trans_id}`)}
-        />
-      )}
+    <PageShell header={header} loading={isLoading}>
+      <DataTable
+        columns={columns}
+        data={filtered}
+        loading={isLoading}
+        error={error}
+        emptyMessage="No invoices in this period. Create a new invoice or adjust your filters."
+        onRowClick={(row) => navigate(`/invoices/${row.trans_id}`)}
+      />
     </PageShell>
   )
 }

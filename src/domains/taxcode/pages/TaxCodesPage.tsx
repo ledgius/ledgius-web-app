@@ -22,7 +22,7 @@ const columns = [
 export function TaxCodesPage() {
   usePageHelp(pageHelpContent.taxCodes)
   usePagePolicies(["tax"])
-  const { data: codes, isLoading } = useTaxCodes()
+  const { data: codes, isLoading, error } = useTaxCodes()
 
   const header = (
     <div>
@@ -30,16 +30,13 @@ export function TaxCodesPage() {
         <h1 className="text-xl font-semibold text-gray-900">Tax Codes</h1>
         <span className="text-sm text-gray-500">{codes?.length ?? 0} codes</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">How GST is calculated on transactions</p>
     </div>
   )
 
   return (
-    <PageShell header={header}>
-      {isLoading ? (
-        <p className="text-gray-500">Loading...</p>
-      ) : (
-        <DataTable columns={columns} data={codes ?? []} emptyMessage="No tax codes configured." />
-      )}
+    <PageShell header={header} loading={isLoading}>
+      <DataTable columns={columns} data={codes ?? []} loading={isLoading} error={error} emptyMessage="No tax codes configured." />
     </PageShell>
   )
 }

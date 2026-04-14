@@ -23,7 +23,7 @@ const columns = [
 export function PayRunsPage() {
   usePageHelp(pageHelpContent.payRuns)
   usePagePolicies(["payroll", "tax"])
-  const { data: runs, isLoading } = usePayRuns()
+  const { data: runs, isLoading, error: fetchError } = usePayRuns()
   const { data: employees } = useEmployees()
   const processPayRun = useProcessPayRun()
 
@@ -75,6 +75,7 @@ export function PayRunsPage() {
         <h1 className="text-xl font-semibold text-gray-900">Pay Runs</h1>
         <span className="text-sm text-gray-500">{runs?.length ?? 0} pay runs</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Process payroll and generate payslips</p>
       <div className="flex items-center gap-3 mt-3">
         <Button onClick={() => setShowForm(!showForm)}>
           {showForm ? "Cancel" : "Process Pay Run"}
@@ -84,7 +85,7 @@ export function PayRunsPage() {
   )
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
       {error && <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-md">{error}</div>}
       {success && <div className="mb-4 p-3 bg-green-50 text-green-700 text-sm rounded-md">{success}</div>}
 
@@ -143,8 +144,7 @@ export function PayRunsPage() {
         </PageSection>
       )}
 
-      {isLoading ? <p className="text-gray-500">Loading...</p> :
-        <DataTable columns={columns} data={runs ?? []} emptyMessage="No pay runs processed yet." />}
+      <DataTable columns={columns} data={runs ?? []} loading={isLoading} error={fetchError} emptyMessage="No pay runs processed yet." />
     </PageShell>
   )
 }

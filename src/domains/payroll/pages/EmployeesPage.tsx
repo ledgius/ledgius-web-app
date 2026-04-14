@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, InlineCreatePanel } from "@/components/layout"
-import { Button, Skeleton, Badge, InlineAlert } from "@/components/primitives"
+import { Button, Badge, InlineAlert } from "@/components/primitives"
 import { DateValue } from "@/components/financial"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { useEmployees, useCreateEmployee, type Employee } from "../hooks/usePayroll"
@@ -220,7 +220,7 @@ function InlineEmployeeForm({ onClose }: { onClose: () => void }) {
 export function EmployeesPage() {
   usePageHelp(pageHelpContent.employees)
   usePagePolicies(["payroll"])
-  const { data: employees, isLoading } = useEmployees()
+  const { data: employees, isLoading, error } = useEmployees()
   const navigate = useNavigate()
   const [createOpen, setCreateOpen] = useState(false)
 
@@ -235,6 +235,7 @@ export function EmployeesPage() {
           {activeCount} active{totalCount > activeCount ? ` · ${totalCount - activeCount} inactive` : ""}
         </span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Manage your team and their pay details</p>
       <div className="flex items-center gap-3 mt-3">
         <Button onClick={() => setCreateOpen(!createOpen)} variant={createOpen ? "secondary" : "primary"}>
           <Plus className="h-4 w-4" />
@@ -245,21 +246,19 @@ export function EmployeesPage() {
   )
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
       <InlineCreatePanel isOpen={createOpen} onClose={() => setCreateOpen(false)} title="New Employee">
         <InlineEmployeeForm onClose={() => setCreateOpen(false)} />
       </InlineCreatePanel>
 
-      {isLoading ? (
-        <Skeleton variant="table" rows={5} columns={5} />
-      ) : (
-        <DataTable
-          columns={columns}
-          data={employees ?? []}
-          emptyMessage="No employees. Click '+ New Employee' to add your first employee."
-          onRowClick={(row) => navigate(`/employees/${row.id}`)}
-        />
-      )}
+      <DataTable
+        columns={columns}
+        data={employees ?? []}
+        loading={isLoading}
+        error={error}
+        emptyMessage="No employees. Click '+ New Employee' to add your first employee."
+        onRowClick={(row) => navigate(`/employees/${row.id}`)}
+      />
     </PageShell>
   )
 }

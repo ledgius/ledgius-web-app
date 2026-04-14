@@ -103,10 +103,7 @@ export function AppHeader({ onSearchOpen, onFeedbackOpen }: AppHeaderProps & { o
     <header className="h-12 shrink-0 border-b border-gray-200 bg-white flex items-center px-4 gap-4">
       {/* ── Left: Logo + Tenant ── */}
       <div className="flex items-center gap-3 min-w-0">
-        <div className="flex items-center gap-1.5">
-          <img src="/favicon.png" alt="Ledgius" className="h-6 w-6" />
-          <span className="text-base font-bold text-primary-700 whitespace-nowrap">Ledgius</span>
-        </div>
+        <img src="/brand/logo/ledgius-400x120-transparent.png" alt="Ledgius" className="h-7 w-auto" />
         <span className="text-gray-300" aria-hidden="true">|</span>
         {tenants.length > 1 ? (
           <div ref={tenantRef} className="relative">
@@ -143,14 +140,9 @@ export function AppHeader({ onSearchOpen, onFeedbackOpen }: AppHeaderProps & { o
 
       {/* ── Center: Time Context (hidden on mobile) ── */}
       <div className="hidden md:flex flex-1 items-center justify-center gap-4 text-xs text-gray-500 relative" ref={calendarRef}>
-        <button
-          type="button"
-          onClick={() => navigate("/reports")}
-          className="font-medium text-gray-700 hover:text-primary-700 transition-colors"
-          title="View financial reports for this period"
-        >
+        <span className="font-medium text-gray-700">
           {getFinancialYear(now)}
-        </button>
+        </span>
         <span className="text-gray-300" aria-hidden="true">&middot;</span>
         <span>{getQuarter(now)} | {now.toLocaleDateString("en-AU", { month: "long" })}</span>
         <span className="text-gray-300" aria-hidden="true">&middot;</span>
@@ -207,7 +199,7 @@ export function AppHeader({ onSearchOpen, onFeedbackOpen }: AppHeaderProps & { o
         {/* Reconciliation badge (hidden on mobile) */}
         <button
           type="button"
-          onClick={() => navigate("/banking")}
+          onClick={() => navigate("/bank-reconciliation")}
           className="hidden md:block p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
           title="Bank reconciliation"
         >

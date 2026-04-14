@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell } from "@/components/layout"
-import { Button, Skeleton } from "@/components/primitives"
+import { Button } from "@/components/primitives"
 import { StatusPill, MoneyValue, DateValue } from "@/components/financial"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { useInvoices, type InvoiceSummary } from "../hooks/useInvoices"
@@ -40,7 +40,7 @@ const columns: Column<InvoiceSummary>[] = [
 export function CreditNoteListPage() {
   usePageHelp(pageHelpContent.creditNotes)
   usePagePolicies(["receivable", "tax"])
-  const { data: invoices, isLoading } = useInvoices()
+  const { data: invoices, isLoading, error } = useInvoices()
   const navigate = useNavigate()
 
   // Filter to credit notes only (is_return would be ideal but we don't have it in the summary —
@@ -53,6 +53,7 @@ export function CreditNoteListPage() {
         <h1 className="text-xl font-semibold text-gray-900">Credit Notes</h1>
         <span className="text-sm text-gray-500">{creditNotes.length} credit notes</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Adjustments reducing what customers owe</p>
       <div className="flex items-center gap-3 mt-3">
         <Button onClick={() => navigate("/credit-notes/new")}>
           <Plus className="h-4 w-4" />
@@ -63,17 +64,15 @@ export function CreditNoteListPage() {
   )
 
   return (
-    <PageShell header={header}>
-      {isLoading ? (
-        <Skeleton variant="table" rows={5} columns={5} />
-      ) : (
-        <DataTable
-          columns={columns}
-          data={creditNotes}
-          emptyMessage="No credit notes issued. Click '+ New Credit Note' to issue one against an existing invoice."
-          onRowClick={(row) => navigate(`/invoices/${row.trans_id}`)}
-        />
-      )}
+    <PageShell header={header} loading={isLoading}>
+      <DataTable
+        columns={columns}
+        data={creditNotes}
+        loading={isLoading}
+        error={error}
+        emptyMessage="No credit notes issued. Click '+ New Credit Note' to issue one against an existing invoice."
+        onRowClick={(row) => navigate(`/invoices/${row.trans_id}`)}
+      />
     </PageShell>
   )
 }

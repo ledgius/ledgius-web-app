@@ -44,7 +44,7 @@ export function TransfersPage() {
   const header = (
     <div>
       <h1 className="text-xl font-semibold text-gray-900">Bank Transfers</h1>
-      <p className="mt-0.5 text-sm text-gray-500">Transfer funds between bank accounts</p>
+      <p className="mt-0.5 text-sm text-gray-500">Move money between your bank accounts</p>
     </div>
   )
 

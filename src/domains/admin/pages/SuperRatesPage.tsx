@@ -1,7 +1,6 @@
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell } from "@/components/layout"
-import { Skeleton } from "@/components/primitives"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { DateValue } from "@/components/financial"
 import { useQuery } from "@tanstack/react-query"
@@ -63,7 +62,7 @@ const columns: Column<SuperRate>[] = [
 export function SuperRatesPage() {
   usePageHelp(pageHelpContent.superRates)
   usePagePolicies(["payroll"])
-  const { data: rates, isLoading } = useSuperRates()
+  const { data: rates, isLoading, error } = useSuperRates()
 
   const header = (
     <div>
@@ -71,16 +70,13 @@ export function SuperRatesPage() {
         <h1 className="text-xl font-semibold text-gray-900">Super Guarantee Rates</h1>
         <span className="text-sm text-gray-500">{rates?.length ?? 0} financial years</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Superannuation contribution percentages by year</p>
     </div>
   )
 
   return (
-    <PageShell header={header}>
-      {isLoading ? (
-        <Skeleton variant="table" rows={6} columns={5} />
-      ) : (
-        <DataTable columns={columns} data={rates ?? []} emptyMessage="No super guarantee rates configured." />
-      )}
+    <PageShell header={header} loading={isLoading}>
+      <DataTable columns={columns} data={rates ?? []} loading={isLoading} error={error} emptyMessage="No super guarantee rates configured." />
     </PageShell>
   )
 }

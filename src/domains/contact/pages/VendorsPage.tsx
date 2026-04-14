@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, InlineCreatePanel } from "@/components/layout"
-import { Button, Skeleton, InlineAlert } from "@/components/primitives"
+import { Button, InlineAlert } from "@/components/primitives"
 import { MoneyValue } from "@/components/financial"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { SearchFilter } from "@/shared/components/SearchFilter"
@@ -121,7 +121,7 @@ function InlineVendorForm({ onClose }: { onClose: () => void }) {
 export function VendorsPage() {
   usePageHelp(pageHelpContent.vendors)
   usePagePolicies(["contact"])
-  const { data: vendors, isLoading } = useVendors()
+  const { data: vendors, isLoading, error } = useVendors()
   const navigate = useNavigate()
   const [search, setSearch] = useState("")
   const [createOpen, setCreateOpen] = useState(false)
@@ -143,6 +143,7 @@ export function VendorsPage() {
         <h1 className="text-xl font-semibold text-gray-900">Vendors</h1>
         <span className="text-sm text-gray-500">Accounts Payable &middot; {filtered.length} contacts</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">People and businesses you buy from</p>
       <div className="flex items-center gap-3 mt-3">
         <Button onClick={() => setCreateOpen(!createOpen)} variant={createOpen ? "secondary" : "primary"}>
           <Plus className="h-4 w-4" />
@@ -157,21 +158,19 @@ export function VendorsPage() {
   )
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
       <InlineCreatePanel isOpen={createOpen} onClose={() => setCreateOpen(false)} title="New Vendor">
         <InlineVendorForm onClose={() => setCreateOpen(false)} />
       </InlineCreatePanel>
 
-      {isLoading ? (
-        <Skeleton variant="table" rows={8} columns={5} />
-      ) : (
-        <DataTable
-          columns={columns}
-          data={filtered}
-          emptyMessage="No vendors. Click 'New Vendor' to add your first vendor."
-          onRowClick={(row) => navigate(`/contacts/${row.id}`)}
-        />
-      )}
+      <DataTable
+        columns={columns}
+        data={filtered}
+        loading={isLoading}
+        error={error}
+        emptyMessage="No vendors. Click 'New Vendor' to add your first vendor."
+        onRowClick={(row) => navigate(`/contacts/${row.id}`)}
+      />
     </PageShell>
   )
 }

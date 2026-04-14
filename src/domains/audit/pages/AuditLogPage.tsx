@@ -18,7 +18,7 @@ export function AuditLogPage() {
   usePageHelp(pageHelpContent.auditLog)
   usePagePolicies(["platform"])
   const [entityType, setEntityType] = useState("")
-  const { data: entries, isLoading } = useAuditLog(entityType || undefined)
+  const { data: entries, isLoading, error } = useAuditLog(entityType || undefined)
 
   const header = (
     <div>
@@ -26,6 +26,7 @@ export function AuditLogPage() {
         <h1 className="text-xl font-semibold text-gray-900">Audit Log</h1>
         <span className="text-sm text-gray-500">{entries?.length ?? 0} entries</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Who changed what, and when</p>
       <div className="flex items-center gap-3 mt-3">
         <select value={entityType} onChange={e => setEntityType(e.target.value)} className="border rounded px-2 py-1.5 text-sm">
           <option value="">All entities</option>
@@ -41,8 +42,8 @@ export function AuditLogPage() {
   )
 
   return (
-    <PageShell header={header}>
-      {isLoading ? <p className="text-gray-500">Loading...</p> : <DataTable columns={columns} data={entries ?? []} emptyMessage="No audit entries." />}
+    <PageShell header={header} loading={isLoading}>
+      <DataTable columns={columns} data={entries ?? []} loading={isLoading} error={error} emptyMessage="No audit entries." />
     </PageShell>
   )
 }

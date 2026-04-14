@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { PageShell, InlineCreatePanel } from "@/components/layout"
-import { Button, Skeleton, Badge, InlineAlert } from "@/components/primitives"
+import { Button, Badge, InlineAlert } from "@/components/primitives"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { SearchFilter } from "@/shared/components/SearchFilter"
 import { useAccounts, useCreateAccount, type Account } from "../hooks/useAccounts"
@@ -141,7 +141,7 @@ function InlineAccountForm({ onClose }: { onClose: () => void }) {
 export function AccountsPage() {
   usePageHelp(pageHelpContent.chartOfAccounts)
   usePagePolicies(["account"])
-  const { data: accounts, isLoading } = useAccounts()
+  const { data: accounts, isLoading, error } = useAccounts()
   const navigate = useNavigate()
   const [search, setSearch] = useState("")
   const [showInactive, setShowInactive] = useState(false)
@@ -177,6 +177,7 @@ export function AccountsPage() {
           {inactiveCount > 0 && <> &middot; {inactiveCount} inactive</>}
         </span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Your business's financial categories</p>
       <div className="flex items-center gap-3 mt-3">
         <Button onClick={() => setCreateOpen(!createOpen)} variant={createOpen ? "secondary" : "primary"}>
           <Plus className="h-4 w-4" />
@@ -208,25 +209,23 @@ export function AccountsPage() {
   )
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
       <InlineCreatePanel isOpen={createOpen} onClose={() => setCreateOpen(false)} title="New Account">
         <InlineAccountForm onClose={() => setCreateOpen(false)} />
       </InlineCreatePanel>
 
-      {isLoading ? (
-        <Skeleton variant="table" rows={10} columns={6} />
-      ) : (
-        <DataTable
-          columns={columns}
-          data={filtered}
-          onRowClick={(row) => navigate(`/accounts/${row.id}/edit`)}
-          emptyMessage={
-            showInactive
-              ? "No accounts match your search."
-              : "No active accounts. Click 'Show all' to see unused accounts."
-          }
-        />
-      )}
+      <DataTable
+        columns={columns}
+        data={filtered}
+        loading={isLoading}
+        error={error}
+        onRowClick={(row) => navigate(`/accounts/${row.id}/edit`)}
+        emptyMessage={
+          showInactive
+            ? "No accounts match your search."
+            : "No active accounts. Click 'Show all' to see unused accounts."
+        }
+      />
     </PageShell>
   )
 }

@@ -41,33 +41,16 @@ export interface QueueItem {
 }
 
 export interface ReconciliationSummary {
-  bank_account_id: number
-  period_start: string
-  period_end: string
-  statement_opening_balance: number
-  statement_closing_balance: number
-  reconciled_amount: number
-  reconciled_count: number
-  unreconciled_count: number
-  unreconciled_amount: number
-  balance_difference: number
-  auto_matched_count: number
-  manual_matched_count: number
-  exception_count: number
-  exception_by_priority: Record<string, number>
-  aged_exceptions: Record<string, number>
-  rule_hit_rate: number
-  false_positive_override_rate: number
-  close_ready: boolean
-  close_blockers: string[]
-  period_status: string
-  // Derived convenience fields used by UI
-  total: number
-  imported: number
+  account_id: number
+  total_imported: number
   auto_matched: number
+  manually_matched: number
   needs_review: number
+  deferred: number
+  excluded: number
   exception: number
-  resolved: number
+  unprocessed: number
+  total_transactions: number
 }
 
 export interface ReconciliationException {
@@ -245,7 +228,40 @@ export function useRunPipeline() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (body: RunPipelineRequest) =>
-      api.post("/reconciliation/run-pipeline", body),
+      api.post(`/reconciliation/run-pipeline?account_id=${body.account_id}`, {}),
+    onSuccess: () => qc.invalidateQueries({ queryKey: RECON_KEY }),
+  })
+}
+
+export function useCreateFromLine() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      lineId,
+      ...body
+    }: {
+      lineId: number
+      account_id: number
+      description: string
+      remember_rule: boolean
+      rule_pattern?: string
+    }) => api.post(`/reconciliation/lines/${lineId}/create`, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: RECON_KEY }),
+  })
+}
+
+export interface CreateRuleRequest {
+  account_id: number
+  name: string
+  description_pattern: string
+  match_account_id: number
+  priority?: number
+}
+
+export function useCreateBankRule() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (body: CreateRuleRequest) => api.post("/bank-import/rules", body),
     onSuccess: () => qc.invalidateQueries({ queryKey: RECON_KEY }),
   })
 }

@@ -2,7 +2,7 @@ import { useState, useMemo } from "react"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
-import { Skeleton, Badge } from "@/components/primitives"
+import { Badge } from "@/components/primitives"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { useQuery } from "@tanstack/react-query"
 import { api } from "@/shared/lib/api"
@@ -94,7 +94,7 @@ function getFYLabel(dateStr: string): string {
 export function PAYGConfigPage() {
   usePageHelp(pageHelpContent.paygConfig)
   usePagePolicies(["payroll"])
-  const { data: brackets, isLoading } = usePAYGBrackets()
+  const { data: brackets, isLoading, error } = usePAYGBrackets()
   const [selectedFY, setSelectedFY] = useState<string | null>(null)
 
   const fyGroups = useMemo(() => {
@@ -118,11 +118,12 @@ export function PAYGConfigPage() {
         <h1 className="text-xl font-semibold text-gray-900">PAYG Withholding Configuration</h1>
         <span className="text-sm text-gray-500">{brackets?.length ?? 0} brackets · {fyList.length} financial years</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Tax withholding rates for employee wages</p>
     </div>
   )
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
       <PageSection variant="plain">
         <p className="text-sm text-gray-500 mb-4">
           ATO Schedule 1 coefficients. Formula: <code className="text-xs bg-gray-100 px-1.5 py-0.5 rounded">withholding = (a × weekly_earnings) − b</code>
@@ -145,11 +146,7 @@ export function PAYGConfigPage() {
         </div>
       </PageSection>
 
-      {isLoading ? (
-        <Skeleton variant="table" rows={10} columns={7} />
-      ) : (
-        <DataTable columns={columns} data={activeBrackets} emptyMessage="No brackets for this period." />
-      )}
+      <DataTable columns={columns} data={activeBrackets} loading={isLoading} error={error} emptyMessage="No brackets for this period." />
     </PageShell>
   )
 }

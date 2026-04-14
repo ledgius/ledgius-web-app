@@ -13,5 +13,9 @@ export type { EmptyStateProps } from "./EmptyState"
 export { InlineAlert } from "./InlineAlert"
 export type { InlineAlertProps } from "./InlineAlert"
 
+export { InfoPanel } from "./InfoPanel"
+
 export { Combobox } from "./Combobox"
 export type { ComboboxProps, ComboboxOption } from "./Combobox"
+
+export { PageLoader } from "./PageLoader"

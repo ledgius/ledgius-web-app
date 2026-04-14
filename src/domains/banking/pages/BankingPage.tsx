@@ -55,7 +55,7 @@ export function BankingPage() {
         const batch = await importFile.mutateAsync({
           account_id: selectedAccount,
           file_name: file.name,
-          file_format: format,
+          format: format,
           content: base64,
         })
         const result = batch as { total_rows?: number; matched_rows?: number }
@@ -98,11 +98,11 @@ export function BankingPage() {
   // Filter to bank/cash accounts (category A with functional link containing "Cash" or common bank accnos)
   const bankAccounts = accounts?.filter(a => a.category === "A") ?? []
 
-  const { data: uncleared, isLoading: unclearedLoading } = useUnclearedTransactions(selectedAccount)
+  const { data: uncleared, isLoading: unclearedLoading, error: unclearedError } = useUnclearedTransactions(selectedAccount)
   const { data: status } = useReconciliationStatus(selectedAccount, statementBalance || undefined)
-  const { data: unmatched, isLoading: unmatchedLoading } = useUnmatchedTransactions(selectedAccount)
-  const { data: batches, isLoading: batchesLoading } = useImportBatches(selectedAccount)
-  const { data: bankRules, isLoading: rulesLoading } = useBankRules(selectedAccount)
+  const { data: unmatched, isLoading: unmatchedLoading, error: unmatchedError } = useUnmatchedTransactions(selectedAccount)
+  const { data: batches, isLoading: batchesLoading, error: batchesError } = useImportBatches(selectedAccount)
+  const { data: bankRules, isLoading: rulesLoading, error: rulesError } = useBankRules(selectedAccount)
 
   const unclearedColumns: Column<UnclearedTransaction>[] = [
     { key: "transdate", header: "Date", render: (row) => formatDate(row.transdate) },
@@ -164,10 +164,11 @@ export function BankingPage() {
     { key: "rules" as const, label: "Matching Rules" },
   ]
 
+  const catLabels: Record<string, string> = { A: "Asset", L: "Liability", Q: "Equity", I: "Income", E: "Expense" }
   const accountOptions = bankAccounts.map((a) => ({
     value: a.id,
     label: `${a.accno} — ${a.description}`,
-    detail: a.category,
+    detail: catLabels[a.category] ?? a.category,
   }))
 
   const selectedAccountName = bankAccounts.find((a) => a.id === selectedAccount)?.description
@@ -180,6 +181,7 @@ export function BankingPage() {
           <span className="text-sm text-gray-500">{selectedAccountName}</span>
         )}
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Match your bank statement to your books</p>
       <div className="flex items-end gap-4 mt-3">
         <div className="w-64">
           <label className="block text-xs font-medium text-gray-600 mb-1">Bank Account</label>
@@ -308,19 +310,15 @@ export function BankingPage() {
           </div>
 
           {tab === "uncleared" && (
-            unclearedLoading ? <p className="text-gray-500 text-sm">Loading...</p> :
-            <DataTable columns={unclearedColumns} data={uncleared ?? []} emptyMessage="No uncleared transactions." />
+            <DataTable columns={unclearedColumns} data={uncleared ?? []} loading={unclearedLoading} error={unclearedError} emptyMessage="No uncleared transactions." />
           )}
           {tab === "unmatched" && (
-            unmatchedLoading ? <p className="text-gray-500 text-sm">Loading...</p> :
-            <DataTable columns={unmatchedColumns} data={unmatched ?? []} emptyMessage="No unmatched imports." />
+            <DataTable columns={unmatchedColumns} data={unmatched ?? []} loading={unmatchedLoading} error={unmatchedError} emptyMessage="No unmatched imports." />
           )}
           {tab === "history" && (
-            batchesLoading ? <p className="text-gray-500 text-sm">Loading...</p> :
-            <DataTable columns={batchColumns} data={batches ?? []} emptyMessage="No import history." />
+            <DataTable columns={batchColumns} data={batches ?? []} loading={batchesLoading} error={batchesError} emptyMessage="No import history." />
           )}
           {tab === "rules" && (
-            rulesLoading ? <p className="text-gray-500 text-sm">Loading...</p> :
             <DataTable columns={[
               { key: "name", header: "Rule Name" },
               { key: "description_pattern", header: "Description Pattern", render: (r: BankRule) => r.description_pattern ?? "-" },
@@ -328,7 +326,7 @@ export function BankingPage() {
               { key: "priority", header: "Priority", className: "w-16 text-right" },
               { key: "enabled", header: "Enabled", className: "w-16 text-center",
                 render: (r: BankRule) => r.enabled ? <span className="text-green-600 text-xs">Yes</span> : <span className="text-gray-400 text-xs">No</span> },
-            ]} data={bankRules ?? []} emptyMessage="No matching rules configured." />
+            ]} data={bankRules ?? []} loading={rulesLoading} error={rulesError} emptyMessage="No matching rules configured." />
           )}
         </>
       )}

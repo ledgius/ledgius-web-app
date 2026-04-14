@@ -8,7 +8,7 @@ import {
   CheckCircle, ListTree, Package,
   Calculator, DollarSign, Repeat, ClipboardList,
   UsersRound, Percent, PiggyBank, UserCheck, Wallet,
-  Camera, GitMerge, Send, Inbox, Sparkles, Import,
+  Camera, Car, GitMerge, Send, Inbox, Sparkles, Import, Upload,
   FileBarChart, Scale, TrendingUp, Clock, ClipboardCheck, ChevronsLeft, ChevronsRight,
   Menu, X, HeartPulse, Calendar,
 } from "lucide-react"
@@ -46,7 +46,7 @@ const financeSections: NavSection[] = [
     title: "",
     items: [
       { to: "/", label: "Dashboard", icon: LayoutDashboard },
-      { to: "/books-health", label: "Books Health", icon: HeartPulse },
+      { to: "/books-health", label: "Health Check", icon: HeartPulse },
       { to: "/calendar", label: "Calendar", icon: Calendar },
     ],
   },
@@ -72,7 +72,10 @@ const financeSections: NavSection[] = [
     title: "Banking",
     icon: CreditCard,
     items: [
-      { to: "/banking", label: "Reconciliation", icon: CreditCard },
+      { to: "/bank-import-transactions", label: "Import Transactions", icon: Upload },
+      { to: "/bank-reconciliation", label: "Reconciliation", icon: GitMerge },
+      { to: "/captured-receipts", label: "Captured Receipts", icon: Camera },
+      { to: "/logbook", label: "Vehicle Logbook", icon: Car },
       { to: "/transfers", label: "Transfers", icon: ArrowLeftRight },
     ],
   },
@@ -139,14 +142,15 @@ const tasksSections: NavSection[] = [
     title: "",
     items: [
       { to: "/", label: "Dashboard", icon: LayoutDashboard },
-      { to: "/books-health", label: "Books Health", icon: HeartPulse },
+      { to: "/books-health", label: "Health Check", icon: HeartPulse },
       { to: "/calendar", label: "Calendar", icon: Calendar },
     ],
   },
   {
     title: "Banking",
     items: [
-      { to: "/banking", label: "Reconcile Bank", icon: GitMerge },
+      { to: "/bank-import-transactions", label: "Import Transactions", icon: Upload },
+      { to: "/bank-reconciliation", label: "Reconcile Bank", icon: GitMerge },
       { to: "/transfers", label: "Bank Transfers", icon: ArrowLeftRight },
     ],
   },
@@ -472,7 +476,7 @@ export function Layout() {
         <div className="flex-1 flex flex-col min-h-0">
           <main className="flex-1 overflow-auto">
             <div className="p-6">
-              {mode === "tasks" && <SessionPlanner />}
+              {mode === "tasks" && (location.pathname === "/" || location.pathname === "/calendar" || location.pathname === "/books-health") && <SessionPlanner />}
               <Outlet />
             </div>
           </main>

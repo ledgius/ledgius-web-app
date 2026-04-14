@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell } from "@/components/layout"
-import { Button, Skeleton } from "@/components/primitives"
+import { Button } from "@/components/primitives"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { StatusPill, MoneyValue, DateValue } from "@/components/financial"
 import { useBills, type BillSummary } from "../hooks/useBills"
@@ -40,7 +40,7 @@ const columns: Column<BillSummary>[] = [
 export function BillsPage() {
   usePageHelp(pageHelpContent.bills)
   usePagePolicies(["payable", "tax"])
-  const { data: bills, isLoading } = useBills()
+  const { data: bills, isLoading, error } = useBills()
   const navigate = useNavigate()
 
   const header = (
@@ -49,6 +49,7 @@ export function BillsPage() {
         <h1 className="text-xl font-semibold text-gray-900">Bills</h1>
         <span className="text-sm text-gray-500">Accounts Payable &middot; {bills?.length ?? 0} records</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Money you owe your suppliers</p>
       <div className="flex items-center gap-3 mt-3">
         <Button onClick={() => navigate("/bills/new")}>
           <Plus className="h-4 w-4" />
@@ -59,17 +60,15 @@ export function BillsPage() {
   )
 
   return (
-    <PageShell header={header}>
-      {isLoading ? (
-        <Skeleton variant="table" rows={8} columns={6} />
-      ) : (
-        <DataTable
-          columns={columns}
-          data={bills ?? []}
-          emptyMessage="No bills recorded. Create a new bill to get started."
-          onRowClick={(row) => navigate(`/bills/${row.trans_id}`)}
-        />
-      )}
+    <PageShell header={header} loading={isLoading}>
+      <DataTable
+        columns={columns}
+        data={bills ?? []}
+        loading={isLoading}
+        error={error}
+        emptyMessage="No bills recorded. Create a new bill to get started."
+        onRowClick={(row) => navigate(`/bills/${row.trans_id}`)}
+      />
     </PageShell>
   )
 }

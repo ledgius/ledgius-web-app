@@ -61,6 +61,7 @@ export function CreateProductPage() {
       <div className="flex items-baseline gap-3">
         <h1 className="text-xl font-semibold text-gray-900">Create Product / Service</h1>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Add something you sell or purchase</p>
       <div className="flex items-center gap-2 mt-3">
         <Button variant="secondary" onClick={handleCancel}>Cancel</Button>
         <Button loading={createProduct.isPending} onClick={handleSubmit}>Create</Button>

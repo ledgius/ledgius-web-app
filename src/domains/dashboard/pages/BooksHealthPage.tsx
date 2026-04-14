@@ -433,7 +433,7 @@ export function BooksHealthPage() {
   const header = (
     <div className="flex items-start justify-between gap-4">
       <div>
-        <h1 className="text-xl font-semibold text-gray-900">Books Health</h1>
+        <h1 className="text-xl font-semibold text-gray-900">Health Check</h1>
         <p className="mt-0.5 text-sm text-gray-500">How clean are your books?</p>
       </div>
       <div className="flex items-center gap-3 shrink-0">
@@ -457,7 +457,7 @@ export function BooksHealthPage() {
 
   if (isLoading) {
     return (
-      <PageShell header={header}>
+      <PageShell header={header} loading={isLoading}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {Array.from({ length: 7 }).map((_, i) => (
             <Skeleton key={i} className="h-32 rounded-lg" />
@@ -471,7 +471,7 @@ export function BooksHealthPage() {
   const bh = data
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
       {/* ── Row 1: 4 panels ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Bank Reconciliation */}
@@ -480,7 +480,7 @@ export function BooksHealthPage() {
           icon={Landmark}
           status={bh?.bank_reconciliation?.status ?? "green"}
           summary={bh?.bank_reconciliation?.summary ?? "Loading…"}
-          link="/banking"
+          link="/bank-reconciliation"
         >
           {bh?.bank_reconciliation?.accounts && bh.bank_reconciliation.accounts.length > 0 ? (
             <div className="overflow-x-auto">
@@ -570,7 +570,7 @@ export function BooksHealthPage() {
           status={bh?.cash_position?.status ?? "green"}
           summary={bh?.cash_position?.summary ?? "Loading…"}
           metric={bh ? fmtCurrency(bh.cash_position.current_balance) : undefined}
-          link="/banking"
+          link="/bank-reconciliation"
         >
           {bh?.cash_position && (
             <div className="space-y-2 text-[11px]">

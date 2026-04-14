@@ -10,6 +10,7 @@ export function UsersPage() {
       <div className="flex items-baseline gap-3">
         <h1 className="text-xl font-semibold text-gray-900">User Management</h1>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Control who can access this organisation</p>
     </div>
   )
 

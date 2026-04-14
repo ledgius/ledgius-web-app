@@ -18,7 +18,7 @@ const columns = [
 export function HeadingsPage() {
   usePageHelp(pageHelpContent.accountHeadings)
   usePagePolicies(["account"])
-  const { data: headings, isLoading } = useAccountHeadings()
+  const { data: headings, isLoading, error: fetchError } = useAccountHeadings()
   const createHeading = useCreateHeading()
   const [showForm, setShowForm] = useState(false)
   const [accno, setAccno] = useState("")
@@ -39,6 +39,7 @@ export function HeadingsPage() {
         <h1 className="text-xl font-semibold text-gray-900">Account Headings</h1>
         <span className="text-sm text-gray-500">{headings?.length ?? 0} headings</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Group and organise your chart of accounts</p>
       <div className="flex items-center gap-3 mt-3">
         <Button onClick={() => setShowForm(!showForm)}>
           {showForm ? "Cancel" : "New Heading"}
@@ -48,7 +49,7 @@ export function HeadingsPage() {
   )
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
       {error && <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-md">{error}</div>}
       {showForm && (
         <PageSection title="New Heading">
@@ -61,7 +62,7 @@ export function HeadingsPage() {
           </div>
         </PageSection>
       )}
-      {isLoading ? <p className="text-gray-500">Loading...</p> : <DataTable columns={columns} data={headings ?? []} emptyMessage="No headings." />}
+      <DataTable columns={columns} data={headings ?? []} loading={isLoading} error={fetchError} emptyMessage="No headings." />
     </PageShell>
   )
 }

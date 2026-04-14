@@ -22,7 +22,7 @@ export function DashboardPage() {
 
   if (isLoading) {
     return (
-      <PageShell header={header}>
+      <PageShell header={header} loading={isLoading}>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Skeleton className="h-48 rounded-lg" />
           <Skeleton className="h-48 rounded-lg" />
@@ -60,7 +60,7 @@ export function DashboardPage() {
     : []
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
       {/* Financial position summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <PageSection title="Receivables" variant="card">

@@ -19,7 +19,7 @@ interface CategoryMeta {
 }
 
 const CATEGORY_META: Record<string, CategoryMeta> = {
-  banking:     { label: "Reconcile Bank",      icon: GitMerge,      link: "/banking",    hard: false },
+  banking:     { label: "Reconcile Bank",      icon: GitMerge,      link: "/bank-reconciliation",    hard: false },
   receivables: { label: "Send & Chase",        icon: Send,          link: "/invoices",   hard: false },
   invoices:    { label: "Send & Chase",        icon: Send,          link: "/invoices",   hard: false },
   payables:    { label: "Review & Pay Bills",  icon: Inbox,         link: "/bills",      hard: false },

@@ -52,6 +52,7 @@ export function FeedbackStatusPage() {
         <h1 className="text-xl font-semibold text-gray-900">Feedback Status</h1>
         <span className="text-sm font-mono text-gray-500">FB-{feedbackId}</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Track the status of a feedback item</p>
     </div>
   )
 

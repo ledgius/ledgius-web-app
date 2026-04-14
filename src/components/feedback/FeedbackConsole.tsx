@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useState, type ReactNode } from "react"
+import { createContext, useCallback, useContext, useState, useEffect, useRef, type ReactNode } from "react"
 import { CheckCircle, AlertCircle, Info, X, ChevronUp, ChevronDown } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 
@@ -122,10 +122,23 @@ function formatTime(date: Date): string {
 
 function FeedbackConsoleUI({ entries, onDismiss, onClear }: ConsoleUIProps) {
   const [expanded, setExpanded] = useState(false)
+  const [animating, setAnimating] = useState(false)
+  const prevErrorCountRef = useRef(0)
 
   const latest = entries[0]
   const hasError = entries.some((e) => e.level === "error")
   const errorCount = entries.filter((e) => e.level === "error").length
+
+  // Trigger 30-second pulse animation when error count increases
+  useEffect(() => {
+    if (errorCount > prevErrorCountRef.current) {
+      setAnimating(true)
+      const timer = setTimeout(() => setAnimating(false), 30_000)
+      prevErrorCountRef.current = errorCount
+      return () => clearTimeout(timer)
+    }
+    prevErrorCountRef.current = errorCount
+  }, [errorCount])
 
   // Determine strip colour based on latest entry
   const stripColor = !latest
@@ -166,8 +179,11 @@ function FeedbackConsoleUI({ entries, onDismiss, onClear }: ConsoleUIProps) {
 
         {/* Error count badge */}
         {hasError && errorCount > 0 && (
-          <span className="inline-flex items-center gap-1 rounded-full bg-red-100 px-1.5 py-0.5 text-[10px] font-medium text-red-600">
-            <AlertCircle className="h-2.5 w-2.5" />
+          <span className={cn(
+            "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium text-red-600 transition-all",
+            animating ? "bg-red-200 animate-pulse shadow-sm shadow-red-200" : "bg-red-100"
+          )}>
+            <AlertCircle className={cn("h-2.5 w-2.5", animating && "animate-bounce")} />
             {errorCount}
           </span>
         )}

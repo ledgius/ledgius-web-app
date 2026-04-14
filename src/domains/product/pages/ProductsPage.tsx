@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, InlineCreatePanel } from "@/components/layout"
-import { Button, Skeleton, InlineAlert } from "@/components/primitives"
+import { Button, InlineAlert } from "@/components/primitives"
 import { DataTable } from "@/shared/components/DataTable"
 import { SearchFilter } from "@/shared/components/SearchFilter"
 import { useProducts, useCreateProduct, type Product } from "../hooks/useProducts"
@@ -182,7 +182,7 @@ export function ProductsPage() {
   const [search, setSearch] = useState("")
   const [typeFilter, setTypeFilter] = useState("")
   const [createOpen, setCreateOpen] = useState(false)
-  const { data: products, isLoading } = useProducts(typeFilter, search)
+  const { data: products, isLoading, error } = useProducts(typeFilter, search)
   const navigate = useNavigate()
 
   const header = (
@@ -191,6 +191,7 @@ export function ProductsPage() {
         <h1 className="text-xl font-semibold text-gray-900">Products & Services</h1>
         <span className="text-sm text-gray-500">{products?.length ?? 0} items</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">What you sell or buy</p>
       <div className="flex items-center gap-3 mt-3">
         <Button onClick={() => setCreateOpen(!createOpen)} variant={createOpen ? "secondary" : "primary"}>
           <Plus className="h-4 w-4" />
@@ -201,7 +202,7 @@ export function ProductsPage() {
   )
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
       <InlineCreatePanel isOpen={createOpen} onClose={() => setCreateOpen(false)} title="New Product / Service">
         <InlineProductForm onClose={() => setCreateOpen(false)} />
       </InlineCreatePanel>
@@ -219,16 +220,14 @@ export function ProductsPage() {
         </select>
       </div>
 
-      {isLoading ? (
-        <Skeleton variant="table" rows={8} columns={6} />
-      ) : (
-        <DataTable
-          columns={columns}
-          data={products ?? []}
-          emptyMessage="No products or services found."
-          onRowClick={(row) => navigate(`/products/${row.id}`)}
-        />
-      )}
+      <DataTable
+        columns={columns}
+        data={products ?? []}
+        loading={isLoading}
+        error={error}
+        emptyMessage="No products or services found."
+        onRowClick={(row) => navigate(`/products/${row.id}`)}
+      />
     </PageShell>
   )
 }

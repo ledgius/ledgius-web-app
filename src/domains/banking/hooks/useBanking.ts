@@ -82,7 +82,7 @@ export function useUnmatchedTransactions(accountId: number) {
 export function useImportBankFile() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: (data: { account_id: number; file_name: string; file_format: string; content: string }) =>
+    mutationFn: (data: { account_id: number; file_name: string; format: string; content: string }) =>
       api.post("/bank-import", data),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["bank"] }),
   })
@@ -104,6 +104,23 @@ export function useBankRules(accountId: number) {
     queryKey: ["bank", accountId, "rules"],
     queryFn: () => api.get<BankRule[]>(`/bank/${accountId}/rules`),
     enabled: accountId > 0,
+  })
+}
+
+export function useDeleteBankRule() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (ruleId: number) => api.delete(`/bank-import/rules/${ruleId}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["bank"] }),
+  })
+}
+
+export function useUpdateRulePriority() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ ruleId, priority }: { ruleId: number; priority: number }) =>
+      api.patch(`/bank-import/rules/${ruleId}/priority`, { priority }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["bank"] }),
   })
 }
 

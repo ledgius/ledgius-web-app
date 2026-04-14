@@ -30,7 +30,7 @@ export function GLPage() {
 
   const { data: accounts } = useAccounts()
   const postJournal = usePostJournal()
-  const { data: pending, isLoading: pendingLoading } = usePendingApprovals()
+  const { data: pending, isLoading: pendingLoading, error: pendingError } = usePendingApprovals()
   const approveTransaction = useApproveTransaction()
   const yearEndClose = useYearEndClose()
 
@@ -133,6 +133,7 @@ export function GLPage() {
       <div className="flex items-baseline gap-3">
         <h1 className="text-xl font-semibold text-gray-900">General Ledger</h1>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">All journal entries and transactions</p>
       <div className="flex items-center gap-3 mt-3">
         <Button onClick={() => setShowForm(!showForm)}>
           {showForm ? "Cancel" : "New Journal Entry"}
@@ -245,13 +246,7 @@ export function GLPage() {
       )}
 
       <PageSection title="Pending Approvals">
-        {pendingLoading ? (
-          <p className="text-gray-500 text-sm">Loading...</p>
-        ) : (pending?.length ?? 0) === 0 ? (
-          <p className="text-gray-500 text-sm">No transactions pending approval.</p>
-        ) : (
-          <DataTable columns={pendingColumns} data={pending ?? []} />
-        )}
+        <DataTable columns={pendingColumns} data={pending ?? []} loading={pendingLoading} error={pendingError} emptyMessage="No transactions pending approval." />
       </PageSection>
 
       {showYearEnd && (

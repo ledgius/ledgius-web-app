@@ -127,6 +127,7 @@ export function CreditNotesPage() {
         <h1 className="text-xl font-semibold text-gray-900">Credit Notes</h1>
         <span className="text-sm text-gray-500">Issue credits against AR invoices</span>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Issue a credit adjustment for a customer</p>
       <div className="flex items-center gap-2 mt-3">
         <Button variant="secondary" onClick={handleCancel}>Cancel</Button>
         <Button loading={createCreditNote.isPending} onClick={handleCreate}>

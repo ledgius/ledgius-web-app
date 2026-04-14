@@ -63,6 +63,7 @@ export function CreateContactPage() {
       <div className="flex items-baseline gap-3">
         <h1 className="text-xl font-semibold text-gray-900">Create {type === "vendor" ? "Vendor" : "Customer"}</h1>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Add a new customer or supplier</p>
       <div className="flex items-center gap-2 mt-3">
         <Button variant="secondary" onClick={handleCancel}>Cancel</Button>
         <Button loading={submitting} onClick={handleSubmit}>

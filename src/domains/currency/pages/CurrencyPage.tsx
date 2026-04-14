@@ -11,7 +11,7 @@ export function CurrencyPage() {
   usePageHelp(pageHelpContent.currency)
   usePagePolicies(["reporting"])
   const { data: currencies } = useCurrencies()
-  const { data: rates, isLoading } = useExchangeRates()
+  const { data: rates, isLoading, error: ratesError } = useExchangeRates()
   const createRate = useCreateRate()
   const [showForm, setShowForm] = useState(false)
   const [fromCurr, setFromCurr] = useState("")
@@ -46,6 +46,7 @@ export function CurrencyPage() {
       <div className="flex items-baseline gap-3">
         <h1 className="text-xl font-semibold text-gray-900">Currency & Exchange Rates</h1>
       </div>
+      <p className="text-sm text-gray-500 mt-0.5">Manage currencies and conversion rates</p>
       <div className="flex items-center gap-3 mt-3">
         <Button onClick={() => setShowForm(!showForm)}>
           {showForm ? "Cancel" : "Add Rate"}
@@ -55,7 +56,7 @@ export function CurrencyPage() {
   )
 
   return (
-    <PageShell header={header}>
+    <PageShell header={header} loading={isLoading}>
       {error && <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-md">{error}</div>}
 
       {showForm && (
@@ -84,8 +85,7 @@ export function CurrencyPage() {
           <DataTable columns={currColumns} data={currencies ?? []} emptyMessage="No currencies." />
         </PageSection>
         <PageSection title="Recent Exchange Rates">
-          {isLoading ? <p className="text-gray-500 text-sm">Loading...</p> :
-            <DataTable columns={rateColumns} data={rates ?? []} emptyMessage="No exchange rates." />}
+          <DataTable columns={rateColumns} data={rates ?? []} loading={isLoading} error={ratesError} emptyMessage="No exchange rates." />
         </PageSection>
       </div>
     </PageShell>
