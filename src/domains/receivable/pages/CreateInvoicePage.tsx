@@ -158,17 +158,17 @@ export function CreateInvoicePage() {
               <span className="ml-1 font-normal text-gray-400">auto-generated</span>
             </label>
             <input type="text" value={displayInvNumber} onChange={e => setInvNumber(e.target.value)}
-              className="w-full border rounded px-2 py-1.5 text-sm font-mono" />
+              className="border rounded px-2 py-1.5 text-sm font-mono w-full max-w-[14rem]" />
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
             <input type="date" value={transDate} onChange={e => setTransDate(e.target.value)}
-              className="w-full border rounded px-2 py-1.5 text-sm" />
+              className="border rounded px-2 py-1.5 text-sm w-full max-w-[11rem]" />
           </div>
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Due Date</label>
             <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)}
-              className="w-full border rounded px-2 py-1.5 text-sm" />
+              className="border rounded px-2 py-1.5 text-sm w-full max-w-[11rem]" />
           </div>
         </div>
       </PageSection>
@@ -186,7 +186,7 @@ export function CreateInvoicePage() {
               <th className="w-8"></th>
             </tr>
           </thead>
-          <tbody className="divide-y">
+          <tbody className="divide-y divide-gray-100">
             {lines.map((line, idx) => (
               <tr key={idx}>
                 <td className="px-3 py-2">
@@ -229,25 +229,27 @@ export function CreateInvoicePage() {
             ))}
           </tbody>
           <tfoot>
-            <tr className="bg-gray-100">
-              <td colSpan={5} className="px-3 py-2 text-right font-medium text-gray-600">Subtotal (ex GST)</td>
-              <td className="px-3 py-2 text-right font-mono text-gray-600">{formatCurrency(netTotal)}</td>
+            <tr>
+              <td colSpan={5} className="px-3 py-1.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">Subtotal (ex GST)</td>
+              <td className="px-3 py-1.5 text-right font-mono text-sm text-gray-700 tabular-nums">{formatCurrency(netTotal)}</td>
               <td></td>
             </tr>
-            <tr className="bg-gray-100">
-              <td colSpan={5} className="px-3 py-2 text-right font-medium text-gray-600">GST</td>
-              <td className="px-3 py-2 text-right font-mono text-gray-600">{formatCurrency(gstTotal)}</td>
+            <tr>
+              <td colSpan={5} className="px-3 py-1.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">GST</td>
+              <td className="px-3 py-1.5 text-right font-mono text-sm text-gray-700 tabular-nums">{formatCurrency(gstTotal)}</td>
               <td></td>
             </tr>
-            <tr className="bg-gray-500 text-white">
-              <td colSpan={5} className="px-3 py-2 text-right font-semibold">Total (inc GST)</td>
-              <td className="px-3 py-2 text-right font-mono font-semibold">{formatCurrency(grossTotal)}</td>
+            {/* Total row — emphasis via typography + top rule, not a filled bar.
+                Printed-invoice convention: bold label, larger bold number, top border. */}
+            <tr className="border-t-2 border-gray-800">
+              <td colSpan={5} className="px-3 pt-2.5 pb-3 text-right text-sm font-semibold text-gray-900">Total (inc GST)</td>
+              <td className="px-3 pt-2.5 pb-3 text-right font-mono text-base font-bold text-gray-900 tabular-nums">{formatCurrency(grossTotal)}</td>
               <td></td>
             </tr>
           </tfoot>
         </table>
 
-        <Button variant="muted" size="sm" onClick={addLine} className="mb-4">
+        <Button variant="ghost" size="sm" onClick={addLine} className="mb-4">
           + Add Line
         </Button>
 
