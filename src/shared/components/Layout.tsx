@@ -10,10 +10,10 @@ import {
   UsersRound, Percent, PiggyBank, UserCheck, Wallet,
   Camera, Car, GitMerge, Send, Inbox, Sparkles, Import, Upload,
   FileBarChart, Scale, TrendingUp, Clock, ClipboardCheck, ChevronsLeft, ChevronsRight,
-  Menu, X, HeartPulse, Calendar,
+  Menu, X, HeartPulse, Calendar, MessageSquare as MessageSquareIcon,
 } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
-import { useAuthTokenSync } from "@/shared/lib/auth"
+import { useAuthTokenSync, useAuth } from "@/shared/lib/auth"
 import { AppHeader } from "./AppHeader"
 import { FeedbackConsoleStrip } from "@/components/feedback"
 import { HelpPanelSidebar, useHelpDockPosition, SessionPlanner } from "@/components/workflow"
@@ -275,6 +275,7 @@ const modeLabels: { key: SidebarMode; label: string; icon: LucideIcon }[] = [
 
 export function Layout() {
   useAuthTokenSync()
+  const { user } = useAuth()
   const navigate = useNavigate()
   const helpDock = useHelpDockPosition()
   const [commandOpen, setCommandOpen] = useState(false)
@@ -315,7 +316,24 @@ export function Layout() {
     }, 120)
   }
 
-  const activeSections = modeNavMap[mode]
+  // Compose the visible sidebar sections for the current mode, then
+  // append a Platform Admin section iff the current user is a platform
+  // administrator (PLATFORM_ADMIN_EMAILS-flagged account; future R-0052
+  // platform_owner population). Backend endpoints under /api/v1/admin/*
+  // already enforce this — the conditional render here just hides the
+  // entry from non-admins so they don't see a link they can't follow.
+  const activeSections: NavSection[] = user?.is_platform_admin
+    ? [
+        ...modeNavMap[mode],
+        {
+          title: "Platform",
+          items: [
+            { to: "/admin", label: "Platform Admin", icon: Shield },
+            { to: "/admin/feedback", label: "Feedback Inbox", icon: MessageSquareIcon },
+          ],
+        },
+      ]
+    : modeNavMap[mode]
 
   const handleGlobalKeyDown = useCallback((e: KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === "k") {
