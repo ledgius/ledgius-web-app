@@ -240,16 +240,18 @@ export function CreateInvoicePage() {
               <td></td>
             </tr>
             {/* Total row — emphasis via typography + top rule, not a filled bar.
-                Printed-invoice convention: bold label, larger bold number, top border. */}
-            <tr className="border-t-2 border-gray-800">
-              <td colSpan={5} className="px-3 pt-2.5 pb-3 text-right text-sm font-semibold text-gray-900">Total (inc GST)</td>
-              <td className="px-3 pt-2.5 pb-3 text-right font-mono text-base font-bold text-gray-900 tabular-nums">{formatCurrency(grossTotal)}</td>
+                Printed-invoice convention: bold label, larger bold number, top border.
+                Colour: dark grey (not black — black reads too strong next to the
+                lighter sub/GST rows above). */}
+            <tr className="border-t-2 border-gray-400">
+              <td colSpan={5} className="px-3 pt-2.5 pb-3 text-right text-sm font-semibold text-gray-700">Total (inc GST)</td>
+              <td className="px-3 pt-2.5 pb-3 text-right font-mono text-base font-bold text-gray-700 tabular-nums">{formatCurrency(grossTotal)}</td>
               <td></td>
             </tr>
           </tfoot>
         </table>
 
-        <Button variant="ghost" size="sm" onClick={addLine} className="mb-4">
+        <Button size="sm" onClick={addLine} className="mb-4">
           + Add Line
         </Button>
 
