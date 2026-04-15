@@ -36,23 +36,41 @@ export function LoginPage() {
     if (ssoAccessToken) {
       const tenantId = searchParams.get("tenant_id") || null
       const role = searchParams.get("role") || null
-      const userEmail = searchParams.get("user_email") || ""
-      const userName = searchParams.get("user_name") || ""
-      const userId = searchParams.get("user_id") || ""
 
-      const authState = {
-        user: { id: userId, email: userEmail, display_name: userName, is_platform_admin: false },
-        currentTenantId: tenantId,
-        currentRole: role,
-        tenants: tenantId ? [{ tenant_id: tenantId, role: role || "owner" }] : [],
-        accessToken: ssoAccessToken,
-        refreshToken: ssoRefreshToken,
-        isAuthenticated: true,
-      }
-      sessionStorage.setItem("ledgius_auth", JSON.stringify(authState))
-      setAuthToken(ssoAccessToken)
-      if (ssoRefreshToken) setRefreshTokenValue(ssoRefreshToken)
-      window.location.replace("/")
+      // Fetch the canonical user object from /api/v1/auth/me so the auth
+      // state carries accurate is_platform_admin (and any other server-
+      // side flags). Previously the SSO path hardcoded these from URL
+      // params, which silently dropped the admin flag for every SSO
+      // login — sidebar entries gated on is_platform_admin never showed.
+      // See R-0054 §"Reporting UI" + LSMB migration tile context.
+      ;(async () => {
+        try {
+          const meRes = await fetch(`${API_BASE}/auth/me`, {
+            headers: { Authorization: `Bearer ${ssoAccessToken}` },
+          })
+          if (!meRes.ok) {
+            setError("SSO login succeeded but /me lookup failed — please try logging in again.")
+            return
+          }
+          const meData = await meRes.json()
+
+          const authState = {
+            user: meData.user,
+            currentTenantId: meData.current_tenant ?? tenantId,
+            currentRole: meData.current_role ?? role,
+            tenants: meData.tenants ?? (tenantId ? [{ tenant_id: tenantId, role: role || "owner" }] : []),
+            accessToken: ssoAccessToken,
+            refreshToken: ssoRefreshToken,
+            isAuthenticated: true,
+          }
+          sessionStorage.setItem("ledgius_auth", JSON.stringify(authState))
+          setAuthToken(ssoAccessToken)
+          if (ssoRefreshToken) setRefreshTokenValue(ssoRefreshToken)
+          window.location.replace("/")
+        } catch (e: unknown) {
+          setError(e instanceof Error ? e.message : "SSO callback failed")
+        }
+      })()
     }
   }, [searchParams])
 

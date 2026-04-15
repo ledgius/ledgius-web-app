@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react"
 import { createBrowserRouter } from "react-router-dom"
 import { Layout } from "@/shared/components/Layout"
 import { RequireAuth } from "@/shared/components/RequireAuth"
+import { RequirePlatformAdmin } from "@/shared/components/RequirePlatformAdmin"
 import { PageLoader } from "@/components/primitives"
 
 // Lazy-load all page components — each becomes a separate chunk.
@@ -64,6 +65,7 @@ const SuperRatesPage = lazy(() => import("@/domains/admin/pages/SuperRatesPage")
 const UsersPage = lazy(() => import("@/domains/admin/pages/UsersPage").then(m => ({ default: m.UsersPage })))
 const DataImportPage = lazy(() => import("@/domains/admin/pages/DataImportPage").then(m => ({ default: m.DataImportPage })))
 const FeedbackDashboardPage = lazy(() => import("@/domains/admin/pages/FeedbackDashboardPage").then(m => ({ default: m.FeedbackDashboardPage })))
+const PlatformAdminPage = lazy(() => import("@/domains/admin/pages/PlatformAdminPage").then(m => ({ default: m.PlatformAdminPage })))
 const FeedbackStatusPage = lazy(() => import("@/domains/admin/pages/FeedbackStatusPage").then(m => ({ default: m.FeedbackStatusPage })))
 
 const AuditLogPage = lazy(() => import("@/domains/audit/pages/AuditLogPage").then(m => ({ default: m.AuditLogPage })))
@@ -158,8 +160,9 @@ export const router = createBrowserRouter([
       // Data Import
       { path: "import", element: <S><DataImportPage /></S> },
 
-      // Platform Admin (feedback dashboard)
-      { path: "admin/feedback", element: <S><FeedbackDashboardPage /></S> },
+      // Platform Admin (feedback dashboard) — gated to platform admins only
+      { path: "admin", element: <RequirePlatformAdmin><S><PlatformAdminPage /></S></RequirePlatformAdmin> },
+      { path: "admin/feedback", element: <RequirePlatformAdmin><S><FeedbackDashboardPage /></S></RequirePlatformAdmin> },
       { path: "feedback/:id", element: <S><FeedbackStatusPage /></S> },
 
       // Reports & Tax
