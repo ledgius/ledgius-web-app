@@ -12,6 +12,7 @@ import { useHelpPanelToggle } from "@/components/workflow"
 import { FinancialTimeline, useCalendarBadge } from "@/components/workflow/FinancialTimeline"
 import { api } from "@/shared/lib/api"
 import type { DashboardMetrics } from "@/domains/dashboard/hooks/useDashboard"
+import { BankFeedStatusBadge } from "@/domains/bankfeed/components/BankFeedStatusBadge"
 
 interface AppHeaderProps {
   onSearchOpen: () => void
@@ -205,6 +206,11 @@ export function AppHeader({ onSearchOpen, onFeedbackOpen }: AppHeaderProps & { o
         >
           <CreditCard className="h-4 w-4" />
         </button>
+
+        {/* Bank feed status (R-0049 — hidden on mobile) */}
+        <div className="hidden md:flex items-center px-2">
+          <BankFeedStatusBadge />
+        </div>
 
         {/* Divider (hidden on mobile) */}
         <div className="hidden md:block w-px h-5 bg-gray-200 mx-1" />
