@@ -1,8 +1,9 @@
 import { useState } from "react"
+import { Link } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
-import { Button, Combobox } from "@/components/primitives"
+import { Badge, Button, Combobox } from "@/components/primitives"
 import { DataTable } from "@/shared/components/DataTable"
 import { usePayments, useCreatePayment, type PaymentSummary } from "../hooks/usePayments"
 import { useVendors } from "@/domains/contact/hooks/useContacts"
@@ -11,9 +12,40 @@ import { useBills } from "@/domains/payable/hooks/useBills"
 import { formatCurrency, formatDate } from "@/shared/lib/utils"
 
 const columns = [
-  { key: "reference", header: "Reference", className: "font-mono" },
+  {
+    key: "reference",
+    header: "Reference",
+    className: "font-mono",
+    render: (row: PaymentSummary) => (
+      <Link to={`/payments/${row.trans_id}`} className="text-primary-600 hover:underline">
+        {row.reference || `#${row.trans_id}`}
+      </Link>
+    ),
+  },
   { key: "payment_date", header: "Date", render: (row: PaymentSummary) => row.payment_date ? formatDate(row.payment_date) : "-" },
-  { key: "vendor_name", header: "Vendor" },
+  {
+    key: "vendor_name",
+    header: "Vendor",
+    render: (row: PaymentSummary) => {
+      if (!row.vendor_name) {
+        // Unattributed payment — surface as a clear call-to-action so the
+        // user knows they can fix it from the detail page.
+        return (
+          <Link to={`/payments/${row.trans_id}`} className="text-amber-700 hover:underline text-xs">
+            (no vendor — attribute)
+          </Link>
+        )
+      }
+      return (
+        <span className="inline-flex items-center gap-2">
+          {row.vendor_name}
+          {row.vendor_source === "override" && (
+            <Badge variant="info">manual</Badge>
+          )}
+        </span>
+      )
+    },
+  },
   { key: "amount", header: "Amount", className: "text-right font-mono", render: (row: PaymentSummary) => formatCurrency(row.amount) },
   { key: "approved", header: "Status", className: "w-20",
     render: (row: PaymentSummary) => (

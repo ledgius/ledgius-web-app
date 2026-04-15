@@ -34,6 +34,7 @@ const BillDetailPage = lazy(() => import("@/domains/payable/pages/BillDetailPage
 const CreateBillPage = lazy(() => import("@/domains/payable/pages/CreateBillPage").then(m => ({ default: m.CreateBillPage })))
 const DebitNotesPage = lazy(() => import("@/domains/payable/pages/DebitNotesPage").then(m => ({ default: m.DebitNotesPage })))
 const PaymentsPage = lazy(() => import("@/domains/payment/pages/PaymentsPage").then(m => ({ default: m.PaymentsPage })))
+const PaymentDetailPage = lazy(() => import("@/domains/payment/pages/PaymentDetailPage").then(m => ({ default: m.PaymentDetailPage })))
 
 const BankStatementsPage = lazy(() => import("@/domains/banking/pages/BankStatementsPage").then(m => ({ default: m.BankStatementsPage })))
 const BankFeedsPage = lazy(() => import("@/domains/bankfeed/pages/BankFeedsPage").then(m => ({ default: m.BankFeedsPage })))
@@ -116,6 +117,7 @@ export const router = createBrowserRouter([
       { path: "bills/:id", element: <S><BillDetailPage /></S> },
       { path: "debit-notes", element: <S><DebitNotesPage /></S> },
       { path: "payments", element: <S><PaymentsPage /></S> },
+      { path: "payments/:id", element: <S><PaymentDetailPage /></S> },
 
       // Cash & Banking
       { path: "settings/bank-feeds", element: <S><BankFeedsPage /></S> },
