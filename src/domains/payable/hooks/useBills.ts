@@ -6,6 +6,7 @@ export interface BillSummary {
   invnumber: string
   transdate: string | null
   duedate: string | null
+  vendor_id: number
   vendor_name: string
   meta_number: string
   amount_bc: string

@@ -25,6 +25,8 @@ export interface PayRun {
   id: number; pay_period_start: string; pay_period_end: string; payment_date: string
   status: string; total_gross: string; total_tax: string; total_super: string; total_net: string
   employee_count: number
+  stp_status?: "pending" | "accepted" | "failed" | "submitted" | null
+  stp_submitted_at?: string | null
 }
 
 export function useEmployees() {

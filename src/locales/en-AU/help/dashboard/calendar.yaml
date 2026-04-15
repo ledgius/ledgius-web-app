@@ -1,0 +1,42 @@
+page: /calendar
+title: Financial Calendar
+sections:
+  - heading: What is this page?
+    body: >
+      A month-view of every financial event relevant to your business — compliance deadlines, payroll runs, BAS/GST
+      lodgements, bill and invoice due dates, scheduled bank imports, reconciliation windows, and any manual tasks
+      you add yourself.
+
+  - heading: Event categories (dot colours)
+    body: |
+      Each day's events appear as coloured dots:
+      - {{bad:Red}} — **Compliance & BAS** deadlines (ATO lodgements, BAS/GST due dates, super guarantee cut-offs).
+      - Blue — **Banking & reconciliation** (scheduled imports, open reconciliation windows).
+      - Purple — **Payroll runs** (pay dates and {{term:STP}} submission cut-offs).
+      - {{warn:Amber}} — **Receivables** (customer invoice due dates).
+      - Orange — **Payables** (supplier bill due dates).
+      - Grey — **Accounting & period close** events.
+      - Cyan — **Manual tasks** you've added yourself.
+
+  - heading: Overdue and completed events
+    body: >
+      Overdue events show with a pulsing red dot at the day level, and a red card in the detail panel with an alert
+      icon. Completed events show with a green tick and strikethrough text — they stay on the calendar as audit
+      evidence of when work got done.
+
+  - heading: Adding a task
+    body: >
+      Click the **+** button (on the page header or inside a day cell) to add a manual task to a specific date.
+      Tasks are free-text — use them for anything you need to remember to do on a given day that isn't an automatic
+      system event (e.g. "Review Q3 inventory count", "Call accountant about depreciation").
+
+  - heading: Navigation
+    body: >
+      Use the **‹** and **›** arrows in the header to move between months. The **Today** button jumps back to the
+      current month and highlights today's date. Click any day cell to open its detail panel on the right.
+
+  - heading: Tip
+    body: >
+      The same events also appear on the {{term:BAS}}/Health Check page's "Financial Timeline" — that's a 7-day
+      / 30-day / quarter summary. Use the Calendar for the month-at-a-glance view and the Health Check timeline for
+      a prioritised action feed.

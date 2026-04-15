@@ -254,8 +254,8 @@ export function BankStatementsPage() {
 
   const header = (
     <div>
-      <h1 className="text-xl font-semibold text-gray-900">Bank Statements</h1>
-      <p className="mt-0.5 text-sm text-gray-500">Import and manage bank statement files</p>
+      <h1 className="text-xl font-semibold text-gray-900">Import Transactions</h1>
+      <p className="mt-0.5 text-sm text-gray-500">Upload bank statement files and commit transactions to the ledger</p>
     </div>
   )
 

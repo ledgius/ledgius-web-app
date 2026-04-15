@@ -1,0 +1,47 @@
+page: /books-health
+title: Health Check
+sections:
+  - heading: What is this page?
+    body: >
+      A snapshot of how clean your books are right now. Seven panels cover the areas that typically go wrong first
+      — bank reconciliation, receivables, payables, cash position, expense documentation, GST/BAS readiness, and
+      period close. Below the panels, the Financial Timeline lists upcoming and overdue events.
+
+  - heading: What each panel measures
+    body: |
+      - **Bank Reconciliation** — bank statement lines not yet matched to ledger entries, and how long since each account was last reconciled.
+      - **Receivables ({{term:AR}})** — money your customers owe you on unpaid invoices, aged by how overdue.
+      - **Payables ({{term:AP}})** — money you owe suppliers on unpaid bills, with anything due this week surfaced in amber.
+      - **Cash Position** — current combined bank balance, net cash flow this month, and projected end-of-month position.
+      - **Expense Docs** — percentage of expense transactions that have a receipt attached. The ATO requires supporting evidence for every {{term:GST}} claim.
+      - **GST / {{term:BAS}}** — lodgement-readiness for the current period, including coded/uncoded transaction counts and net GST position (owed to the ATO shows red; refund due shows green).
+      - **Period Close** — checklist of steps required before the current period can be locked.
+
+  - heading: Status colours
+    body: |
+      Every panel shows a colour-coded status signal:
+      - {{good:Green — healthy}}: no action needed; the area is under control.
+      - {{warn:Amber — attention soon}}: not urgent but drifting — e.g. receipts missing, unmatched bank lines, a due-soon deadline.
+      - {{bad:Red — act now}}: overdue, out-of-balance, or blocking period close / BAS.
+
+  - heading: Aged buckets
+    body: >
+      The Receivables and Payables panels split outstanding amounts by age — *current*, *30+*, *60+*, *90+* days.
+      The further right the bar extends, the older the unpaid debt. The colour deepens from green → amber → orange → red
+      as age increases, so you can spot chronic overdue accounts at a glance.
+
+  - heading: Financial Timeline entries
+    body: |
+      The timeline aggregates events from across the system into one ordered list:
+      - **Compliance & BAS deadlines** — ATO lodgement dates, {{term:BAS}}/{{term:GST}} due dates, super guarantee cut-offs.
+      - **Banking & reconciliation** — scheduled imports, open reconciliation windows.
+      - **Payroll runs** — upcoming pay dates and {{term:STP}} submission cut-offs.
+      - **Receivables / payables events** — invoice and bill due dates worth surfacing.
+      - **Manual tasks** — anything you've added to the Task planner.
+      Overdue entries appear at the top with a pulsing red dot. Completed items show a green tick with strikethrough.
+      Click any card with a chevron to jump to the relevant page.
+
+  - heading: Tip
+    body: >
+      Use this page as your morning checklist. If every panel is green and the timeline is empty, your books are in
+      good shape. Start with any red panel first, then amber, then work through the upcoming timeline entries.

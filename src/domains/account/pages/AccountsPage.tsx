@@ -179,6 +179,9 @@ export function AccountsPage() {
       </div>
       <p className="text-sm text-gray-500 mt-0.5">Your business's financial categories</p>
       <div className="flex items-center gap-3 mt-3">
+        <div className="max-w-sm">
+          <SearchFilter placeholder="Search accounts..." onSearch={setSearch} />
+        </div>
         <Button onClick={() => setCreateOpen(!createOpen)} variant={createOpen ? "secondary" : "primary"}>
           <Plus className="h-4 w-4" />
           New Account
@@ -200,10 +203,6 @@ export function AccountsPage() {
             </>
           )}
         </Button>
-        <div className="flex-1" />
-        <div className="max-w-sm">
-          <SearchFilter placeholder="Search accounts..." onSearch={setSearch} />
-        </div>
       </div>
     </div>
   )

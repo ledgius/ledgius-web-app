@@ -1,5 +1,7 @@
 import { useState } from "react"
+import { Link } from "react-router-dom"
 import { PageShell } from "@/components/layout"
+import { InfoPanel } from "@/components/primitives"
 import { SearchFilter } from "@/shared/components/SearchFilter"
 import { DataTable } from "@/shared/components/DataTable"
 import { useCaptures, useDeleteCapture, useUpdateCapture, type CapturedReceipt } from "../hooks/useCaptures"
@@ -238,6 +240,22 @@ export function CapturedReceiptsPage() {
 
   return (
     <PageShell header={header} loading={isLoading}>
+      <InfoPanel title="About Captured Receipts" storageKey="captured-receipts-info">
+        <p>
+          <strong>Captured Receipts</strong> are photos and PDFs of supplier receipts that you've uploaded for OCR
+          scanning. The system extracts vendor, date, amount, and GST, then holds the receipt in a <em>Ready</em> state
+          until you attach it to a bill or bank transaction.
+        </p>
+        <p className="mt-1.5">
+          Upload via the mobile app or drag-and-drop here. Review the scanned fields, correct anything wrong, then
+          either create a new <Link to="/bills" className="underline font-medium">Bill</Link> from the receipt or match
+          it to an imported bank transaction on the <Link to="/bank-reconciliation" className="underline font-medium">Reconciliation</Link> page.
+        </p>
+        <p className="mt-1.5 text-blue-600">
+          Matched receipts become the audit evidence attached to the related bill or transaction — the ATO requires
+          supporting evidence for every GST claim.
+        </p>
+      </InfoPanel>
       <div className="flex items-center justify-between mb-4">
         <SearchFilter
           placeholder="Search by vendor, description, or status..."

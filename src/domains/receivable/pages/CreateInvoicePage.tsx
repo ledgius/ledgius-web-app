@@ -178,10 +178,10 @@ export function CreateInvoicePage() {
           <thead className="bg-gray-50">
             <tr>
               <th className="text-left px-3 py-2 font-medium text-gray-600">Description</th>
-              <th className="text-left px-3 py-2 font-medium text-gray-600 w-20">Qty</th>
-              <th className="text-left px-3 py-2 font-medium text-gray-600 w-28">Price</th>
-              <th className="text-left px-3 py-2 font-medium text-gray-600 w-40">Revenue Account</th>
-              <th className="text-left px-3 py-2 font-medium text-gray-600 w-28">Tax Code</th>
+              <th className="text-center px-3 py-2 font-medium text-gray-600 w-20">Qty</th>
+              <th className="text-center px-3 py-2 font-medium text-gray-600 w-[142px]">Price</th>
+              <th className="text-center px-3 py-2 font-medium text-gray-600 w-40">Revenue Account</th>
+              <th className="text-center px-3 py-2 font-medium text-gray-600 w-[127px]">Tax Code</th>
               <th className="text-right px-3 py-2 font-medium text-gray-600 w-28">Total</th>
               <th className="w-8"></th>
             </tr>
@@ -203,7 +203,7 @@ export function CreateInvoicePage() {
                 </td>
                 <td className="px-3 py-2">
                   <select value={line.account_id} onChange={e => updateLine(idx, "account_id", e.target.value)}
-                    className="w-full border rounded px-2 py-1 text-sm">
+                    className="w-full border rounded pl-2 pr-7 py-1 text-sm">
                     <option value="">Account...</option>
                     {revenueAccounts.map(a => (
                       <option key={a.id} value={a.id}>{a.accno} — {a.description}</option>
@@ -212,7 +212,7 @@ export function CreateInvoicePage() {
                 </td>
                 <td className="px-3 py-2">
                   <select value={line.tax_code_id} onChange={e => updateLine(idx, "tax_code_id", e.target.value)}
-                    className="w-full border rounded px-2 py-1 text-sm">
+                    className="w-full border rounded pl-2 pr-7 py-1 text-sm">
                     <option value="">GST (10%)</option>
                     {taxCodes?.map(tc => (
                       <option key={tc.id} value={tc.id}>{tc.code} ({(parseFloat(tc.rate) * 100).toFixed(0)}%)</option>
@@ -240,16 +240,18 @@ export function CreateInvoicePage() {
               <td></td>
             </tr>
             {/* Total row — emphasis via typography + top rule, not a filled bar.
-                Printed-invoice convention: bold label, larger bold number, top border. */}
-            <tr className="border-t-2 border-gray-800">
-              <td colSpan={5} className="px-3 pt-2.5 pb-3 text-right text-sm font-semibold text-gray-900">Total (inc GST)</td>
-              <td className="px-3 pt-2.5 pb-3 text-right font-mono text-base font-bold text-gray-900 tabular-nums">{formatCurrency(grossTotal)}</td>
+                Printed-invoice convention: bold label, larger bold number, top border.
+                Colour: dark grey (not black — black reads too strong next to the
+                lighter sub/GST rows above). */}
+            <tr className="border-t-2 border-gray-300">
+              <td colSpan={5} className="px-3 pt-2.5 pb-3 text-right text-sm font-semibold text-gray-600">Total (inc GST)</td>
+              <td className="px-3 pt-2.5 pb-3 text-right font-mono text-base font-bold text-gray-600 tabular-nums">{formatCurrency(grossTotal)}</td>
               <td></td>
             </tr>
           </tfoot>
         </table>
 
-        <Button variant="ghost" size="sm" onClick={addLine} className="mb-4">
+        <Button size="sm" onClick={addLine} className="mb-4">
           + Add Line
         </Button>
 

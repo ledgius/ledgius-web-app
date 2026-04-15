@@ -2,7 +2,7 @@ import { useState } from "react"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
-import { Button } from "@/components/primitives"
+import { Button, InfoPanel } from "@/components/primitives"
 import { DataTable } from "@/shared/components/DataTable"
 import { useCurrencies, useExchangeRates, useCreateRate, type Currency, type ExchangeRate } from "../hooks/useCurrency"
 import { formatDate } from "@/shared/lib/utils"
@@ -57,6 +57,23 @@ export function CurrencyPage() {
 
   return (
     <PageShell header={header} loading={isLoading}>
+      <InfoPanel title="About Currency & Exchange Rates" storageKey="currency-info">
+        <p>
+          Exchange rates convert foreign-currency transactions (invoices, bills, bank feeds) back to your base
+          currency (AUD) for the general ledger. Every FX-denominated transaction records both the original amount and
+          the AUD-equivalent at the rate effective on the transaction date.
+        </p>
+        <p className="mt-1.5">
+          <strong>Recent Exchange Rates</strong> (left) shows the rates currently in use. <strong>Currencies</strong>{" "}
+          (right) lists the ISO codes available for selection on invoices, bills, and bank accounts. Click{" "}
+          <strong>Add Rate</strong> to enter a new rate for a specific date — the system uses the most recent rate
+          on-or-before the transaction date.
+        </p>
+        <p className="mt-1.5 text-blue-600">
+          The ATO requires you to use a rate from a reliable source (RBA daily rates are commonly accepted). Record
+          the source so the rate is defensible at audit.
+        </p>
+      </InfoPanel>
       {error && <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-md">{error}</div>}
 
       {showForm && (
@@ -81,11 +98,11 @@ export function CurrencyPage() {
       )}
 
       <div className="grid grid-cols-2 gap-6">
-        <PageSection title="Currencies">
-          <DataTable columns={currColumns} data={currencies ?? []} emptyMessage="No currencies." />
-        </PageSection>
         <PageSection title="Recent Exchange Rates">
           <DataTable columns={rateColumns} data={rates ?? []} loading={isLoading} error={ratesError} emptyMessage="No exchange rates." />
+        </PageSection>
+        <PageSection title="Currencies">
+          <DataTable columns={currColumns} data={currencies ?? []} emptyMessage="No currencies." />
         </PageSection>
       </div>
     </PageShell>

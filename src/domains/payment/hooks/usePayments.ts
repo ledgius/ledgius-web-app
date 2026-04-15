@@ -11,6 +11,7 @@ export interface PaymentSummary {
   amount: string
   curr: string
   approved: boolean
+  bill_refs: string
 }
 
 export interface GLLine {
