@@ -243,9 +243,9 @@ export function CreateInvoicePage() {
                 Printed-invoice convention: bold label, larger bold number, top border.
                 Colour: dark grey (not black — black reads too strong next to the
                 lighter sub/GST rows above). */}
-            <tr className="border-t-2 border-gray-400">
-              <td colSpan={5} className="px-3 pt-2.5 pb-3 text-right text-sm font-semibold text-gray-700">Total (inc GST)</td>
-              <td className="px-3 pt-2.5 pb-3 text-right font-mono text-base font-bold text-gray-700 tabular-nums">{formatCurrency(grossTotal)}</td>
+            <tr className="border-t-2 border-gray-300">
+              <td colSpan={5} className="px-3 pt-2.5 pb-3 text-right text-sm font-semibold text-gray-600">Total (inc GST)</td>
+              <td className="px-3 pt-2.5 pb-3 text-right font-mono text-base font-bold text-gray-600 tabular-nums">{formatCurrency(grossTotal)}</td>
               <td></td>
             </tr>
           </tfoot>
