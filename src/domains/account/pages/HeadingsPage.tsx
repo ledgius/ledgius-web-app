@@ -1,18 +1,39 @@
 import { useState } from "react"
+import { Link } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
-import { Button } from "@/components/primitives"
+import { Button, InfoPanel } from "@/components/primitives"
 import { DataTable } from "@/shared/components/DataTable"
 import { useAccountHeadings, useCreateHeading, type AccountHeading } from "../hooks/useAccounts"
 
 const categoryLabels: Record<string, string> = { A: "Asset", L: "Liability", Q: "Equity", I: "Income", E: "Expense" }
 
+// Derive a category letter from the accno range using standard accounting
+// conventions. Used as a display fallback when category is NULL on the row.
+function inferCategory(accno: string): string | null {
+  const n = parseInt(accno, 10)
+  if (isNaN(n)) return null
+  if (n >= 1000 && n < 2000) return "A"
+  if (n >= 2000 && n < 3000) return "L"
+  if (n >= 3000 && n < 4000) return "Q"
+  if (n >= 4000 && n < 5000) return "I"
+  if (n >= 5000 && n < 7000) return "E"
+  return null
+}
+
+function renderCategory(r: AccountHeading) {
+  const letter = r.category?.trim() || inferCategory(r.accno)
+  if (!letter) return <span className="text-gray-400">—</span>
+  const label = categoryLabels[letter] ?? letter
+  return r.category ? label : <span className="text-gray-500 italic" title="Derived from account number range">{label}</span>
+}
+
 const columns = [
   { key: "accno", header: "Code", className: "font-mono w-20" },
   { key: "description", header: "Description" },
-  { key: "category", header: "Category", className: "w-24", render: (r: AccountHeading) => r.category ? categoryLabels[r.category.trim()] ?? r.category : <span className="text-gray-400">—</span> },
-  { key: "parent_id", header: "Parent", className: "w-16", render: (r: AccountHeading) => r.parent_id ?? <span className="text-gray-400">—</span> },
+  { key: "category", header: "Category", className: "w-28", render: renderCategory },
+  { key: "parent_id", header: "Parent", className: "w-20", render: (r: AccountHeading) => r.parent_id ?? <span className="text-gray-400">—</span> },
 ]
 
 export function HeadingsPage() {
@@ -50,6 +71,22 @@ export function HeadingsPage() {
 
   return (
     <PageShell header={header} loading={isLoading}>
+      <InfoPanel title="About Account Headings" storageKey="headings-info">
+        <p>
+          <strong>Account Headings</strong> are the grouping labels in your{" "}
+          <Link to="/accounts" className="underline font-medium">Chart of Accounts</Link> — they organise individual
+          accounts into categories (Assets, Liabilities, Equity, Income, Expenses) and optional sub-groups.
+        </p>
+        <p className="mt-1.5">
+          <strong>Code ranges follow standard accounting convention:</strong> 1000-series = Assets, 2000-series =
+          Liabilities, 3000-series = Equity, 4000-series = Income, 5000/6000-series = Expenses. When a heading's
+          category column is empty, the system displays the inferred category in grey italics.
+        </p>
+        <p className="mt-1.5 text-blue-600">
+          Changing a heading's code can cascade into GIFI/BAS mappings and historical reports — prefer creating new
+          headings over renumbering existing ones.
+        </p>
+      </InfoPanel>
       {error && <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-md">{error}</div>}
       {showForm && (
         <PageSection title="New Heading">

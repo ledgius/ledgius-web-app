@@ -8,8 +8,10 @@ import {
 } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import { PageShell } from "@/components/layout"
-import { Skeleton } from "@/components/primitives"
+import { InfoPanel, Skeleton } from "@/components/primitives"
 import { useFeedback } from "@/components/feedback"
+import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
+import { usePagePolicies } from "@/hooks/usePagePolicies"
 import {
   useCalendarTimeline,
   useCreateCalendarTask,
@@ -489,6 +491,10 @@ function CalendarSkeleton() {
 // ── Main CalendarPage ──
 
 export function CalendarPage() {
+  // Help panel content is resolved from YAML by route (see
+  // locales/en-AU/help/dashboard/calendar.yaml).
+  usePageHelp(pageHelpContent.dashboard)
+  usePagePolicies(["reporting", "tax"])
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
@@ -574,6 +580,17 @@ export function CalendarPage() {
 
   return (
     <PageShell header={header} loading={isLoading}>
+      <InfoPanel title="About the Calendar" storageKey="calendar-info">
+        <p>
+          The Calendar shows every financial event across the month in one view — BAS deadlines, payroll runs, bill
+          due dates, reconciliation windows, scheduled imports, and any manual tasks you've added. Click a day to see
+          that day's events, or click the <strong>+</strong> button to add a task on a specific date.
+        </p>
+        <p className="mt-1.5">
+          Dots on each day are colour-coded by event type — see <strong>F1 Help</strong> for the full legend. Overdue
+          events appear red; completed events show a green tick.
+        </p>
+      </InfoPanel>
       <div className="flex gap-4 min-h-0">
         {/* Calendar grid — shrinks when panel is open */}
         <div className={cn("flex-1 min-w-0 transition-all duration-200")}>

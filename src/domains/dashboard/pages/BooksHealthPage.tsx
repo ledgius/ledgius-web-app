@@ -1,6 +1,6 @@
 // Spec references: A-0023.
 import { useState } from "react"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import {
   Landmark, FileText, Receipt, DollarSign,
   ScrollText, CalculatorIcon, CalendarCheck,
@@ -10,10 +10,12 @@ import {
   CheckCircle, Lock, ClipboardList, Wallet, Calculator,
   ChevronRight,
 } from "lucide-react"
+import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
+import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { cn } from "@/shared/lib/utils"
 import { PageShell } from "@/components/layout"
 import { HealthPanel } from "@/components/layout/HealthPanel"
-import { Skeleton } from "@/components/primitives"
+import { InfoPanel, Skeleton } from "@/components/primitives"
 import { useBooksHealth, type AgeBuckets, type PeriodCloseChecklist } from "../hooks/useBooksHealth"
 import { useCalendarTimeline, type TimelineItem as APITimelineItem } from "@/domains/calendar/hooks/useCalendar"
 import type { LucideIcon } from "lucide-react"
@@ -428,6 +430,11 @@ function FullCalendarTimeline() {
 // ── Main page ──
 
 export function BooksHealthPage() {
+  // Help panel content is resolved from YAML by route (see
+  // locales/en-AU/help/dashboard/books-health.yaml). Fallback to the dashboard
+  // inline help keeps F1 useful even if the YAML loader misses.
+  usePageHelp(pageHelpContent.dashboard)
+  usePagePolicies(["reporting", "tax"])
   const { data, isLoading, refetch, isFetching } = useBooksHealth()
 
   const header = (
@@ -469,9 +476,41 @@ export function BooksHealthPage() {
   }
 
   const bh = data
+  const actions = deriveActions(bh)
 
   return (
     <PageShell header={header} loading={isLoading}>
+      <InfoPanel title={actions.length === 0 ? "All clear" : `Actions (${actions.length})`} storageKey="books-health-info">
+        {actions.length === 0 ? (
+          <p className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+            <span>No immediate actions needed. Your books look healthy — all panels green, no overdue entries.</span>
+          </p>
+        ) : (
+          <>
+            <p>Based on your current Health Check signals, here's what to work on — in priority order:</p>
+            <ul className="mt-1.5 space-y-1">
+              {actions.map((a, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <span className={cn(
+                    "inline-block h-2.5 w-2.5 rounded-full mt-1 shrink-0",
+                    a.severity === "red" ? "bg-red-500" : "bg-amber-400"
+                  )} />
+                  <span>
+                    <Link to={a.link} className="underline font-medium hover:text-blue-900">{a.title}</Link>
+                    {a.detail && <span className="text-blue-600"> — {a.detail}</span>}
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-2 text-blue-500 text-[11px]">
+              Reference material (what each panel means, status colours, aged buckets, timeline sources) has moved to{" "}
+              <strong>F1 Help</strong>.
+            </p>
+          </>
+        )}
+      </InfoPanel>
+
       {/* ── Row 1: 4 panels ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Bank Reconciliation */}
@@ -737,6 +776,138 @@ export function BooksHealthPage() {
       </div>
     </PageShell>
   )
+}
+
+// Derive a prioritised action list from the Health Check data. Each action
+// is a concrete, clickable thing the user can go do now. Red severity sorts
+// above amber; we intentionally skip any panel currently green.
+interface HealthAction {
+  severity: "red" | "amber"
+  title: string
+  detail?: string
+  link: string
+}
+
+type BH = ReturnType<typeof useBooksHealth>["data"]
+
+function deriveActions(bh: BH | undefined): HealthAction[] {
+  if (!bh) return []
+  const out: HealthAction[] = []
+
+  if (bh.bank_reconciliation?.status !== "green" && bh.bank_reconciliation?.accounts) {
+    const totalUnmatched = bh.bank_reconciliation.accounts.reduce((s, a) => s + (a.unmatched_count || 0), 0)
+    const staleAccounts = bh.bank_reconciliation.accounts.filter((a) => a.days_since > 7).length
+    if (totalUnmatched > 0) {
+      out.push({
+        severity: bh.bank_reconciliation.status === "red" ? "red" : "amber",
+        title: `Reconcile ${totalUnmatched} unmatched bank line${totalUnmatched === 1 ? "" : "s"}`,
+        detail: staleAccounts > 0 ? `${staleAccounts} account${staleAccounts === 1 ? "" : "s"} not reconciled in 7+ days` : undefined,
+        link: "/bank-reconciliation",
+      })
+    } else if (staleAccounts > 0) {
+      out.push({
+        severity: "amber",
+        title: `Run reconciliation for ${staleAccounts} stale account${staleAccounts === 1 ? "" : "s"}`,
+        link: "/bank-reconciliation",
+      })
+    }
+  }
+
+  if (bh.receivables?.status !== "green" && bh.receivables?.buckets) {
+    const overdue = (bh.receivables.buckets.days_30?.count ?? 0)
+      + (bh.receivables.buckets.days_60?.count ?? 0)
+      + (bh.receivables.buckets.days_90?.count ?? 0)
+    if (overdue > 0) {
+      const ninetyPlus = bh.receivables.buckets.days_90?.count ?? 0
+      out.push({
+        severity: ninetyPlus > 0 ? "red" : "amber",
+        title: `Chase ${overdue} overdue invoice${overdue === 1 ? "" : "s"} (AR)`,
+        detail: ninetyPlus > 0 ? `${ninetyPlus} over 90 days` : undefined,
+        link: "/invoices",
+      })
+    }
+  }
+
+  if (bh.payables?.status !== "green") {
+    const overdue = (bh.payables?.buckets?.days_30?.count ?? 0)
+      + (bh.payables?.buckets?.days_60?.count ?? 0)
+      + (bh.payables?.buckets?.days_90?.count ?? 0)
+    if (overdue > 0) {
+      out.push({
+        severity: "red",
+        title: `Pay ${overdue} overdue bill${overdue === 1 ? "" : "s"} (AP)`,
+        link: "/payments",
+      })
+    } else if ((bh.payables?.due_this_week ?? 0) > 0) {
+      out.push({
+        severity: "amber",
+        title: "Allocate payments for bills due this week",
+        detail: fmtCurrency(bh.payables.due_this_week) + " due",
+        link: "/payments",
+      })
+    }
+  }
+
+  if (bh.expense_documentation?.status !== "green") {
+    const missing = bh.expense_documentation?.without_receipt ?? 0
+    const uncoded = bh.expense_documentation?.uncoded_count ?? 0
+    if (missing > 0) {
+      out.push({
+        severity: bh.expense_documentation?.status === "red" ? "red" : "amber",
+        title: `Capture ${missing} missing receipt${missing === 1 ? "" : "s"}`,
+        detail: "ATO requires evidence for every GST claim",
+        link: "/captured-receipts",
+      })
+    }
+    if (uncoded > 0) {
+      out.push({
+        severity: "red",
+        title: `Code ${uncoded} uncoded transaction${uncoded === 1 ? "" : "s"}`,
+        link: "/gl",
+      })
+    }
+  }
+
+  if (bh.gst_bas_readiness?.status !== "green") {
+    const uncoded = bh.gst_bas_readiness?.uncoded_count ?? 0
+    if (uncoded > 0) {
+      out.push({
+        severity: bh.gst_bas_readiness?.status === "red" ? "red" : "amber",
+        title: `Code ${uncoded} uncoded GST transaction${uncoded === 1 ? "" : "s"}`,
+        detail: `Period ${bh.gst_bas_readiness?.period ?? "current"}`,
+        link: "/bas",
+      })
+    }
+    if (bh.gst_bas_readiness?.prior_quarter_lodged === false) {
+      out.push({
+        severity: "red",
+        title: "Prior quarter BAS not yet lodged",
+        link: "/bas",
+      })
+    }
+  }
+
+  if (bh.period_close?.status !== "green" && bh.period_close?.checklist) {
+    const items = bh.period_close.checklist
+    const labels: { key: keyof typeof items; label: string }[] = [
+      { key: "bank_reconciled", label: "bank reconciled" },
+      { key: "journals_posted", label: "journals posted" },
+      { key: "adjustments_reviewed", label: "adjustments reviewed" },
+      { key: "gst_reconciled", label: "GST reconciled" },
+      { key: "period_locked", label: "period locked" },
+    ]
+    const undone = labels.filter(({ key }) => !items[key]).map(({ label }) => label)
+    if (undone.length > 0 && (bh.period_close.days_remaining ?? 0) <= 7) {
+      out.push({
+        severity: (bh.period_close.days_remaining ?? 0) <= 2 ? "red" : "amber",
+        title: `Complete period close: ${undone.join(", ")}`,
+        detail: `${bh.period_close.days_remaining} day${bh.period_close.days_remaining === 1 ? "" : "s"} remaining`,
+        link: "/reports",
+      })
+    }
+  }
+
+  return out.sort((a, b) => (a.severity === b.severity ? 0 : a.severity === "red" ? -1 : 1))
 }
 
 function ChecklistItems({ checklist }: { checklist: PeriodCloseChecklist }) {

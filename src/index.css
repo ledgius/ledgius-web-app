@@ -69,10 +69,20 @@
 
 body {
   margin: 0;
-  font-family: Inter, system-ui, -apple-system, sans-serif;
+  /* Inter is loaded via Google Fonts (see index.html). System fallbacks kick
+     in if the font file can't load, preserving legibility. */
+  font-family: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
+  /* Grayscale antialiasing — smoother letter edges than the macOS subpixel default. */
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Inter OpenType features for accounting UI:
+       cv11 — single-storey "a" (clearer at small sizes)
+       ss01 — open digits (easier to scan)
+       ss03 — lowercase "l" with tail (disambiguates from "1" and "I")
+       tnum — tabular numerals (columns of amounts align naturally) */
+  font-feature-settings: "cv11", "ss01", "ss03", "tnum";
 }
 
 /* Consistent soft gray borders on all form inputs */

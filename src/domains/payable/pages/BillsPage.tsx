@@ -1,8 +1,8 @@
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell } from "@/components/layout"
-import { Button } from "@/components/primitives"
+import { Button, InfoPanel } from "@/components/primitives"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { StatusPill, MoneyValue, DateValue } from "@/components/financial"
 import { useBills, type BillSummary } from "../hooks/useBills"
@@ -61,6 +61,20 @@ export function BillsPage() {
 
   return (
     <PageShell header={header} loading={isLoading}>
+      <InfoPanel title="About Bills" storageKey="bills-info">
+        <p>
+          <strong>Bills</strong> are money you owe your suppliers. Each bill records an obligation with a due date and an
+          outstanding balance.
+        </p>
+        <p className="mt-1.5">
+          <strong>You don't pay bills from this page.</strong> When a payment leaves your bank account, go to the{" "}
+          <Link to="/payments" className="underline font-medium">Payments</Link> page and attribute the payment to this
+          vendor — ticking the bill(s) it settled will mark them paid here.
+        </p>
+        <p className="mt-1.5 text-blue-600">
+          Open bills are ordered by due date on the Payments allocation screen so you pay what's due first.
+        </p>
+      </InfoPanel>
       <DataTable
         columns={columns}
         data={bills ?? []}

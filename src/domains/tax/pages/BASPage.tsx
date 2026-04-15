@@ -1,7 +1,10 @@
 import { useState } from "react"
+import { Link } from "react-router-dom"
+import { CheckCircle2, Circle, Clock } from "lucide-react"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell } from "@/components/layout"
+import { InfoPanel } from "@/components/primitives"
 import { useBAS, useGSTDetail } from "../hooks/useBAS"
 import { formatCurrency } from "@/shared/lib/utils"
 
@@ -24,8 +27,113 @@ export function BASPage() {
     </div>
   )
 
+  // Progress signals derived from loaded data. See A-0014 §26b status-indicator rules.
+  const periodChosen = !!from && !!to
+  const basLoaded = !!bas
+  const salesCount = detail?.sales?.length ?? 0
+  const purchasesCount = detail?.purchases?.length ?? 0
+  const hasTransactions = basLoaded && (salesCount > 0 || purchasesCount > 0)
+  const hasBothSides = basLoaded && salesCount > 0 && purchasesCount > 0
+  const gstCalculated = basLoaded && bas.gst_owed !== undefined
+
+  // BAS due date rules (ATO):
+  //   Quarterly BAS: 28th of the month after period end — except Q2 (Oct–Dec)
+  //     which is extended to 28 Feb due to the Christmas/New Year break.
+  //   Monthly BAS: 21st of the month after period end.
+  //   BAS agents get a further ~4-week extension; not modelled here.
+  // A period is "quarterly" if the `to` date lands on Mar 31 / Jun 30 /
+  // Sep 30 / Dec 31; otherwise treat as monthly.
+  const basDeadline = (() => {
+    if (!to) return null
+    const toDate = new Date(to + "T00:00:00")
+    if (isNaN(toDate.getTime())) return null
+    const m = toDate.getMonth() // 0-indexed
+    const d = toDate.getDate()
+    const y = toDate.getFullYear()
+    const isQuarterEnd = (m === 2 && d === 31) || (m === 5 && d === 30) || (m === 8 && d === 30) || (m === 11 && d === 31)
+    let due: Date
+    if (isQuarterEnd) {
+      // Q2 (Oct–Dec, month index 11) → due 28 Feb of next calendar year.
+      if (m === 11) due = new Date(y + 1, 1, 28)
+      else due = new Date(y, m + 1, 28)
+    } else {
+      // Monthly — 21st of month following `to`.
+      due = new Date(y, m + 1, 21)
+    }
+    const msPerDay = 1000 * 60 * 60 * 24
+    const daysRemaining = Math.ceil((due.getTime() - Date.now()) / msPerDay)
+    return { due, daysRemaining, cycle: isQuarterEnd ? "quarterly" : "monthly" as const }
+  })()
+
+  const formatAUDate = (d: Date) =>
+    d.toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })
+
   return (
     <PageShell header={header}>
+      <InfoPanel title="Prepare your BAS" storageKey="bas-info">
+        <div className="space-y-2">
+          <StepRow
+            done={periodChosen}
+            text={<>
+              <strong>1. Choose the BAS period</strong> using the <strong>From</strong> and <strong>To</strong> dates
+              below. Most businesses lodge quarterly; check your ATO reporting cycle.
+            </>}
+          />
+          <StepRow
+            done={hasBothSides}
+            partial={hasTransactions && !hasBothSides}
+            text={<>
+              <strong>2. Enter bills and invoices for the period.</strong>{" "}
+              {basLoaded ? (
+                <>
+                  <span className="text-blue-700">
+                    {salesCount} sales, {purchasesCount} purchases in this period.
+                  </span>{" "}
+                </>
+              ) : null}
+              Create any missing <Link to="/invoices" className="underline font-medium">invoices</Link> and{" "}
+              <Link to="/bills" className="underline font-medium">bills</Link> before locking the BAS — the BAS totals
+              only include transactions dated in the period.
+            </>}
+          />
+          <StepRow
+            done={gstCalculated}
+            partial={basLoaded && !gstCalculated}
+            text={<>
+              <strong>3. Review the G-labels and Net GST Owed.</strong> 1A (GST on sales) and 1B (GST on purchases)
+              drive the final amount. Click <strong>Show GST Transaction Detail</strong> below to drill into the
+              contributing invoices and bills.
+            </>}
+          />
+          <StepRow
+            done={false}
+            text={<>
+              <strong>4. Lodge with the ATO.</strong>{" "}
+              {basDeadline && (
+                <span className={
+                  basDeadline.daysRemaining < 0
+                    ? "font-medium text-red-700"
+                    : basDeadline.daysRemaining <= 7
+                      ? "font-medium text-amber-700"
+                      : "font-medium text-green-700"
+                }>
+                  BAS due: {formatAUDate(basDeadline.due)}
+                  {" · "}
+                  {basDeadline.daysRemaining < 0
+                    ? `${Math.abs(basDeadline.daysRemaining)} days overdue`
+                    : basDeadline.daysRemaining === 0
+                      ? "due today"
+                      : `${basDeadline.daysRemaining} days remaining`}
+                  {" ("}{basDeadline.cycle}{" cycle). "}
+                </span>
+              )}
+              Use the computed 1A / 1B / 7 / 7A values in the ATO Business Portal or your BAS agent's system. Ledgius
+              does not currently submit BAS electronically — this is a manual step. Registered BAS agents receive
+              approximately a further 4 weeks' extension.
+            </>}
+          />
+        </div>
+      </InfoPanel>
       <div className="flex gap-4 mb-6">
         <label className="text-sm text-gray-600">From: <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="ml-1 border rounded px-2 py-1 text-sm" /></label>
         <label className="text-sm text-gray-600">To: <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="ml-1 border rounded px-2 py-1 text-sm" /></label>
@@ -120,6 +228,20 @@ function SummaryCard({ label, value, highlight }: { label: string; value: string
     <div className={`p-3 rounded-lg ${highlight ? "bg-blue-50 border border-blue-200" : "bg-gray-50"}`}>
       <p className="text-xs text-gray-500 mb-1">{label}</p>
       <p className={`text-xl font-mono font-semibold ${highlight ? "text-blue-700" : ""}`}>{formatCurrency(value)}</p>
+    </div>
+  )
+}
+
+function StepRow({ done, partial, text }: { done: boolean; partial?: boolean; text: React.ReactNode }) {
+  const icon = done
+    ? <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+    : partial
+      ? <Clock className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+      : <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
+  return (
+    <div className="flex items-start gap-2">
+      {icon}
+      <p className="text-xs leading-relaxed">{text}</p>
     </div>
   )
 }

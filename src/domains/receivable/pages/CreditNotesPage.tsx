@@ -1,9 +1,9 @@
 import { useState, useCallback, useMemo } from "react"
-import { useNavigate } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
-import { Button, InlineAlert, Combobox } from "@/components/primitives"
+import { Button, InfoPanel, InlineAlert, Combobox } from "@/components/primitives"
 import { useEscapeKey } from "@/hooks/useEscapeKey"
 import { useNotification, useFeedback } from "@/components/feedback"
 import { useInvoices, useCreateCreditNote, type InvoiceSummary } from "../hooks/useInvoices"
@@ -139,6 +139,22 @@ export function CreditNotesPage() {
 
   return (
     <PageShell header={header}>
+      <InfoPanel title="About Credit Notes" storageKey="credit-notes-info">
+        <p>
+          A <strong>Credit Note</strong> reduces what a customer owes you — typically issued for returns, partial
+          refunds, or price adjustments against a previously issued <Link to="/invoices" className="underline font-medium">invoice</Link>.
+        </p>
+        <p className="mt-1.5">
+          Pick the original invoice, enter the credit amount (positive — the system records it as a credit against the
+          invoice), and give a short reason. The credit reduces the invoice's outstanding balance; if the credit equals
+          the invoice amount, the invoice is fully settled. A surplus sits as a customer credit usable against future
+          invoices.
+        </p>
+        <p className="mt-1.5 text-blue-600">
+          GST on the original invoice is proportionally reversed — this affects the BAS period in which the credit note
+          is dated.
+        </p>
+      </InfoPanel>
       {error && <InlineAlert variant="error" className="mb-4">{error}</InlineAlert>}
       <PageSection title="Credit Note Details">
         <div className="space-y-4">

@@ -164,10 +164,10 @@ export function CreateBillPage() {
           <thead className="bg-gray-50">
             <tr>
               <th className="text-left px-3 py-2 font-medium text-gray-600">Description</th>
-              <th className="text-left px-3 py-2 font-medium text-gray-600 w-20">Qty</th>
-              <th className="text-left px-3 py-2 font-medium text-gray-600 w-28">Price</th>
-              <th className="text-left px-3 py-2 font-medium text-gray-600 w-40">Expense Account</th>
-              <th className="text-left px-3 py-2 font-medium text-gray-600 w-28">Tax Code</th>
+              <th className="text-center px-3 py-2 font-medium text-gray-600 w-20">Qty</th>
+              <th className="text-center px-3 py-2 font-medium text-gray-600 w-[142px]">Price</th>
+              <th className="text-center px-3 py-2 font-medium text-gray-600 w-40">Expense Account</th>
+              <th className="text-center px-3 py-2 font-medium text-gray-600 w-[127px]">Tax Code</th>
               <th className="text-right px-3 py-2 font-medium text-gray-600 w-28">Total</th>
               <th className="w-8"></th>
             </tr>
@@ -179,13 +179,13 @@ export function CreateBillPage() {
                 <td className="px-3 py-2"><input type="number" value={line.qty} onChange={e => updateLine(idx, "qty", e.target.value)} className="w-full border rounded px-2 py-1 text-sm text-right" min="1" /></td>
                 <td className="px-3 py-2"><input type="number" step="0.01" value={line.sellprice} onChange={e => updateLine(idx, "sellprice", e.target.value)} className="w-full border rounded px-2 py-1 text-sm text-right font-mono" placeholder="0.00" /></td>
                 <td className="px-3 py-2">
-                  <select value={line.account_id} onChange={e => updateLine(idx, "account_id", e.target.value)} className="w-full border rounded px-2 py-1 text-sm">
+                  <select value={line.account_id} onChange={e => updateLine(idx, "account_id", e.target.value)} className="w-full border rounded pl-2 pr-7 py-1 text-sm">
                     <option value="">Account...</option>
                     {expenseAccounts.map(a => <option key={a.id} value={a.id}>{a.accno} — {a.description}</option>)}
                   </select>
                 </td>
                 <td className="px-3 py-2">
-                  <select value={line.tax_code_id} onChange={e => updateLine(idx, "tax_code_id", e.target.value)} className="w-full border rounded px-2 py-1 text-sm">
+                  <select value={line.tax_code_id} onChange={e => updateLine(idx, "tax_code_id", e.target.value)} className="w-full border rounded pl-2 pr-7 py-1 text-sm">
                     <option value="">GST (10%)</option>
                     {taxCodes?.map(tc => <option key={tc.id} value={tc.id}>{tc.code} ({(parseFloat(tc.rate) * 100).toFixed(0)}%)</option>)}
                   </select>
@@ -196,9 +196,21 @@ export function CreateBillPage() {
             ))}
           </tbody>
           <tfoot>
-            <tr className="bg-gray-100"><td colSpan={5} className="px-3 py-2 text-right font-medium text-gray-600">Subtotal</td><td className="px-3 py-2 text-right font-mono text-gray-600">{formatCurrency(netTotal)}</td><td></td></tr>
-            <tr className="bg-gray-100"><td colSpan={5} className="px-3 py-2 text-right font-medium text-gray-600">GST</td><td className="px-3 py-2 text-right font-mono text-gray-600">{formatCurrency(gstTotal)}</td><td></td></tr>
-            <tr className="bg-gray-500 text-white"><td colSpan={5} className="px-3 py-2 text-right font-semibold">Total (inc GST)</td><td className="px-3 py-2 text-right font-mono font-semibold">{formatCurrency(grossTotal)}</td><td></td></tr>
+            <tr>
+              <td colSpan={5} className="px-3 py-1.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">Subtotal (ex GST)</td>
+              <td className="px-3 py-1.5 text-right font-mono text-sm text-gray-700 tabular-nums">{formatCurrency(netTotal)}</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td colSpan={5} className="px-3 py-1.5 text-right text-xs font-medium text-gray-500 uppercase tracking-wide">GST</td>
+              <td className="px-3 py-1.5 text-right font-mono text-sm text-gray-700 tabular-nums">{formatCurrency(gstTotal)}</td>
+              <td></td>
+            </tr>
+            <tr className="border-t-2 border-gray-300">
+              <td colSpan={5} className="px-3 pt-2.5 pb-3 text-right text-sm font-semibold text-gray-600">Total (inc GST)</td>
+              <td className="px-3 pt-2.5 pb-3 text-right font-mono text-base font-bold text-gray-600 tabular-nums">{formatCurrency(grossTotal)}</td>
+              <td></td>
+            </tr>
           </tfoot>
         </table>
 

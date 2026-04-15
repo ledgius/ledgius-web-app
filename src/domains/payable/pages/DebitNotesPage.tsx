@@ -3,7 +3,8 @@ import { useNavigate } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
-import { Button, InlineAlert, Combobox } from "@/components/primitives"
+import { Link } from "react-router-dom"
+import { Button, InfoPanel, InlineAlert, Combobox } from "@/components/primitives"
 import { useEscapeKey } from "@/hooks/useEscapeKey"
 import { useNotification, useFeedback } from "@/components/feedback"
 import { useBills, useCreateDebitNote } from "../hooks/useBills"
@@ -70,6 +71,20 @@ export function DebitNotesPage() {
 
   return (
     <PageShell header={header}>
+      <InfoPanel title="About Debit Notes" storageKey="debit-notes-info">
+        <p>
+          A <strong>Debit Note</strong> reduces the amount you owe a supplier — typically issued when you return goods,
+          receive a refund, or agree a price adjustment on a previously entered <Link to="/bills" className="underline font-medium">bill</Link>.
+        </p>
+        <p className="mt-1.5">
+          Pick the original bill, enter the adjustment amount (positive — the system records it as a credit against the
+          bill), and give a short reason. The debit note reduces the bill's outstanding balance; if the debit exceeds
+          the bill amount, the surplus remains as a vendor credit usable on future payments.
+        </p>
+        <p className="mt-1.5 text-blue-600">
+          GST on the original bill is proportionally reversed — this affects the BAS period in which the debit note is dated.
+        </p>
+      </InfoPanel>
       {error && <InlineAlert variant="error" className="mb-4">{error}</InlineAlert>}
       <PageSection title="Debit Note Details">
         <div className="space-y-4">

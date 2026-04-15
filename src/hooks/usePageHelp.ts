@@ -47,9 +47,9 @@ export const pageHelpContent = {
   dashboard: {
     title: "Dashboard",
     sections: [
-      { heading: "What is this?", body: "Your operational overview — what needs attention today. Shows outstanding receivables, payables, and work queues." },
-      { heading: "AR & AP", body: "Receivables (AR) is money owed to you. Payables (AP) is money you owe. The GST position shows your net tax obligation." },
-      { heading: "Tip", body: "Click the amounts to jump directly to the relevant invoice or bill list." },
+      { heading: "What is this?", body: "Today's decisions queue — the items that need your attention right now, in priority order. This is a doing page, not a monitoring page." },
+      { heading: "Health Check vs Dashboard", body: "Dashboard shows what to do today. Health Check shows the overall state of your books (aged receivables, BAS readiness, period close, etc.). Use Health Check for terminology (AR, AP, GST position) and status colour meanings." },
+      { heading: "Tip", body: "Click any amount to jump directly to the list where you can act on it." },
     ],
   },
 

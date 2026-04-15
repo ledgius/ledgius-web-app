@@ -8,7 +8,7 @@ import {
   CheckCircle, ListTree, Package,
   Calculator, DollarSign, Repeat, ClipboardList,
   UsersRound, Percent, PiggyBank, UserCheck, Wallet,
-  Camera, Car, GitMerge, Send, Inbox, Sparkles, Import, Upload,
+  Camera, Car, GitMerge, Send, Inbox, Sparkles, Import, Upload, Radio,
   FileBarChart, Scale, TrendingUp, Clock, ClipboardCheck, ChevronsLeft, ChevronsRight,
   Menu, X, HeartPulse, Calendar, MessageSquare as MessageSquareIcon,
 } from "lucide-react"
@@ -55,8 +55,8 @@ const financeSections: NavSection[] = [
     icon: ShoppingCart,
     items: [
       { to: "/invoices", label: "Invoices", icon: FileText },
-      { to: "/credit-notes", label: "Credit Notes", icon: FileText },
       { to: "/receipts", label: "Receipts", icon: ArrowDownToLine },
+      { to: "/credit-notes", label: "Credit Notes", icon: FileText },
     ],
   },
   {
@@ -64,8 +64,8 @@ const financeSections: NavSection[] = [
     icon: ShoppingBag,
     items: [
       { to: "/bills", label: "Bills", icon: Receipt },
-      { to: "/debit-notes", label: "Debit Notes", icon: Receipt },
       { to: "/payments", label: "Payments", icon: ArrowUpFromLine },
+      { to: "/debit-notes", label: "Debit Notes", icon: Receipt },
     ],
   },
   {
@@ -73,6 +73,7 @@ const financeSections: NavSection[] = [
     icon: CreditCard,
     items: [
       { to: "/bank-import-transactions", label: "Import Transactions", icon: Upload },
+      { to: "/settings/bank-feeds", label: "Live Bank Feeds", icon: Radio },
       { to: "/bank-reconciliation", label: "Reconciliation", icon: GitMerge },
       { to: "/captured-receipts", label: "Captured Receipts", icon: Camera },
       { to: "/logbook", label: "Vehicle Logbook", icon: Car },
@@ -494,7 +495,7 @@ export function Layout() {
         <div className="flex-1 flex flex-col min-h-0">
           <main className="flex-1 overflow-auto">
             <div className="p-6">
-              {mode === "tasks" && (location.pathname === "/" || location.pathname === "/calendar" || location.pathname === "/books-health") && <SessionPlanner />}
+              {mode === "tasks" && (location.pathname === "/calendar" || location.pathname === "/books-health") && <SessionPlanner />}
               <Outlet />
             </div>
           </main>

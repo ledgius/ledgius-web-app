@@ -41,7 +41,9 @@ public/             — Favicon, logos
 
 ## UX/UI Rules (Non-Negotiable)
 
-All frontend implementation MUST follow these rules. Governed by **A-0014** in ledgius-specs.
+All frontend implementation MUST follow these rules. Governed by **A-0014** in ledgius-specs (`../ledgius-specs/domains/architecture/ux-principles/A-0014.md`).
+
+**Before starting any frontend work, read A-0014 end-to-end.** The summary below is a reminder, not a substitute. Sections 26b (Info Panel), 26c (Inline Feedback), 26d (Totals Row Styling), 27 (Inline Creation) contain rules that are easy to miss and non-negotiable.
 
 ### 1. Page Layout — Four-Zone Structure
 App header, sidebar (navigation only), main content, help panel (collapsible).
@@ -63,7 +65,24 @@ Line 1: Title + contextual stats. Line 2: Action buttons (left-aligned) + search
 ### 5. Form Fields
 - Editable: white bg, gray-300 border, cyan focus ring
 - Read-only/computed: gray-100 bg, gray-500 text, no border
-- Grand total row: gray-500 bg, white text (inverted)
+- Native `<select>`: add `pr-7` so the chevron doesn't overlap option text
+
+### 5a. Totals Row on Line-Item Tables (A-0014 §26d)
+- **No filled colour bar** for Subtotal / GST / Total rows — never `bg-gray-500 text-white` or similar
+- Subtotal / GST: `text-xs uppercase tracking-wide text-gray-500` label, `text-sm text-gray-700 tabular-nums` value
+- Total: `border-t-2 border-gray-300`, `text-sm font-semibold text-gray-600` label, `text-base font-bold text-gray-600 tabular-nums` value
+- Labels: `Subtotal (ex GST)`, `GST`, `Total (inc GST)` — always qualify GST-inclusive/exclusive
+
+### 5b. Info Panel + Inline Feedback (A-0014 §26b, §26c)
+- Complex workflow pages MUST have an `InfoPanel` (dismissible, persisted via `storageKey`) explaining the flow
+- Simple list pages (Accounts, Contacts) may skip it — but Invoices/Bills/Payments/Debit Notes/Receipts/Credit Notes SHOULD have one
+- Blue (`bg-blue-50`) is reserved for info panels only — never for action feedback
+- Action feedback uses light grey with a coloured left accent stripe (`border-l-[3px] border-l-green-400` for success, amber for warning, red for error)
+
+### 5c. Every Page MUST Call `usePageHelp` + `usePagePolicies`
+- `usePageHelp(pageHelpContent.<slug>)` — wires F1 help content
+- `usePagePolicies([...domains])` — wires governing policies to the help panel
+- Both are required — reviewers should reject PRs adding pages without them
 
 ### 6. Status-Driven Editing
 - Draft: fully editable, Save/Discard in header

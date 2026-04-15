@@ -1,11 +1,29 @@
 import { useState } from "react"
+import { Link } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
-import { Button } from "@/components/primitives"
+import { Button, InfoPanel } from "@/components/primitives"
 import { DataTable } from "@/shared/components/DataTable"
 import { usePayRuns, useEmployees, useProcessPayRun, type PayRun } from "../hooks/usePayroll"
 import { formatCurrency, formatDate } from "@/shared/lib/utils"
+
+// STP status → colour + label map. "Not submitted" (no STP row) is amber to
+// signal that the pay run is incomplete from an ATO-compliance standpoint.
+function renderSTPStatus(r: PayRun) {
+  const status = r.stp_status
+  if (!status) {
+    return <span className="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700">Not submitted</span>
+  }
+  const styles: Record<string, string> = {
+    accepted: "bg-green-50 text-green-700",
+    submitted: "bg-blue-50 text-blue-700",
+    pending:   "bg-yellow-50 text-yellow-700",
+    failed:    "bg-red-50 text-red-700",
+  }
+  const cls = styles[status] ?? "bg-gray-50 text-gray-700"
+  return <span className={`text-xs px-2 py-0.5 rounded-full ${cls}`}>{status}</span>
+}
 
 const columns = [
   { key: "id", header: "ID", className: "w-12" },
@@ -18,6 +36,7 @@ const columns = [
   { key: "total_net", header: "Net", className: "text-right font-mono", render: (r: PayRun) => formatCurrency(r.total_net) },
   { key: "status", header: "Status", className: "w-24",
     render: (r: PayRun) => <span className={`text-xs px-2 py-0.5 rounded-full ${r.status === "paid" ? "bg-green-50 text-green-700" : "bg-yellow-50 text-yellow-700"}`}>{r.status}</span> },
+  { key: "stp_status", header: "STP", className: "w-28", render: renderSTPStatus },
 ]
 
 export function PayRunsPage() {
@@ -84,8 +103,41 @@ export function PayRunsPage() {
     </div>
   )
 
+  // STP submission signal for the info panel — how many recent runs are not yet
+  // lodged with the ATO.
+  const unlodged = (runs ?? []).filter((r) => !r.stp_status || r.stp_status === "pending" || r.stp_status === "failed").length
+
   return (
     <PageShell header={header} loading={isLoading}>
+      <InfoPanel title="About Pay Runs" storageKey="pay-runs-info">
+        <p>
+          A <strong>Pay Run</strong> calculates each employee's gross pay, PAYG withholding (ATO Schedule 1), and
+          superannuation guarantee for a pay period. Once processed, it posts the payroll journal and generates
+          payslips.
+        </p>
+        <p className="mt-1.5">
+          <strong>STP (Single Touch Payroll)</strong> is mandatory for most Australian employers — every pay run must
+          be lodged with the ATO <em>on or before</em> the payment date. The <strong>STP</strong> column shows each
+          pay run's submission state:
+        </p>
+        <ul className="mt-0.5 space-y-0.5 ml-2">
+          <li><span className="inline-block px-1.5 py-0 rounded-full bg-green-50 text-green-700 text-[10px]">accepted</span> — ATO received and accepted the submission.</li>
+          <li><span className="inline-block px-1.5 py-0 rounded-full bg-blue-50 text-blue-700 text-[10px]">submitted</span> — sent to the ATO via SBR, awaiting receipt.</li>
+          <li><span className="inline-block px-1.5 py-0 rounded-full bg-yellow-50 text-yellow-700 text-[10px]">pending</span> — queued for submission.</li>
+          <li><span className="inline-block px-1.5 py-0 rounded-full bg-red-50 text-red-700 text-[10px]">failed</span> — ATO rejected; click through to see the error and retry.</li>
+          <li><span className="inline-block px-1.5 py-0 rounded-full bg-amber-50 text-amber-700 text-[10px]">Not submitted</span> — no submission yet. Don't leave this state after pay day.</li>
+        </ul>
+        {unlodged > 0 && (
+          <p className="mt-1.5 text-amber-700 font-medium">
+            {unlodged} pay run{unlodged === 1 ? "" : "s"} not yet lodged with the ATO. Open the run and click
+            "Submit STP".
+          </p>
+        )}
+        <p className="mt-1.5 text-blue-600">
+          Manage employees, pay rates, and super funds from the <Link to="/employees" className="underline font-medium">Employees</Link> page.
+          Year-end STP finalisation happens automatically from the last run of the financial year.
+        </p>
+      </InfoPanel>
       {error && <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-md">{error}</div>}
       {success && <div className="mb-4 p-3 bg-green-50 text-green-700 text-sm rounded-md">{success}</div>}
 

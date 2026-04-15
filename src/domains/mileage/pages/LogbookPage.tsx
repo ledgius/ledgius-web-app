@@ -1,8 +1,9 @@
 import { useState } from "react"
+import { Link } from "react-router-dom"
 import { PageShell } from "@/components/layout"
 import { DataTable } from "@/shared/components/DataTable"
 import { SearchFilter } from "@/shared/components/SearchFilter"
-import { Button } from "@/components/primitives"
+import { Button, InfoPanel } from "@/components/primitives"
 import {
   useVehicles,
   useTrips,
@@ -186,6 +187,24 @@ export function LogbookPage() {
 
   return (
     <PageShell header={header} loading={isLoading}>
+      <InfoPanel title="About the Vehicle Logbook" storageKey="logbook-info">
+        <p>
+          The <strong>Vehicle Logbook</strong> tracks business-use vehicle trips for ATO-compliant motor-vehicle expense
+          claims. The ATO requires a continuous <strong>12-week logbook</strong> to establish your business-use
+          percentage, valid for up to 5 years unless your usage pattern changes materially.
+        </p>
+        <p className="mt-1.5">
+          Record each business trip (date, start/end odometer, purpose). The system calculates the business km, total
+          km, and business-use percentage over a rolling 12-week window. Capture fuel and service receipts under{" "}
+          <Link to="/captured-receipts" className="underline font-medium">Captured Receipts</Link> — they'll be applied
+          to motor-vehicle deductions at the business-use rate.
+        </p>
+        <p className="mt-1.5 text-blue-600">
+          Two claim methods: <strong>logbook</strong> (actual costs × business %) or <strong>cents-per-km</strong>
+          {" "}(no logbook needed, capped at 5,000 km/year). Logbook suits higher-mileage vehicles; cents-per-km is
+          simpler for occasional business use.
+        </p>
+      </InfoPanel>
       {/* Summary cards */}
       {summary && (
         <div className="grid grid-cols-4 gap-4 mb-6">
