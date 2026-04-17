@@ -1,3 +1,4 @@
+import { useState, useMemo } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
@@ -37,17 +38,28 @@ const columns: Column<BillSummary>[] = [
   },
 ]
 
+type DocFilter = "all" | "invoice" | "credit_note"
+
 export function BillsPage() {
   usePageHelp(pageHelpContent.bills)
   usePagePolicies(["payable", "tax"])
   const { data: bills, isLoading, error } = useBills()
   const navigate = useNavigate()
+  const [docFilter, setDocFilter] = useState<DocFilter>("all")
+
+  const filtered = useMemo(() => {
+    if (docFilter === "all" || !bills) return bills ?? []
+    return bills.filter(b => {
+      if (docFilter === "credit_note") return (b as Record<string, unknown>).is_return === true
+      return (b as Record<string, unknown>).is_return !== true
+    })
+  }, [bills, docFilter])
 
   const header = (
     <div>
       <div className="flex items-baseline gap-3">
         <h1 className="text-xl font-semibold text-gray-900">Bills</h1>
-        <span className="text-sm text-gray-500">Accounts Payable &middot; {bills?.length ?? 0} records</span>
+        <span className="text-sm text-gray-500">Accounts Payable &middot; {filtered.length} records</span>
       </div>
       <p className="text-sm text-gray-500 mt-0.5">Money you owe your suppliers</p>
       <div className="flex items-center gap-3 mt-3">
@@ -55,6 +67,17 @@ export function BillsPage() {
           <Plus className="h-4 w-4" />
           New Bill
         </Button>
+        <div className="flex items-center gap-1 ml-4 bg-gray-100 rounded-lg p-0.5">
+          {([["all", "All"], ["invoice", "Bills"], ["credit_note", "Debit Notes"]] as const).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setDocFilter(key)}
+              className={`px-3 py-1 text-xs rounded-md transition-colors ${docFilter === key ? "bg-white shadow-sm text-gray-900 font-medium" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   )
@@ -77,7 +100,7 @@ export function BillsPage() {
       </InfoPanel>
       <DataTable
         columns={columns}
-        data={bills ?? []}
+        data={filtered}
         loading={isLoading}
         error={error}
         emptyMessage="No bills recorded. Create a new bill to get started."
