@@ -20,7 +20,30 @@ export function useCustomers() {
   })
 }
 
-export interface ContactDetail {
+export interface ContactChannel {
+  id: number
+  contact_class: string
+  value: string
+  is_primary: boolean
+  notes?: string
+}
+
+export interface ContactAddress {
+  location: {
+    id: number
+    line_one: string
+    line_two?: string
+    city: string
+    state?: string
+    mail_code?: string
+    country_id: number
+  }
+  location_class_id: number
+  class_name: string
+  is_primary: boolean
+}
+
+export interface ContactCreditAccount {
   id: number
   entity_id: number
   entity_class: number
@@ -45,10 +68,16 @@ export interface ContactDetail {
   } | null
 }
 
+export interface ContactDetail {
+  credit_account: ContactCreditAccount
+  channels: ContactChannel[]
+  addresses: ContactAddress[]
+}
+
 export function useContactDetail(id: number) {
   return useQuery({
-    queryKey: ["contacts", id],
-    queryFn: () => api.get<ContactDetail>(`/contacts/${id}`),
+    queryKey: ["contacts", id, "detail"],
+    queryFn: () => api.get<ContactDetail>(`/contacts/${id}/detail`),
     enabled: id > 0,
   })
 }
