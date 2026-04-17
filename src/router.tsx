@@ -89,8 +89,7 @@ export const router = createBrowserRouter([
   {
     element: <RequireAuth><Layout /></RequireAuth>,
     children: [
-      { index: true, element: <S><DashboardPage /></S> },
-      { path: "books-health", element: <S><BooksHealthPage /></S> },
+      { index: true, element: <S><BooksHealthPage /></S> },
       { path: "calendar", element: <S><CalendarPage /></S> },
 
       // Chart of Accounts

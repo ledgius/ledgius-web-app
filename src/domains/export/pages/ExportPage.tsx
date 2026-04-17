@@ -3,6 +3,7 @@ import { PageShell, PageSection } from "@/components/layout"
 import { Button, InlineAlert } from "@/components/primitives"
 import { StatusPill, DateValue } from "@/components/financial"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
+import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { api } from "@/shared/lib/api"
 import { Download, Play, RefreshCw } from "lucide-react"
 
@@ -25,8 +26,17 @@ interface ExportRun {
   bundle_storage_key?: string
 }
 
+type ExportFormat = "xero" | "myob" | "csv"
+const FORMAT_OPTIONS: { key: ExportFormat; label: string; description: string }[] = [
+  { key: "xero", label: "Xero", description: "Xero-compatible CSV bundle for import into Xero" },
+  { key: "myob", label: "MYOB", description: "MYOB-compatible export for AccountRight / AO" },
+  { key: "csv", label: "Generic CSV", description: "Standard CSV files for any system or spreadsheet" },
+]
+
 export function ExportPage() {
   usePageHelp(pageHelpContent.dataExport)
+  usePagePolicies(["export", "tax", "privacy", "compliance"])
+  const [format, setFormat] = useState<ExportFormat>("xero")
   const [entities, setEntities] = useState<string[]>([])
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
@@ -58,11 +68,15 @@ export function ExportPage() {
   const selectNone = () => setEntities([])
 
   const handleRun = async () => {
+    if (format !== "xero") {
+      setError(`${format.toUpperCase()} export is coming soon. Only Xero export is available in v1.`)
+      return
+    }
     setError("")
     setLastResult(null)
     setRunning(true)
     try {
-      const res = await api.post<{ run_id: string; status: string; entity_counts: Record<string, number> }>("/export/xero/run", {
+      const res = await api.post<{ run_id: string; status: string; entity_counts: Record<string, number> }>(`/export/${format}/run`, {
         entity_types: entities.length > 0 ? entities : undefined,
         date_from: dateFrom || undefined,
         date_to: dateTo || undefined,
@@ -104,14 +118,29 @@ export function ExportPage() {
 
   const header = (
     <div>
-      <h1 className="text-xl font-semibold text-gray-900">Export to Xero</h1>
-      <p className="text-sm text-gray-500 mt-0.5">Generate a Xero-compatible CSV bundle for import into Xero</p>
+      <h1 className="text-xl font-semibold text-gray-900">Data Export</h1>
+      <p className="text-sm text-gray-500 mt-0.5">Export your accounting data in a format compatible with external systems</p>
     </div>
   )
 
   return (
     <PageShell header={header}>
       {error && <InlineAlert variant="error" className="mb-4">{error}</InlineAlert>}
+
+      <PageSection title="Export Format">
+        <div className="flex gap-3">
+          {FORMAT_OPTIONS.map(opt => (
+            <button
+              key={opt.key}
+              onClick={() => setFormat(opt.key)}
+              className={`flex-1 text-left p-3 rounded-lg border-2 transition-colors ${format === opt.key ? "border-primary-500 bg-primary-50" : "border-gray-200 bg-white hover:border-gray-300"}`}
+            >
+              <span className={`text-sm font-semibold ${format === opt.key ? "text-primary-700" : "text-gray-900"}`}>{opt.label}</span>
+              <p className="text-xs text-gray-500 mt-0.5">{opt.description}</p>
+            </button>
+          ))}
+        </div>
+      </PageSection>
 
       <PageSection title="Entity Selection">
         <div className="space-y-3">

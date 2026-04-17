@@ -80,7 +80,7 @@ export function DashboardPage() {
           <p className="flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
             <span>Nothing pending in the next 7 days. Good time to catch up on reconciliations or review the{" "}
-              <button onClick={() => navigate("/books-health")} className="underline font-medium hover:text-blue-900">Health Check</button>.
+              <button onClick={() => navigate("/")} className="underline font-medium hover:text-blue-900">Books Overview</button>.
             </span>
           </p>
         ) : (
