@@ -238,15 +238,48 @@ export function DataImportPage() {
     </div>
   )
 
-  // ── No batch — show source selection + configuration ──
+  // ── Format selector — always visible at top (even after batch created) ──
+
+  const brandStyles: Record<string, { border: string; bg: string; text: string; icon: string }> = {
+    xero:  { border: "border-[#13B5EA]", bg: "bg-[#13B5EA]/10", text: "text-[#0B7FA5]", icon: "text-[#13B5EA]" },
+    myob:  { border: "border-[#6D28D9]", bg: "bg-[#6D28D9]/10", text: "text-[#6D28D9]", icon: "text-[#6D28D9]" },
+    csv:   { border: "border-gray-400",   bg: "bg-gray-100",     text: "text-gray-700",  icon: "text-gray-400"  },
+  }
+
+  const formatSelector = (
+    <PageSection title="Import Format">
+      <div className="flex gap-3">
+        {sourceOptions.map((src) => {
+          const active = batch ? batch.source_system === src.id : selectedSource === src.id
+          const brand = brandStyles[src.id] ?? brandStyles.csv
+          return (
+            <button
+              key={src.id}
+              type="button"
+              onClick={() => {
+                if (!batch) {
+                  setSelectedSource(src.id as ImportSource)
+                  createBatch(src.id)
+                }
+              }}
+              disabled={!!batch}
+              className={`flex-1 text-left p-3 rounded-lg border-2 transition-colors ${active ? `${brand.border} ${brand.bg}` : "border-gray-200 bg-white hover:border-gray-300"} ${batch ? "cursor-default" : ""}`}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <Database className={`h-4 w-4 ${active ? brand.icon : "text-gray-400"}`} />
+                <span className={`text-sm font-semibold ${active ? brand.text : "text-gray-900"}`}>{src.name}</span>
+              </div>
+              <p className="text-xs text-gray-500">{src.description}</p>
+            </button>
+          )
+        })}
+      </div>
+    </PageSection>
+  )
+
+  // ── No batch yet — show format selector + info ──
 
   if (!batch) {
-    const brandStyles: Record<string, { border: string; bg: string; text: string; icon: string }> = {
-      xero:  { border: "border-[#13B5EA]", bg: "bg-[#13B5EA]/10", text: "text-[#0B7FA5]", icon: "text-[#13B5EA]" },
-      myob:  { border: "border-[#6D28D9]", bg: "bg-[#6D28D9]/10", text: "text-[#6D28D9]", icon: "text-[#6D28D9]" },
-      csv:   { border: "border-gray-400",   bg: "bg-gray-100",     text: "text-gray-700",  icon: "text-gray-400"  },
-    }
-
     return (
       <PageShell header={header}>
         <InfoPanel title="How data import works" storageKey="import-info">
@@ -255,83 +288,7 @@ export function DataImportPage() {
           <p><strong>3. Analyse &amp; map</strong> — review staged accounts, contacts, and transactions. Map accounts to your Ledgius chart of accounts.</p>
           <p><strong>4. Preview &amp; commit</strong> — verify the data looks correct, then commit to import into your ledger.</p>
         </InfoPanel>
-        <PageSection title="Import Format">
-          <div className="flex gap-3">
-            {sourceOptions.map((src) => {
-              const selected = selectedSource === src.id
-              const brand = brandStyles[src.id] ?? brandStyles.csv
-              return (
-                <button
-                  key={src.id}
-                  type="button"
-                  onClick={() => setSelectedSource(src.id as ImportSource)}
-                  className={`flex-1 text-left p-3 rounded-lg border-2 transition-colors ${selected ? `${brand.border} ${brand.bg}` : "border-gray-200 bg-white hover:border-gray-300"}`}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <Database className={`h-4 w-4 ${selected ? brand.icon : "text-gray-400"}`} />
-                    <span className={`text-sm font-semibold ${selected ? brand.text : "text-gray-900"}`}>{src.name}</span>
-                  </div>
-                  <p className="text-xs text-gray-500">{src.description}</p>
-                </button>
-              )
-            })}
-          </div>
-        </PageSection>
-
-        {selectedSource && (
-          <>
-            <PageSection title="Import Options">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Import Mode</label>
-                  <select value={importMode} onChange={(e) => setImportMode(e.target.value as typeof importMode)} className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm pr-7">
-                    <option value="full_history">Full Transaction History</option>
-                    <option value="opening_balances">Opening Balances Only</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Account Strategy</label>
-                  <select value={importStrategy} onChange={(e) => setImportStrategy(e.target.value as typeof importStrategy)} className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm pr-7">
-                    <option value="import_as_new">Import as New Accounts</option>
-                    <option value="map_to_existing">Map to Existing Accounts</option>
-                  </select>
-                </div>
-              </div>
-            </PageSection>
-
-            <PageSection title="Files You'll Upload">
-              <div className="text-sm text-gray-600 space-y-1.5">
-                {selectedSource === "myob" && (
-                  <>
-                    <p><FileText className="inline h-4 w-4 mr-1.5 text-gray-400" /><strong>Single file import</strong> — MYOB AO or CeeData export (contains accounts + transactions)</p>
-                    <p className="text-xs text-gray-400 ml-5.5">Or upload individual files: Chart of Accounts, Customers, Vendors, Journal Transactions</p>
-                  </>
-                )}
-                {selectedSource === "xero" && (
-                  <>
-                    <p><FileText className="inline h-4 w-4 mr-1.5 text-gray-400" /><strong>Chart of Accounts</strong> — exported from Xero Settings → Chart of Accounts</p>
-                    <p><FileText className="inline h-4 w-4 mr-1.5 text-gray-400" /><strong>Contacts</strong> — exported from Xero Contacts list</p>
-                    <p><FileText className="inline h-4 w-4 mr-1.5 text-gray-400" /><strong>Transactions</strong> — Detailed Account Transactions report</p>
-                  </>
-                )}
-                {selectedSource === "csv" && (
-                  <>
-                    <p><FileText className="inline h-4 w-4 mr-1.5 text-gray-400" /><strong>Accounts</strong> — CSV with Account Number, Account Name, Account Type columns</p>
-                    <p><FileText className="inline h-4 w-4 mr-1.5 text-gray-400" /><strong>Contacts</strong> — CSV with Name, Email, ABN columns</p>
-                    <p><FileText className="inline h-4 w-4 mr-1.5 text-gray-400" /><strong>Transactions</strong> — CSV with Date, Reference, Amount, Account Code columns</p>
-                  </>
-                )}
-              </div>
-            </PageSection>
-
-            <div className="mt-4">
-              <Button onClick={() => createBatch(selectedSource)} loading={loading}>
-                <Upload className="h-4 w-4" />
-                Start Import
-              </Button>
-            </div>
-          </>
-        )}
+        {formatSelector}
       </PageShell>
     )
   }
@@ -362,6 +319,9 @@ export function DataImportPage() {
 
   return (
     <PageShell header={header}>
+      {/* Format selector — stays visible so user sees what they chose */}
+      {formatSelector}
+
       {/* Pipeline progress — click completed steps to navigate back */}
       <StatusStepper steps={pipelineSteps} currentStatus={stage} onStepClick={handleStepClick} className="mb-6 max-w-2xl" />
 
