@@ -29,7 +29,7 @@ interface ExportRun {
 type ExportFormat = "xero" | "myob" | "csv"
 const FORMAT_OPTIONS: { key: ExportFormat; label: string; description: string }[] = [
   { key: "xero", label: "Xero", description: "Xero-compatible CSV bundle for import into Xero" },
-  { key: "myob", label: "MYOB", description: "MYOB-compatible export for AccountRight / AO" },
+  { key: "myob", label: "MYOB", description: "MYOB AccountRight-compatible tab-delimited export" },
   { key: "csv", label: "Generic CSV", description: "Standard CSV files for any system or spreadsheet" },
 ]
 

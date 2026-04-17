@@ -405,7 +405,7 @@ export const pageHelpContent = {
     sections: [
       { heading: "What is this?", body: "Export your accounting data in a format compatible with Xero, MYOB, or as generic CSV files. Select the target format, choose entity types, and download the bundle." },
       { heading: "Xero format", body: "Produces a ZIP bundle of CSV files — one per entity type (accounts, contacts, invoices, bills, credit notes, tax rates). Ready for direct import via Xero's CSV import tool." },
-      { heading: "MYOB format", body: "Produces tab-delimited text files (.txt) compatible with MYOB AccountRight's Import/Export Assistant. Includes accounts, customer cards, and vendor cards. Open the files in AccountRight via File → Import Data." },
+      { heading: "MYOB format", body: "Produces tab-delimited text files (.txt) compatible with MYOB AccountRight's Import/Export Assistant. This format is specific to MYOB AccountRight and may not be compatible with other MYOB products (e.g. MYOB Essentials, MYOB Business). Includes accounts, customer cards, and vendor cards. Open the files in AccountRight via File → Import Data." },
       { heading: "Entity types", body: "Choose which data to include. Leave empty to export all available entities for the selected format." },
       { heading: "Date range", body: "Date filtering applies to transactional entities (invoices, bills, credit notes). Master data (accounts, contacts, tax rates) is always exported in full." },
       { heading: "Download", body: "Completed exports produce a ZIP bundle. Recent exports are listed at the bottom — you can re-download previous bundles." },
