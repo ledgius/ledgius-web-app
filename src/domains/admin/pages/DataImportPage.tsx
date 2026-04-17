@@ -73,12 +73,15 @@ const sourceOptions = [
   { id: "csv", name: "Generic CSV", description: "Import from any CSV with manual column mapping" },
 ]
 
+type ImportSource = "xero" | "myob" | "csv"
+
 export function DataImportPage() {
   const feedback = useFeedback()
+  const [selectedSource, setSelectedSource] = useState<ImportSource | null>(null)
   const [batch, setBatch] = useState<ImportBatch | null>(null)
 
   // Dynamic help content based on import source — loads from YAML with sub-context.
-  usePageHelp(undefined, batch?.source_system)
+  usePageHelp(undefined, batch?.source_system ?? selectedSource ?? undefined)
   const [loading, setLoading] = useState(false)
   const [stagingAccounts, setStagingAccounts] = useState<StagingAccount[]>([])
   const [stagingContacts, setStagingContacts] = useState<StagingContact[]>([])
@@ -235,9 +238,15 @@ export function DataImportPage() {
     </div>
   )
 
-  // ── No batch — show source selection ──
+  // ── No batch — show source selection + configuration ──
 
   if (!batch) {
+    const brandStyles: Record<string, { border: string; bg: string; text: string; icon: string }> = {
+      xero:  { border: "border-[#13B5EA]", bg: "bg-[#13B5EA]/10", text: "text-[#0B7FA5]", icon: "text-[#13B5EA]" },
+      myob:  { border: "border-[#6D28D9]", bg: "bg-[#6D28D9]/10", text: "text-[#6D28D9]", icon: "text-[#6D28D9]" },
+      csv:   { border: "border-gray-400",   bg: "bg-gray-100",     text: "text-gray-700",  icon: "text-gray-400"  },
+    }
+
     return (
       <PageShell header={header}>
         <InfoPanel title="How data import works" storageKey="import-info">
@@ -246,26 +255,21 @@ export function DataImportPage() {
           <p><strong>3. Analyse &amp; map</strong> — review staged accounts, contacts, and transactions. Map accounts to your Ledgius chart of accounts.</p>
           <p><strong>4. Preview &amp; commit</strong> — verify the data looks correct, then commit to import into your ledger.</p>
         </InfoPanel>
-        <PageSection title="Choose Import Source">
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <PageSection title="Import Format">
+          <div className="flex gap-3">
             {sourceOptions.map((src) => {
-              const brandStyles: Record<string, { border: string; bg: string; icon: string }> = {
-                xero:  { border: "hover:border-[#13B5EA]", bg: "hover:bg-[#13B5EA]/10", icon: "text-[#13B5EA]" },
-                myob:  { border: "hover:border-[#6D28D9]", bg: "hover:bg-[#6D28D9]/10", icon: "text-[#6D28D9]" },
-                csv:   { border: "hover:border-gray-400",   bg: "hover:bg-gray-100",     icon: "text-gray-400"  },
-              }
+              const selected = selectedSource === src.id
               const brand = brandStyles[src.id] ?? brandStyles.csv
               return (
                 <button
                   key={src.id}
                   type="button"
-                  onClick={() => createBatch(src.id)}
-                  disabled={loading}
-                  className={`text-left rounded-lg border-2 border-gray-200 bg-white p-4 ${brand.border} ${brand.bg} transition-colors`}
+                  onClick={() => setSelectedSource(src.id as ImportSource)}
+                  className={`flex-1 text-left p-3 rounded-lg border-2 transition-colors ${selected ? `${brand.border} ${brand.bg}` : "border-gray-200 bg-white hover:border-gray-300"}`}
                 >
-                  <div className="flex items-center gap-3 mb-2">
-                    <Database className={`h-5 w-5 ${brand.icon}`} />
-                    <span className="font-medium text-gray-900">{src.name}</span>
+                  <div className="flex items-center gap-2 mb-1">
+                    <Database className={`h-4 w-4 ${selected ? brand.icon : "text-gray-400"}`} />
+                    <span className={`text-sm font-semibold ${selected ? brand.text : "text-gray-900"}`}>{src.name}</span>
                   </div>
                   <p className="text-xs text-gray-500">{src.description}</p>
                 </button>
@@ -273,6 +277,36 @@ export function DataImportPage() {
             })}
           </div>
         </PageSection>
+
+        {selectedSource && (
+          <>
+            <PageSection title="Import Options">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Import Mode</label>
+                  <select value={importMode} onChange={(e) => setImportMode(e.target.value as typeof importMode)} className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm pr-7">
+                    <option value="full_history">Full Transaction History</option>
+                    <option value="opening_balances">Opening Balances Only</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Account Strategy</label>
+                  <select value={importStrategy} onChange={(e) => setImportStrategy(e.target.value as typeof importStrategy)} className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm pr-7">
+                    <option value="import_as_new">Import as New Accounts</option>
+                    <option value="map_to_existing">Map to Existing Accounts</option>
+                  </select>
+                </div>
+              </div>
+            </PageSection>
+
+            <div className="mt-4">
+              <Button onClick={() => createBatch(selectedSource)} loading={loading}>
+                <Upload className="h-4 w-4" />
+                Start Import
+              </Button>
+            </div>
+          </>
+        )}
       </PageShell>
     )
   }
