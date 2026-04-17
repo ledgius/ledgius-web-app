@@ -325,29 +325,30 @@ export function DataImportPage() {
 
         {selectedSource && (
           <>
-            {/* Import options */}
-            <div className="flex items-center gap-4 mb-4 p-3 rounded-lg border border-gray-200 bg-gray-50">
-              <span className="text-xs font-medium text-gray-600">Import mode:</span>
-              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-                <input type="radio" name="import_mode_pre" checked={importMode === "full_history"} onChange={() => setImportMode("full_history")} />
-                <span>Full history</span>
-                <span className="text-xs text-gray-400">(all transactions)</span>
-              </label>
-              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-                <input type="radio" name="import_mode_pre" checked={importMode === "opening_balances"} onChange={() => setImportMode("opening_balances")} />
-                <span>Opening balances only</span>
-              </label>
-            </div>
-            <div className="flex items-center gap-4 mb-4 p-3 rounded-lg border border-gray-200 bg-gray-50">
-              <span className="text-xs font-medium text-gray-600">Account strategy:</span>
-              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-                <input type="radio" name="import_strategy_pre" checked={importStrategy === "import_as_new"} onChange={() => setImportStrategy("import_as_new")} />
-                <span>Import as new</span>
-              </label>
-              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-                <input type="radio" name="import_strategy_pre" checked={importStrategy === "map_to_existing"} onChange={() => setImportStrategy("map_to_existing")} />
-                <span>Map to existing</span>
-              </label>
+            {/* Import options — single panel, two columns */}
+            <div className="grid grid-cols-2 gap-4 mb-4 p-3 rounded-lg border border-gray-200 bg-gray-50">
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-medium text-gray-600 shrink-0">Import mode:</span>
+                <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                  <input type="radio" name="import_mode_pre" checked={importMode === "full_history"} onChange={() => setImportMode("full_history")} />
+                  <span>Full history</span>
+                </label>
+                <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                  <input type="radio" name="import_mode_pre" checked={importMode === "opening_balances"} onChange={() => setImportMode("opening_balances")} />
+                  <span>Opening balances</span>
+                </label>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-medium text-gray-600 shrink-0">Account strategy:</span>
+                <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                  <input type="radio" name="import_strategy_pre" checked={importStrategy === "import_as_new"} onChange={() => setImportStrategy("import_as_new")} />
+                  <span>Import as new</span>
+                </label>
+                <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                  <input type="radio" name="import_strategy_pre" checked={importStrategy === "map_to_existing"} onChange={() => setImportStrategy("map_to_existing")} />
+                  <span>Map to existing</span>
+                </label>
+              </div>
             </div>
 
             {/* MYOB-specific guidance */}
@@ -464,32 +465,30 @@ export function DataImportPage() {
             </div>
           )}
 
-          {/* Import mode selector */}
-          <div className="flex items-center gap-4 mb-4 p-3 rounded-lg border border-gray-200 bg-gray-50">
-            <span className="text-xs font-medium text-gray-600">Import mode:</span>
-            <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-              <input type="radio" name="import_mode" checked={importMode === "full_history"} onChange={() => setImportMode("full_history")} />
-              <span>Full history</span>
-              <span className="text-xs text-gray-400">(all transactions)</span>
-            </label>
-            <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-              <input type="radio" name="import_mode" checked={importMode === "opening_balances"} onChange={() => setImportMode("opening_balances")} />
-              <span>Opening balances only</span>
-              <span className="text-xs text-gray-400">(summary balances, no transaction detail)</span>
-            </label>
-          </div>
-          <div className="flex items-center gap-4 mb-4 p-3 rounded-lg border border-gray-200 bg-gray-50">
-            <span className="text-xs font-medium text-gray-600">Account strategy:</span>
-            <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-              <input type="radio" name="import_strategy" checked={importStrategy === "import_as_new"} onChange={() => setImportStrategy("import_as_new")} />
-              <span>Import as new</span>
-              <span className="text-xs text-gray-400">(use your source accounts, hide unused Ledgius defaults)</span>
-            </label>
-            <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-              <input type="radio" name="import_strategy" checked={importStrategy === "map_to_existing"} onChange={() => setImportStrategy("map_to_existing")} />
-              <span>Map to existing</span>
-              <span className="text-xs text-gray-400">(manually map your accounts to existing Ledgius accounts)</span>
-            </label>
+          {/* Import options — single panel, two columns */}
+          <div className="grid grid-cols-2 gap-4 mb-4 p-3 rounded-lg border border-gray-200 bg-gray-50">
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-medium text-gray-600 shrink-0">Import mode:</span>
+              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                <input type="radio" name="import_mode" checked={importMode === "full_history"} onChange={() => setImportMode("full_history")} />
+                <span>Full history</span>
+              </label>
+              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                <input type="radio" name="import_mode" checked={importMode === "opening_balances"} onChange={() => setImportMode("opening_balances")} />
+                <span>Opening balances</span>
+              </label>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-medium text-gray-600 shrink-0">Account strategy:</span>
+              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                <input type="radio" name="import_strategy" checked={importStrategy === "import_as_new"} onChange={() => setImportStrategy("import_as_new")} />
+                <span>Import as new</span>
+              </label>
+              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                <input type="radio" name="import_strategy" checked={importStrategy === "map_to_existing"} onChange={() => setImportStrategy("map_to_existing")} />
+                <span>Map to existing</span>
+              </label>
+            </div>
           </div>
           <DropZone label="Single File Import" onFileSelected={(f) => uploadFile("accounts", f)} hint="MYOB AO, CeeData — contains accounts + transactions in one file" />
 
@@ -978,45 +977,39 @@ function DropZone({
     if (f) handleFile(f)
   }
 
-  const handleClick = () => inputRef.current?.click()
 
   if (compact) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-3">
-        <div className="flex items-center gap-1.5 mb-2">
-          <p className="text-xs font-medium text-gray-900">{label}</p>
-          {optional && <Badge variant="default" className="text-[10px] px-1.5 py-0">optional</Badge>}
+      <div
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        className={`rounded-lg border-2 border-dashed p-3 transition-colors ${
+          dragOver ? "border-primary-400 bg-primary-50"
+            : file ? "border-green-300 bg-green-50"
+            : "border-gray-200 bg-white"
+        }`}
+      >
+        <div className="flex items-center justify-between mb-1.5">
+          <div className="flex items-center gap-1.5">
+            <p className="text-xs font-medium text-gray-900">{label}</p>
+            {optional && <Badge variant="default" className="text-[10px] px-1.5 py-0">optional</Badge>}
+          </div>
+          <label className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-gray-100 text-gray-600 text-[10px] hover:bg-gray-200 cursor-pointer transition-colors shrink-0">
+            <Upload className="h-2.5 w-2.5" />
+            Choose
+            <input ref={inputRef} type="file" accept=".csv,.txt" onChange={handleChange} className="hidden" />
+          </label>
         </div>
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={handleClick}
-          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleClick() }}
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragEnter={handleDragEnter}
-          onDragLeave={handleDragLeave}
-          className={`rounded-md border-2 border-dashed p-3 text-center cursor-pointer transition-colors ${
-            dragOver
-              ? "border-primary-400 bg-primary-50"
-              : file
-                ? "border-green-300 bg-green-50"
-                : "border-gray-300 hover:border-gray-400"
-          }`}
-        >
-          {file ? (
-            <div className="flex items-center justify-center gap-1.5">
-              <CheckCircle className="h-3.5 w-3.5 text-green-500 shrink-0" />
-              <span className="text-xs text-green-700 font-mono truncate">{file.name}</span>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-1">
-              <Upload className="h-4 w-4 text-gray-400" />
-              <span className="text-xs text-gray-400">Drop or click</span>
-            </div>
-          )}
-          <input ref={inputRef} type="file" accept=".csv,.txt" onChange={handleChange} className="hidden" />
-        </div>
+        {file ? (
+          <div className="flex items-center gap-1.5">
+            <CheckCircle className="h-3 w-3 text-green-500 shrink-0" />
+            <span className="text-[10px] text-green-700 font-mono truncate">{file.name}</span>
+          </div>
+        ) : (
+          <p className="text-[10px] text-gray-400 text-center">or drag &amp; drop</p>
+        )}
       </div>
     )
   }
@@ -1024,24 +1017,18 @@ function DropZone({
   // Full-width variant for "Single File Import"
   return (
     <div
-      role="button"
-      tabIndex={0}
-      onClick={handleClick}
-      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleClick() }}
       onDrop={handleDrop}
       onDragOver={handleDragOver}
       onDragEnter={handleDragEnter}
       onDragLeave={handleDragLeave}
-      className={`rounded-lg border-2 border-dashed p-4 cursor-pointer transition-colors ${
-        dragOver
-          ? "border-primary-400 bg-primary-50"
-          : file
-            ? "border-green-300 bg-green-50"
-            : "border-gray-300 hover:border-gray-400"
+      className={`rounded-lg border-2 border-dashed p-4 transition-colors ${
+        dragOver ? "border-primary-400 bg-primary-50"
+          : file ? "border-green-300 bg-green-50"
+          : "border-gray-200 bg-white"
       }`}
     >
       <div className="flex items-center gap-4">
-        <div className={`rounded-full p-2 ${file ? "bg-green-100" : "bg-gray-100"}`}>
+        <div className={`rounded-full p-2 shrink-0 ${file ? "bg-green-100" : "bg-gray-100"}`}>
           {file
             ? <CheckCircle className="h-5 w-5 text-green-500" />
             : <Upload className="h-5 w-5 text-gray-400" />
@@ -1055,11 +1042,15 @@ function DropZone({
           {file ? (
             <p className="text-xs text-green-700 font-mono mt-0.5 truncate">{file.name} — {(file.size / 1024).toFixed(0)} KB</p>
           ) : (
-            <p className="text-xs text-gray-400 mt-0.5">{hint ?? "Drop a file here or click to browse"}</p>
+            <p className="text-xs text-gray-400 mt-0.5">{hint ?? "Drop a file here or click Choose"}</p>
           )}
         </div>
+        <label className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-gray-100 text-gray-600 text-xs hover:bg-gray-200 cursor-pointer transition-colors shrink-0">
+          <Upload className="h-3 w-3" />
+          Choose
+          <input ref={inputRef} type="file" accept=".csv,.txt" onChange={handleChange} className="hidden" />
+        </label>
       </div>
-      <input ref={inputRef} type="file" accept=".csv,.txt" onChange={handleChange} className="hidden" />
     </div>
   )
 }
