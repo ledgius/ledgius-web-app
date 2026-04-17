@@ -49,14 +49,14 @@ export function ExportPage() {
   const loadRuns = useCallback(async () => {
     setLoadingRuns(true)
     try {
-      const res = await api.get<ExportRun[]>("/export/xero/runs")
+      const res = await api.get<ExportRun[]>(`/export/${format}/runs`)
       setRuns(res ?? [])
     } catch {
       // ignore — runs list is supplementary
     } finally {
       setLoadingRuns(false)
     }
-  }, [])
+  }, [format])
 
   useEffect(() => { loadRuns() }, [loadRuns])
 
@@ -68,8 +68,8 @@ export function ExportPage() {
   const selectNone = () => setEntities([])
 
   const handleRun = async () => {
-    if (format !== "xero") {
-      setError(`${format.toUpperCase()} export is coming soon. Only Xero export is available in v1.`)
+    if (format === "csv") {
+      setError("Generic CSV export is coming soon. Xero and MYOB exports are available now.")
       return
     }
     setError("")
@@ -102,7 +102,7 @@ export function ExportPage() {
 
   const handleDownload = async (runId: string) => {
     try {
-      const res = await fetch(`/api/v1/export/xero/runs/${runId}/download`)
+      const res = await fetch(`/api/v1/export/${format}/runs/${runId}/download`)
       if (!res.ok) throw new Error(`Download failed: ${res.status}`)
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
