@@ -1,3 +1,4 @@
+import { BackLink } from "@/components/primitives"
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
@@ -153,6 +154,7 @@ export function GLPage() {
 
   return (
     <PageShell header={header}>
+      <BackLink />
       <InfoPanel title="About Journal Entries" storageKey="journal-info">
         <p>
           <strong>Journal Entries</strong> are the raw debits and credits that move money between accounts in your

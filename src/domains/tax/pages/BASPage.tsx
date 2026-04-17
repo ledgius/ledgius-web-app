@@ -1,3 +1,4 @@
+import { BackLink } from "@/components/primitives"
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import { CheckCircle2, Circle, Clock } from "lucide-react"
@@ -70,6 +71,7 @@ export function BASPage() {
 
   return (
     <PageShell header={header}>
+      <BackLink />
       <InfoPanel title="Prepare your BAS" storageKey="bas-info">
         <div className="space-y-2">
           <StepRow
