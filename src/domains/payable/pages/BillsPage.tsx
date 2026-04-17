@@ -50,8 +50,8 @@ export function BillsPage() {
   const filtered = useMemo(() => {
     if (docFilter === "all" || !bills) return bills ?? []
     return bills.filter(b => {
-      if (docFilter === "credit_note") return (b as Record<string, unknown>).is_return === true
-      return (b as Record<string, unknown>).is_return !== true
+      if (docFilter === "credit_note") return b.is_return === true
+      return b.is_return !== true
     })
   }, [bills, docFilter])
 

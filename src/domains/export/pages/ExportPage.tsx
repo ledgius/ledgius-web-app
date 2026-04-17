@@ -26,7 +26,7 @@ interface ExportRun {
 }
 
 export function ExportPage() {
-  usePageHelp(pageHelpContent.dataExport ?? pageHelpContent.settings)
+  usePageHelp(pageHelpContent.dataExport)
   const [entities, setEntities] = useState<string[]>([])
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
@@ -39,8 +39,8 @@ export function ExportPage() {
   const loadRuns = useCallback(async () => {
     setLoadingRuns(true)
     try {
-      const res = await api.get("/export/xero/runs")
-      setRuns(res.data ?? [])
+      const res = await api.get<ExportRun[]>("/export/xero/runs")
+      setRuns(res ?? [])
     } catch {
       // ignore — runs list is supplementary
     } finally {
@@ -62,12 +62,12 @@ export function ExportPage() {
     setLastResult(null)
     setRunning(true)
     try {
-      const res = await api.post("/export/xero/run", {
+      const res = await api.post<{ run_id: string; status: string; entity_counts: Record<string, number> }>("/export/xero/run", {
         entity_types: entities.length > 0 ? entities : undefined,
         date_from: dateFrom || undefined,
         date_to: dateTo || undefined,
       })
-      setLastResult(res.data)
+      setLastResult(res)
       loadRuns()
     } catch (err: unknown) {
       if (err && typeof err === "object" && "response" in err) {
@@ -88,8 +88,10 @@ export function ExportPage() {
 
   const handleDownload = async (runId: string) => {
     try {
-      const res = await api.get(`/export/xero/runs/${runId}/download`, { responseType: "blob" })
-      const url = URL.createObjectURL(res.data)
+      const res = await fetch(`/api/v1/export/xero/runs/${runId}/download`)
+      if (!res.ok) throw new Error(`Download failed: ${res.status}`)
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
       const a = document.createElement("a")
       a.href = url
       a.download = `xero-export-${runId.slice(0, 8)}.zip`
