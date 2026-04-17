@@ -398,4 +398,25 @@ export const pageHelpContent = {
       { heading: "Current rate", body: "Check the ATO website for the current Super Guarantee percentage. This rate is applied to ordinary time earnings in pay runs." },
     ],
   },
+
+  // ── Export ──
+  dataExport: {
+    title: "Export to Xero",
+    sections: [
+      { heading: "What is this?", body: "Generate a Xero-compatible CSV bundle for import into Xero. Select which entity types to export and optionally restrict by date range." },
+      { heading: "Entity types", body: "Choose which data to include: Chart of Accounts, Contacts, Invoices, Bills, Credit Notes, and Tax Rates. Leave empty to export all." },
+      { heading: "Date range", body: "Date filtering applies to transactional entities (invoices, bills, credit notes). Master data (accounts, contacts, tax rates) is always exported in full." },
+      { heading: "Download", body: "Completed exports produce a ZIP bundle containing one CSV file per entity type, ready for Xero import." },
+    ],
+  },
+
+  // ── Super Obligations ──
+  superObligations: {
+    title: "Super Guarantee Obligations",
+    sections: [
+      { heading: "What is this?", body: "Track employer superannuation guarantee contributions by quarter — due dates, amounts owed, and payment status." },
+      { heading: "Quarterly due dates", body: "SG contributions must be received by the employee's super fund by the quarterly due date. Q1 (Jul–Sep) due 28 Oct, Q2 (Oct–Dec) due 28 Jan, Q3 (Jan–Mar) due 28 Apr, Q4 (Apr–Jun) due 28 Jul." },
+      { heading: "Overdue quarters", body: "Late SG payments incur the Super Guarantee Charge (SGC) which includes interest and an admin fee. Lodge an SGC statement with the ATO if overdue." },
+    ],
+  },
 } as const

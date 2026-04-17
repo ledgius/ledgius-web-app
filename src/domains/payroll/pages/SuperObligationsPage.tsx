@@ -15,16 +15,16 @@ interface SGQuarter {
 }
 
 export function SuperObligationsPage() {
-  usePageHelp(pageHelpContent.superRates ?? pageHelpContent.settings)
+  usePageHelp(pageHelpContent.superObligations)
   const [quarters, setQuarters] = useState<SGQuarter[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
+  const [error] = useState("")
 
   useEffect(() => {
     const load = async () => {
       try {
-        const res = await api.get("/payroll/super-obligations")
-        setQuarters(res.data ?? [])
+        const res = await api.get<SGQuarter[]>("/payroll/super-obligations")
+        setQuarters(res ?? [])
       } catch {
         setQuarters(buildStaticQuarters())
       } finally {
@@ -42,9 +42,6 @@ export function SuperObligationsPage() {
   )
 
   const overdue = quarters.filter(q => q.status === "overdue")
-  const upcoming = quarters.filter(q => q.status === "upcoming")
-  const paid = quarters.filter(q => q.status === "paid")
-
   return (
     <PageShell header={header}>
       {error && <InlineAlert variant="error" className="mb-4">{error}</InlineAlert>}

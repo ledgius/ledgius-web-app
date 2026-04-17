@@ -12,6 +12,7 @@ export interface InvoiceSummary {
   curr: string
   on_hold: boolean
   approved: boolean
+  is_return: boolean
 }
 
 export function useInvoices() {

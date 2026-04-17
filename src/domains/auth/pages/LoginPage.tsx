@@ -127,9 +127,10 @@ export function LoginPage() {
     window.location.href = `${API_BASE}/auth/google`
   }
 
-  const handleMicrosoftSSO = () => {
-    window.location.href = `${API_BASE}/auth/microsoft`
-  }
+  // Microsoft SSO — postponed until later in 2026. Uncomment when ready.
+  // const handleMicrosoftSSO = () => {
+  //   window.location.href = `${API_BASE}/auth/microsoft`
+  // }
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
