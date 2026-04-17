@@ -60,11 +60,13 @@ const EmployeesPage = lazy(() => import("@/domains/payroll/pages/EmployeesPage")
 const CreateEmployeePage = lazy(() => import("@/domains/payroll/pages/CreateEmployeePage").then(m => ({ default: m.CreateEmployeePage })))
 const EmployeeDetailPage = lazy(() => import("@/domains/payroll/pages/EmployeeDetailPage").then(m => ({ default: m.EmployeeDetailPage })))
 const PayRunsPage = lazy(() => import("@/domains/payroll/pages/PayRunsPage").then(m => ({ default: m.PayRunsPage })))
+const SuperObligationsPage = lazy(() => import("@/domains/payroll/pages/SuperObligationsPage").then(m => ({ default: m.SuperObligationsPage })))
 
 const PAYGConfigPage = lazy(() => import("@/domains/admin/pages/PAYGConfigPage").then(m => ({ default: m.PAYGConfigPage })))
 const SuperRatesPage = lazy(() => import("@/domains/admin/pages/SuperRatesPage").then(m => ({ default: m.SuperRatesPage })))
 const UsersPage = lazy(() => import("@/domains/admin/pages/UsersPage").then(m => ({ default: m.UsersPage })))
 const DataImportPage = lazy(() => import("@/domains/admin/pages/DataImportPage").then(m => ({ default: m.DataImportPage })))
+const ExportPage = lazy(() => import("@/domains/export/pages/ExportPage").then(m => ({ default: m.ExportPage })))
 const FeedbackDashboardPage = lazy(() => import("@/domains/admin/pages/FeedbackDashboardPage").then(m => ({ default: m.FeedbackDashboardPage })))
 const PlatformAdminPage = lazy(() => import("@/domains/admin/pages/PlatformAdminPage").then(m => ({ default: m.PlatformAdminPage })))
 const FeedbackStatusPage = lazy(() => import("@/domains/admin/pages/FeedbackStatusPage").then(m => ({ default: m.FeedbackStatusPage })))
@@ -154,13 +156,15 @@ export const router = createBrowserRouter([
       // Admin
       { path: "payg-config", element: <S><PAYGConfigPage /></S> },
       { path: "super-rates", element: <S><SuperRatesPage /></S> },
+      { path: "super-obligations", element: <S><SuperObligationsPage /></S> },
       { path: "users", element: <S><UsersPage /></S> },
 
       // Audit
       { path: "audit-log", element: <S><AuditLogPage /></S> },
 
-      // Data Import
+      // Data Import / Export
       { path: "import", element: <S><DataImportPage /></S> },
+      { path: "export", element: <S><ExportPage /></S> },
 
       // Platform Admin (feedback dashboard) — gated to platform admins only
       { path: "admin", element: <RequirePlatformAdmin><S><PlatformAdminPage /></S></RequirePlatformAdmin> },
