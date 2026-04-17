@@ -238,72 +238,176 @@ export function DataImportPage() {
     </div>
   )
 
-  // ── No batch — show source selection + configuration ──
+  // ── Format selector — always visible at top (even after batch created) ──
+
+  const brandStyles: Record<string, { border: string; bg: string; text: string; icon: string }> = {
+    xero:  { border: "border-[#13B5EA]", bg: "bg-[#13B5EA]/10", text: "text-[#0B7FA5]", icon: "text-[#13B5EA]" },
+    myob:  { border: "border-[#6D28D9]", bg: "bg-[#6D28D9]/10", text: "text-[#6D28D9]", icon: "text-[#6D28D9]" },
+    csv:   { border: "border-gray-400",   bg: "bg-gray-100",     text: "text-gray-700",  icon: "text-gray-400"  },
+  }
+
+  const formatSelector = (
+    <PageSection title="Import Format">
+      <div className="flex gap-3">
+        {sourceOptions.map((src) => {
+          const active = batch ? batch.source_system === src.id : selectedSource === src.id
+          const brand = brandStyles[src.id] ?? brandStyles.csv
+          return (
+            <button
+              key={src.id}
+              type="button"
+              onClick={() => {
+                if (!batch) {
+                  setSelectedSource(src.id as ImportSource)
+                  createBatch(src.id)
+                }
+              }}
+              disabled={!!batch}
+              className={`flex-1 text-left p-3 rounded-lg border-2 transition-colors ${active ? `${brand.border} ${brand.bg}` : "border-gray-200 bg-white hover:border-gray-300"} ${batch ? "cursor-default" : ""}`}
+            >
+              <div className="flex items-center gap-2 mb-1">
+                <Database className={`h-4 w-4 ${active ? brand.icon : "text-gray-400"}`} />
+                <span className={`text-sm font-semibold ${active ? brand.text : "text-gray-900"}`}>{src.name}</span>
+              </div>
+              <p className="text-xs text-gray-500">{src.description}</p>
+            </button>
+          )
+        })}
+      </div>
+    </PageSection>
+  )
+
+  // ── Buffered files (before batch creation) ──
+  const [bufferedFiles, setBufferedFiles] = useState<{ type: string; file: File; contactType?: string }[]>([])
+
+  const bufferFile = (type: string, file: File, contactType?: string) => {
+    setBufferedFiles(prev => [...prev.filter(f => !(f.type === type && f.contactType === contactType)), { type, file, contactType }])
+    feedback.success(`${file.name} ready for upload`)
+  }
+
+  const startImport = async () => {
+    if (!selectedSource || bufferedFiles.length === 0) return
+    setLoading(true)
+    try {
+      const b = await api.post<ImportBatch>("/import/batches", { source_system: selectedSource, import_mode: importMode, import_strategy: importStrategy })
+      setBatch(b)
+      for (const bf of bufferedFiles) {
+        const reader = new FileReader()
+        const content = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => {
+            const base64 = (reader.result as string).split(",")[1]
+            resolve(base64)
+          }
+          reader.onerror = reject
+          reader.readAsDataURL(bf.file)
+        })
+        const updated = await api.post<ImportBatch>(`/import/batches/${b.id}/upload`, {
+          file_type: bf.type,
+          file_name: bf.file.name,
+          content,
+          contact_type: bf.contactType,
+        })
+        setBatch(updated)
+      }
+      setBufferedFiles([])
+      feedback.success("Files uploaded — ready to analyse")
+      const accts = await api.get<StagingAccount[]>(`/import/batches/${b.id}/accounts`)
+      setStagingAccounts(accts)
+    } catch (err: unknown) {
+      feedback.error(err instanceof Error ? err.message : "Import failed")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ── No batch yet — show format selector + upload config ──
 
   if (!batch) {
-    const brandStyles: Record<string, { border: string; bg: string; text: string; icon: string }> = {
-      xero:  { border: "border-[#13B5EA]", bg: "bg-[#13B5EA]/10", text: "text-[#0B7FA5]", icon: "text-[#13B5EA]" },
-      myob:  { border: "border-[#6D28D9]", bg: "bg-[#6D28D9]/10", text: "text-[#6D28D9]", icon: "text-[#6D28D9]" },
-      csv:   { border: "border-gray-400",   bg: "bg-gray-100",     text: "text-gray-700",  icon: "text-gray-400"  },
-    }
-
     return (
       <PageShell header={header}>
         <InfoPanel title="How data import works" storageKey="import-info">
-          <p><strong>1. Choose source</strong> — select MYOB, Xero, or Generic CSV. MYOB AO and CeeData formats are auto-detected.</p>
-          <p><strong>2. Upload files</strong> — upload your transaction file and optionally a Chart of Accounts file to enrich account types.</p>
-          <p><strong>3. Analyse &amp; map</strong> — review staged accounts, contacts, and transactions. Map accounts to your Ledgius chart of accounts.</p>
+          <p><strong>1. Choose format &amp; upload</strong> — select MYOB, Xero, or Generic CSV, configure options, and add your files.</p>
+          <p><strong>2. Start Import</strong> — click to upload files and begin the analysis pipeline.</p>
+          <p><strong>3. Analyse &amp; map</strong> — review staged accounts, contacts, and transactions.</p>
           <p><strong>4. Preview &amp; commit</strong> — verify the data looks correct, then commit to import into your ledger.</p>
         </InfoPanel>
-        <PageSection title="Import Format">
-          <div className="flex gap-3">
-            {sourceOptions.map((src) => {
-              const selected = selectedSource === src.id
-              const brand = brandStyles[src.id] ?? brandStyles.csv
-              return (
-                <button
-                  key={src.id}
-                  type="button"
-                  onClick={() => setSelectedSource(src.id as ImportSource)}
-                  className={`flex-1 text-left p-3 rounded-lg border-2 transition-colors ${selected ? `${brand.border} ${brand.bg}` : "border-gray-200 bg-white hover:border-gray-300"}`}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <Database className={`h-4 w-4 ${selected ? brand.icon : "text-gray-400"}`} />
-                    <span className={`text-sm font-semibold ${selected ? brand.text : "text-gray-900"}`}>{src.name}</span>
-                  </div>
-                  <p className="text-xs text-gray-500">{src.description}</p>
-                </button>
-              )
-            })}
-          </div>
-        </PageSection>
+        {formatSelector}
 
         {selectedSource && (
           <>
-            <PageSection title="Import Options">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Import Mode</label>
-                  <select value={importMode} onChange={(e) => setImportMode(e.target.value as typeof importMode)} className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm pr-7">
-                    <option value="full_history">Full Transaction History</option>
-                    <option value="opening_balances">Opening Balances Only</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Account Strategy</label>
-                  <select value={importStrategy} onChange={(e) => setImportStrategy(e.target.value as typeof importStrategy)} className="w-full border border-gray-200 rounded px-2 py-1.5 text-sm pr-7">
-                    <option value="import_as_new">Import as New Accounts</option>
-                    <option value="map_to_existing">Map to Existing Accounts</option>
-                  </select>
-                </div>
+            {/* Import options */}
+            <div className="flex items-center gap-4 mb-4 p-3 rounded-lg border border-gray-200 bg-gray-50">
+              <span className="text-xs font-medium text-gray-600">Import mode:</span>
+              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                <input type="radio" name="import_mode_pre" checked={importMode === "full_history"} onChange={() => setImportMode("full_history")} />
+                <span>Full history</span>
+                <span className="text-xs text-gray-400">(all transactions)</span>
+              </label>
+              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                <input type="radio" name="import_mode_pre" checked={importMode === "opening_balances"} onChange={() => setImportMode("opening_balances")} />
+                <span>Opening balances only</span>
+              </label>
+            </div>
+            <div className="flex items-center gap-4 mb-4 p-3 rounded-lg border border-gray-200 bg-gray-50">
+              <span className="text-xs font-medium text-gray-600">Account strategy:</span>
+              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                <input type="radio" name="import_strategy_pre" checked={importStrategy === "import_as_new"} onChange={() => setImportStrategy("import_as_new")} />
+                <span>Import as new</span>
+              </label>
+              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                <input type="radio" name="import_strategy_pre" checked={importStrategy === "map_to_existing"} onChange={() => setImportStrategy("map_to_existing")} />
+                <span>Map to existing</span>
+              </label>
+            </div>
+
+            {/* MYOB-specific guidance */}
+            {selectedSource === "myob" && (
+              <div className="mb-4 p-3 rounded-lg border border-primary-200 bg-primary-50 text-sm text-primary-800">
+                <strong>Recommended:</strong> Export two files from MYOB. <strong>(1)</strong> Go to <em>Import and export data → Export</em>,
+                select Data type <strong>"Data for your accountant"</strong> and Export file type <strong>"MYOB AO"</strong> or <strong>"CeeData"</strong>.
+                <strong>(2)</strong> Also export your <strong>Chart of Accounts</strong> from MYOB (<em>Reports → Accounts → Chart of Accounts</em>).
               </div>
+            )}
+
+            {/* Upload dropzones — files buffered client-side */}
+            <PageSection title="Upload Files">
+              <div className="space-y-3">
+                <UploadRow label="Single File Import" type="accounts" onUpload={(f) => bufferFile("accounts", f)} hint="MYOB AO, CeeData — contains accounts + transactions in one file" />
+
+                <div className="relative py-2">
+                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
+                  <div className="relative flex justify-center"><span className="bg-white px-3 text-xs text-gray-400">or upload individual files</span></div>
+                </div>
+
+                <UploadRow label="Chart of Accounts" type="accounts" onUpload={(f) => bufferFile("accounts", f)} />
+                <UploadRow label="Customers" type="contacts" onUpload={(f) => bufferFile("contacts", f, "customer")} optional />
+                <UploadRow label="Vendors" type="contacts" onUpload={(f) => bufferFile("contacts", f, "vendor")} optional />
+                <UploadRow label="Transactions" type="transactions" onUpload={(f) => bufferFile("transactions", f)} />
+              </div>
+
+              {/* Buffered files summary */}
+              {bufferedFiles.length > 0 && (
+                <div className="mt-4 space-y-1">
+                  {bufferedFiles.map((f, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs text-gray-500">
+                      <CheckCircle className="h-3 w-3 text-green-500" />
+                      <span className="font-mono">{f.file.name}</span>
+                      <span>— {(f.file.size / 1024).toFixed(0)} KB</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </PageSection>
 
+            {/* Start Import — creates batch + uploads all buffered files */}
             <div className="mt-4">
-              <Button onClick={() => createBatch(selectedSource)} loading={loading}>
+              <Button onClick={startImport} loading={loading} disabled={bufferedFiles.length === 0}>
                 <Upload className="h-4 w-4" />
-                Start Import
+                Start Import ({bufferedFiles.length} file{bufferedFiles.length !== 1 ? "s" : ""})
               </Button>
+              {bufferedFiles.length === 0 && (
+                <p className="text-xs text-gray-400 mt-1.5">Add at least one file to begin</p>
+              )}
             </div>
           </>
         )}
@@ -337,6 +441,9 @@ export function DataImportPage() {
 
   return (
     <PageShell header={header}>
+      {/* Format selector — stays visible so user sees what they chose */}
+      {formatSelector}
+
       {/* Pipeline progress — click completed steps to navigate back */}
       <StatusStepper steps={pipelineSteps} currentStatus={stage} onStepClick={handleStepClick} className="mb-6 max-w-2xl" />
 
