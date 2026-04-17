@@ -325,29 +325,30 @@ export function DataImportPage() {
 
         {selectedSource && (
           <>
-            {/* Import options */}
-            <div className="flex items-center gap-4 mb-4 p-3 rounded-lg border border-gray-200 bg-gray-50">
-              <span className="text-xs font-medium text-gray-600">Import mode:</span>
-              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-                <input type="radio" name="import_mode_pre" checked={importMode === "full_history"} onChange={() => setImportMode("full_history")} />
-                <span>Full history</span>
-                <span className="text-xs text-gray-400">(all transactions)</span>
-              </label>
-              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-                <input type="radio" name="import_mode_pre" checked={importMode === "opening_balances"} onChange={() => setImportMode("opening_balances")} />
-                <span>Opening balances only</span>
-              </label>
-            </div>
-            <div className="flex items-center gap-4 mb-4 p-3 rounded-lg border border-gray-200 bg-gray-50">
-              <span className="text-xs font-medium text-gray-600">Account strategy:</span>
-              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-                <input type="radio" name="import_strategy_pre" checked={importStrategy === "import_as_new"} onChange={() => setImportStrategy("import_as_new")} />
-                <span>Import as new</span>
-              </label>
-              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-                <input type="radio" name="import_strategy_pre" checked={importStrategy === "map_to_existing"} onChange={() => setImportStrategy("map_to_existing")} />
-                <span>Map to existing</span>
-              </label>
+            {/* Import options — single panel, two columns */}
+            <div className="grid grid-cols-2 gap-4 mb-4 p-3 rounded-lg border border-gray-200 bg-gray-50">
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-medium text-gray-600 shrink-0">Import mode:</span>
+                <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                  <input type="radio" name="import_mode_pre" checked={importMode === "full_history"} onChange={() => setImportMode("full_history")} />
+                  <span>Full history</span>
+                </label>
+                <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                  <input type="radio" name="import_mode_pre" checked={importMode === "opening_balances"} onChange={() => setImportMode("opening_balances")} />
+                  <span>Opening balances</span>
+                </label>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-xs font-medium text-gray-600 shrink-0">Account strategy:</span>
+                <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                  <input type="radio" name="import_strategy_pre" checked={importStrategy === "import_as_new"} onChange={() => setImportStrategy("import_as_new")} />
+                  <span>Import as new</span>
+                </label>
+                <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                  <input type="radio" name="import_strategy_pre" checked={importStrategy === "map_to_existing"} onChange={() => setImportStrategy("map_to_existing")} />
+                  <span>Map to existing</span>
+                </label>
+              </div>
             </div>
 
             {/* MYOB-specific guidance */}
@@ -464,32 +465,30 @@ export function DataImportPage() {
             </div>
           )}
 
-          {/* Import mode selector */}
-          <div className="flex items-center gap-4 mb-4 p-3 rounded-lg border border-gray-200 bg-gray-50">
-            <span className="text-xs font-medium text-gray-600">Import mode:</span>
-            <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-              <input type="radio" name="import_mode" checked={importMode === "full_history"} onChange={() => setImportMode("full_history")} />
-              <span>Full history</span>
-              <span className="text-xs text-gray-400">(all transactions)</span>
-            </label>
-            <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-              <input type="radio" name="import_mode" checked={importMode === "opening_balances"} onChange={() => setImportMode("opening_balances")} />
-              <span>Opening balances only</span>
-              <span className="text-xs text-gray-400">(summary balances, no transaction detail)</span>
-            </label>
-          </div>
-          <div className="flex items-center gap-4 mb-4 p-3 rounded-lg border border-gray-200 bg-gray-50">
-            <span className="text-xs font-medium text-gray-600">Account strategy:</span>
-            <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-              <input type="radio" name="import_strategy" checked={importStrategy === "import_as_new"} onChange={() => setImportStrategy("import_as_new")} />
-              <span>Import as new</span>
-              <span className="text-xs text-gray-400">(use your source accounts, hide unused Ledgius defaults)</span>
-            </label>
-            <label className="flex items-center gap-1.5 text-sm cursor-pointer">
-              <input type="radio" name="import_strategy" checked={importStrategy === "map_to_existing"} onChange={() => setImportStrategy("map_to_existing")} />
-              <span>Map to existing</span>
-              <span className="text-xs text-gray-400">(manually map your accounts to existing Ledgius accounts)</span>
-            </label>
+          {/* Import options — single panel, two columns */}
+          <div className="grid grid-cols-2 gap-4 mb-4 p-3 rounded-lg border border-gray-200 bg-gray-50">
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-medium text-gray-600 shrink-0">Import mode:</span>
+              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                <input type="radio" name="import_mode" checked={importMode === "full_history"} onChange={() => setImportMode("full_history")} />
+                <span>Full history</span>
+              </label>
+              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                <input type="radio" name="import_mode" checked={importMode === "opening_balances"} onChange={() => setImportMode("opening_balances")} />
+                <span>Opening balances</span>
+              </label>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-medium text-gray-600 shrink-0">Account strategy:</span>
+              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                <input type="radio" name="import_strategy" checked={importStrategy === "import_as_new"} onChange={() => setImportStrategy("import_as_new")} />
+                <span>Import as new</span>
+              </label>
+              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                <input type="radio" name="import_strategy" checked={importStrategy === "map_to_existing"} onChange={() => setImportStrategy("map_to_existing")} />
+                <span>Map to existing</span>
+              </label>
+            </div>
           </div>
           <DropZone label="Single File Import" onFileSelected={(f) => uploadFile("accounts", f)} hint="MYOB AO, CeeData — contains accounts + transactions in one file" />
 
