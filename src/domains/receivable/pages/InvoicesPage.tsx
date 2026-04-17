@@ -39,22 +39,32 @@ const columns: Column<InvoiceSummary>[] = [
   },
 ]
 
+type DocFilter = "all" | "invoice" | "credit_note"
+
 export function InvoicesPage() {
   usePageHelp(pageHelpContent.invoices)
   usePagePolicies(["receivable", "tax"])
   const { data: invoices, isLoading, error } = useInvoices()
   const navigate = useNavigate()
   const [search, setSearch] = useState("")
+  const [docFilter, setDocFilter] = useState<DocFilter>("all")
 
   const filtered = useMemo(() => {
-    if (!search || !invoices) return invoices ?? []
+    let list = invoices ?? []
+    if (docFilter !== "all") {
+      list = list.filter(i => {
+        if (docFilter === "credit_note") return i.is_return === true
+        return i.is_return !== true
+      })
+    }
+    if (!search) return list
     const q = search.toLowerCase()
-    return invoices.filter(
+    return list.filter(
       (i) =>
         i.invnumber?.toLowerCase().includes(q) ||
         i.customer_name?.toLowerCase().includes(q)
     )
-  }, [invoices, search])
+  }, [invoices, search, docFilter])
 
   const header = (
     <div>
@@ -68,6 +78,17 @@ export function InvoicesPage() {
           <Plus className="h-4 w-4" />
           New Invoice
         </Button>
+        <div className="flex items-center gap-1 ml-4 bg-gray-100 rounded-lg p-0.5">
+          {([["all", "All"], ["invoice", "Invoices"], ["credit_note", "Credit Notes"]] as const).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setDocFilter(key)}
+              className={`px-3 py-1 text-xs rounded-md transition-colors ${docFilter === key ? "bg-white shadow-sm text-gray-900 font-medium" : "text-gray-500 hover:text-gray-700"}`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
         <div className="flex-1" />
         <div className="max-w-sm">
           <SearchFilter placeholder="Search invoices..." onSearch={setSearch} />
