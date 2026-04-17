@@ -67,6 +67,17 @@ export function ExportPage() {
   const selectAll = () => setEntities(ENTITY_OPTIONS.map(e => e.key))
   const selectNone = () => setEntities([])
 
+  const [phase, setPhase] = useState("")
+
+  const PHASE_LABELS: Record<string, { label: string; pct: number }> = {
+    fetching:   { label: "Fetching data...", pct: 15 },
+    validating: { label: "Validating...", pct: 35 },
+    mapping:    { label: "Mapping fields...", pct: 55 },
+    writing:    { label: "Writing bundle...", pct: 75 },
+    storing:    { label: "Storing bundle...", pct: 90 },
+    completed:  { label: "Complete", pct: 100 },
+  }
+
   const handleRun = async () => {
     if (format === "csv") {
       setError("Generic CSV export is coming soon. Xero and MYOB exports are available now.")
@@ -74,28 +85,68 @@ export function ExportPage() {
     }
     setError("")
     setLastResult(null)
+    setPhase("")
     setRunning(true)
     try {
-      const res = await api.post<{ run_id: string; status: string; entity_counts: Record<string, number> }>(`/export/${format}/run`, {
+      // POST returns 202 immediately — export runs in background.
+      await api.post(`/export/${format}/run`, {
         entity_types: entities.length > 0 ? entities : undefined,
         date_from: dateFrom || undefined,
         date_to: dateTo || undefined,
       })
-      setLastResult(res)
-      loadRuns()
-    } catch (err: unknown) {
-      if (err && typeof err === "object" && "response" in err) {
-        const axiosErr = err as { response?: { data?: { error?: string; status?: string; run_id?: string } } }
-        if (axiosErr.response?.data?.status === "failed") {
-          setLastResult({ run_id: axiosErr.response.data.run_id ?? "", status: "failed", entity_counts: {} })
-          setError(axiosErr.response.data.error ?? "Export failed — check validation report")
-        } else {
-          setError(axiosErr.response?.data?.error ?? "Export failed")
-        }
-      } else {
-        setError(err instanceof Error ? err.message : "Export failed")
+
+      // Wait briefly for the export_run row to be created, then
+      // find the latest run and subscribe to its SSE stream.
+      await new Promise(r => setTimeout(r, 500))
+      const runs = await api.get<ExportRun[]>(`/export/${format}/runs`)
+      const latestRun = runs?.[0]
+      if (!latestRun) {
+        setError("Export started but run not found")
+        setRunning(false)
+        return
       }
-    } finally {
+
+      // Subscribe to SSE stream for real-time phase updates.
+      const sseUrl = `/api/v1/export/${format}/runs/${latestRun.id}/stream`
+      const eventSource = new EventSource(sseUrl)
+
+      eventSource.addEventListener("progress", (e) => {
+        const data = JSON.parse(e.data)
+        setPhase(data.status ?? "running")
+      })
+
+      eventSource.addEventListener("complete", (e) => {
+        const data = JSON.parse(e.data)
+        eventSource.close()
+        setPhase("completed")
+        setLastResult({
+          run_id: latestRun.id,
+          status: "completed",
+          entity_counts: data.entity_counts ?? {},
+        })
+        setRunning(false)
+        loadRuns()
+      })
+
+      eventSource.addEventListener("error", (e) => {
+        if (e instanceof MessageEvent) {
+          const data = JSON.parse(e.data)
+          setError(data.error ?? "Export failed")
+        }
+        eventSource.close()
+        setPhase("")
+        setRunning(false)
+        loadRuns()
+      })
+
+      eventSource.onerror = () => {
+        eventSource.close()
+        setPhase("")
+        setRunning(false)
+        loadRuns()
+      }
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Export failed")
       setRunning(false)
     }
   }
@@ -194,6 +245,22 @@ export function ExportPage() {
           <Play className="w-4 h-4" /> Run Export
         </Button>
       </div>
+
+      {/* Progress bar — visible while export is running */}
+      {running && phase && (
+        <div className="mb-6">
+          <div className="flex items-center justify-between text-xs text-gray-500 mb-1.5">
+            <span className="font-medium">{PHASE_LABELS[phase]?.label ?? phase}</span>
+            <span className="tabular-nums">{PHASE_LABELS[phase]?.pct ?? 0}%</span>
+          </div>
+          <div className="h-2 rounded-full bg-gray-100 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-primary-500 transition-all duration-500"
+              style={{ width: `${PHASE_LABELS[phase]?.pct ?? 0}%` }}
+            />
+          </div>
+        </div>
+      )}
 
       {lastResult && (
         <PageSection title="Export Result">
