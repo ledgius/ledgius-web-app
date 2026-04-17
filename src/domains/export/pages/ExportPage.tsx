@@ -233,17 +233,44 @@ export function ExportPage() {
       </PageSection>
 
       <PageSection title="Date Range (optional)">
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">From</label>
-            <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-full border rounded px-2 py-1.5 text-sm" />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">To</label>
-            <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-full border rounded px-2 py-1.5 text-sm" />
-          </div>
-        </div>
-        <p className="text-xs text-gray-400 mt-1">Only applies to transactional entities (invoices, bills, credit notes). Master data is always exported in full.</p>
+        {(() => {
+          const now = new Date()
+          const currentFYStart = now.getMonth() >= 6 ? now.getFullYear() : now.getFullYear() - 1
+          const currentFY = { from: `${currentFYStart}-07-01`, to: `${currentFYStart + 1}-06-30`, label: `FY${currentFYStart}–${currentFYStart + 1}` }
+          const prevFY = { from: `${currentFYStart - 1}-07-01`, to: `${currentFYStart}-06-30`, label: `FY${currentFYStart - 1}–${currentFYStart}` }
+          const setFY = (fy: { from: string; to: string }) => { setDateFrom(fy.from); setDateTo(fy.to) }
+          const clearDates = () => { setDateFrom(""); setDateTo("") }
+          const isActive = (fy: { from: string; to: string }) => dateFrom === fy.from && dateTo === fy.to
+          return (
+            <>
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-xs font-medium text-gray-500">Quick select:</span>
+                <button onClick={() => setFY(currentFY)} className={`px-2.5 py-1 text-xs rounded-md border transition-colors ${isActive(currentFY) ? "border-primary-500 bg-primary-50 text-primary-700 font-medium" : "border-gray-200 text-gray-600 hover:border-gray-300"}`}>
+                  {currentFY.label}
+                </button>
+                <button onClick={() => setFY(prevFY)} className={`px-2.5 py-1 text-xs rounded-md border transition-colors ${isActive(prevFY) ? "border-primary-500 bg-primary-50 text-primary-700 font-medium" : "border-gray-200 text-gray-600 hover:border-gray-300"}`}>
+                  {prevFY.label}
+                </button>
+                {(dateFrom || dateTo) && (
+                  <button onClick={clearDates} className="px-2.5 py-1 text-xs rounded-md border border-gray-200 text-gray-400 hover:text-gray-600 hover:border-gray-300">
+                    Clear
+                  </button>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">From</label>
+                  <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} className="w-full border rounded px-2 py-1.5 text-sm" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">To</label>
+                  <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} className="w-full border rounded px-2 py-1.5 text-sm" />
+                </div>
+              </div>
+              <p className="text-xs text-gray-400 mt-1">Only applies to transactional entities (invoices, bills, credit notes). Master data is always exported in full.</p>
+            </>
+          )
+        })()}
       </PageSection>
 
       <div className="flex gap-2 mt-4 mb-6">
