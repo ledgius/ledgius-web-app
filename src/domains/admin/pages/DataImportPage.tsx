@@ -299,6 +299,31 @@ export function DataImportPage() {
               </div>
             </PageSection>
 
+            <PageSection title="Files You'll Upload">
+              <div className="text-sm text-gray-600 space-y-1.5">
+                {selectedSource === "myob" && (
+                  <>
+                    <p><FileText className="inline h-4 w-4 mr-1.5 text-gray-400" /><strong>Single file import</strong> — MYOB AO or CeeData export (contains accounts + transactions)</p>
+                    <p className="text-xs text-gray-400 ml-5.5">Or upload individual files: Chart of Accounts, Customers, Vendors, Journal Transactions</p>
+                  </>
+                )}
+                {selectedSource === "xero" && (
+                  <>
+                    <p><FileText className="inline h-4 w-4 mr-1.5 text-gray-400" /><strong>Chart of Accounts</strong> — exported from Xero Settings → Chart of Accounts</p>
+                    <p><FileText className="inline h-4 w-4 mr-1.5 text-gray-400" /><strong>Contacts</strong> — exported from Xero Contacts list</p>
+                    <p><FileText className="inline h-4 w-4 mr-1.5 text-gray-400" /><strong>Transactions</strong> — Detailed Account Transactions report</p>
+                  </>
+                )}
+                {selectedSource === "csv" && (
+                  <>
+                    <p><FileText className="inline h-4 w-4 mr-1.5 text-gray-400" /><strong>Accounts</strong> — CSV with Account Number, Account Name, Account Type columns</p>
+                    <p><FileText className="inline h-4 w-4 mr-1.5 text-gray-400" /><strong>Contacts</strong> — CSV with Name, Email, ABN columns</p>
+                    <p><FileText className="inline h-4 w-4 mr-1.5 text-gray-400" /><strong>Transactions</strong> — CSV with Date, Reference, Amount, Account Code columns</p>
+                  </>
+                )}
+              </div>
+            </PageSection>
+
             <div className="mt-4">
               <Button onClick={() => createBatch(selectedSource)} loading={loading}>
                 <Upload className="h-4 w-4" />
