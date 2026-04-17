@@ -125,10 +125,10 @@ const assetsSections: NavSection[] = [
   {
     title: "Fixed Assets",
     items: [
-      { to: "/", label: "Asset Register", icon: Package },
-      { to: "/", label: "Buy Asset", icon: ShoppingCart },
-      { to: "/", label: "Sell / Dispose Asset", icon: ArrowUpFromLine },
-      { to: "/", label: "Depreciation", icon: TrendingUp },
+      { to: "/assets", label: "Asset Register", icon: Package },
+      { to: "/assets/buy", label: "Buy Asset", icon: ShoppingCart },
+      { to: "/assets/sell", label: "Sell / Dispose Asset", icon: ArrowUpFromLine },
+      { to: "/assets/depreciation", label: "Depreciation", icon: TrendingUp },
     ],
   },
   {
@@ -149,9 +149,9 @@ const liabilitiesSections: NavSection[] = [
   {
     title: "Loans",
     items: [
-      { to: "/", label: "Loan Register", icon: Landmark },
-      { to: "/", label: "Loan Payments", icon: ArrowUpFromLine },
-      { to: "/", label: "Loan Payout", icon: CheckCircle },
+      { to: "/loans", label: "Loan Register", icon: Landmark },
+      { to: "/loans/payments", label: "Loan Payments", icon: ArrowUpFromLine },
+      { to: "/loans/payout", label: "Loan Payout", icon: CheckCircle },
     ],
   },
 ]
