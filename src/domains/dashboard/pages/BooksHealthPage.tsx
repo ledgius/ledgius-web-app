@@ -1,23 +1,26 @@
 // Spec references: A-0023.
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
+import { MoneyValue } from "@/components/financial"
+import { DecisionQueue, type DecisionQueueItem } from "@/components/workflow"
+import { useDashboard } from "../hooks/useDashboard"
 import {
   Landmark, FileText, Receipt, DollarSign,
   ScrollText, CalculatorIcon, CalendarCheck,
   RefreshCw, CheckCircle2, XCircle,
   TrendingUp, TrendingDown, Minus,
-  AlertCircle, Calendar,
+  AlertCircle, Calendar, AlertTriangle, Circle,
   CheckCircle, Lock, ClipboardList, Wallet, Calculator,
   ChevronRight,
 } from "lucide-react"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { cn } from "@/shared/lib/utils"
-import { PageShell } from "@/components/layout"
+import { PageShell, PageSection } from "@/components/layout"
 import { HealthPanel } from "@/components/layout/HealthPanel"
 import { InfoPanel, Skeleton } from "@/components/primitives"
 import { useBooksHealth, type AgeBuckets, type PeriodCloseChecklist } from "../hooks/useBooksHealth"
-import { useCalendarTimeline, type TimelineItem as APITimelineItem } from "@/domains/calendar/hooks/useCalendar"
+import { useCalendarTimeline, useCompleteCalendarTask, type TimelineItem as APITimelineItem } from "@/domains/calendar/hooks/useCalendar"
 import type { LucideIcon } from "lucide-react"
 
 // ── Currency formatting ──
@@ -436,12 +439,45 @@ export function BooksHealthPage() {
   usePageHelp(pageHelpContent.dashboard)
   usePagePolicies(["reporting", "tax"])
   const { data, isLoading, refetch, isFetching } = useBooksHealth()
+  const { data: dashMetrics, isLoading: dashLoading } = useDashboard()
+  const { data: dashTimelineData } = useCalendarTimeline(7)
+  const dashCompleteTask = useCompleteCalendarTask()
+  const navigate = useNavigate()
+
+  const dashPendingItems = (dashTimelineData?.items ?? []).filter((i) => !i.done)
+  const dashOverdueCount = dashPendingItems.filter((i) => i.overdue).length
+
+  const dashArOutstanding = dashMetrics ? parseFloat(dashMetrics.ar_outstanding) : 0
+  const dashApOutstanding = dashMetrics ? parseFloat(dashMetrics.ap_outstanding) : 0
+  const dashGstPosition = dashMetrics ? parseFloat(dashMetrics.gst_position) : 0
+
+  const dashReceivablesItems: DecisionQueueItem[] = dashArOutstanding > 0
+    ? [{
+        id: "ar-outstanding",
+        label: "Outstanding receivables",
+        amount: dashArOutstanding,
+        actionLabel: "Review",
+        onAction: () => navigate("/invoices"),
+        variant: "warning",
+      }]
+    : []
+
+  const dashPayablesItems: DecisionQueueItem[] = dashApOutstanding > 0
+    ? [{
+        id: "ap-outstanding",
+        label: "Outstanding payables",
+        amount: dashApOutstanding,
+        actionLabel: "Review",
+        onAction: () => navigate("/bills"),
+        variant: "warning",
+      }]
+    : []
 
   const header = (
     <div className="flex items-start justify-between gap-4">
       <div>
-        <h1 className="text-xl font-semibold text-gray-900">Health Check</h1>
-        <p className="mt-0.5 text-sm text-gray-500">How clean are your books?</p>
+        <h1 className="text-xl font-semibold text-gray-900">Books Overview</h1>
+        <p className="mt-0.5 text-sm text-gray-500">Your financial position at a glance</p>
       </div>
       <div className="flex items-center gap-3 shrink-0">
         {data?.last_updated && (
@@ -510,6 +546,115 @@ export function BooksHealthPage() {
           </>
         )}
       </InfoPanel>
+
+      {/* ── Dashboard: Today's action items ── */}
+      <InfoPanel
+        title={
+          dashPendingItems.length === 0
+            ? "All clear for today"
+            : `Today (${dashPendingItems.length})${dashOverdueCount > 0 ? ` — ${dashOverdueCount} overdue` : ""}`
+        }
+        storageKey="dashboard-today-info"
+      >
+        {dashPendingItems.length === 0 ? (
+          <p className="flex items-center gap-2">
+            <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+            <span>Nothing pending in the next 7 days. Good time to catch up on reconciliations.</span>
+          </p>
+        ) : (
+          <ul className="space-y-1">
+            {dashPendingItems.map((item) => {
+              const isTask = item.type === "task"
+              const icon = item.overdue ? (
+                <AlertTriangle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+              ) : isTask ? (
+                <button
+                  type="button"
+                  onClick={() => dashCompleteTask.mutate(item.id)}
+                  disabled={dashCompleteTask.isPending}
+                  className="shrink-0 mt-0.5 text-blue-400 hover:text-green-500 disabled:opacity-50"
+                  title="Mark as done"
+                  aria-label={`Mark "${item.title}" as done`}
+                >
+                  <Circle className="h-4 w-4" />
+                </button>
+              ) : (
+                <Circle className="h-4 w-4 text-blue-300 shrink-0 mt-0.5" />
+              )
+              const dateLabel = new Date(item.date).toLocaleDateString("en-AU", { day: "numeric", month: "short" })
+              return (
+                <li key={item.id} className="flex items-start gap-2">
+                  {icon}
+                  <span className="flex-1">
+                    {item.link ? (
+                      <button onClick={() => navigate(item.link!)} className="underline font-medium text-left hover:text-blue-900">
+                        {item.title}
+                      </button>
+                    ) : (
+                      <span className="font-medium">{item.title}</span>
+                    )}
+                    <span className={item.overdue ? "ml-2 text-red-700 font-medium" : "ml-2 text-blue-600"}>
+                      {item.overdue ? `overdue (was due ${dateLabel})` : dateLabel}
+                    </span>
+                    {item.description && <span className="block text-blue-600 text-[11px] mt-0.5">{item.description}</span>}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+        )}
+        <p className="mt-2 text-blue-500 text-[11px]">
+          Manual tasks (circles) can be checked off here. Auto-generated items (BAS, payroll, due dates) clear when the underlying work is done.
+        </p>
+      </InfoPanel>
+
+      {/* Financial position summary */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <PageSection title="Receivables" variant="card">
+          <MoneyValue amount={dashArOutstanding} size="xl" colorNegative={false} />
+          <p className="text-xs text-gray-500 mt-1">Outstanding AR</p>
+        </PageSection>
+        <PageSection title="Payables" variant="card">
+          <MoneyValue amount={dashApOutstanding} size="xl" colorNegative={false} />
+          <p className="text-xs text-gray-500 mt-1">Outstanding AP</p>
+        </PageSection>
+        <PageSection title="GST Position" variant="card">
+          <MoneyValue amount={dashGstPosition} size="xl" />
+          <p className="text-xs text-gray-500 mt-1">{dashGstPosition >= 0 ? "Owing to ATO" : "Refund expected"}</p>
+        </PageSection>
+      </div>
+
+      {/* Work queues */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <DecisionQueue
+          title="Receivables requiring attention"
+          items={dashReceivablesItems}
+          emptyMessage="All receivables are current."
+          headerAction={
+            <button
+              type="button"
+              className="text-xs text-primary-600 hover:underline"
+              onClick={() => navigate("/invoices")}
+            >
+              View all
+            </button>
+          }
+        />
+        <DecisionQueue
+          title="Payables requiring attention"
+          items={dashPayablesItems}
+          emptyMessage="All payables are current."
+          headerAction={
+            <button
+              type="button"
+              className="text-xs text-primary-600 hover:underline"
+              onClick={() => navigate("/bills")}
+            >
+              View all
+            </button>
+          }
+        />
+      </div>
 
       {/* ── Row 1: 4 panels ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

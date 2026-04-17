@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom"
 import {
-  LayoutDashboard, ShoppingCart, ShoppingBag, Landmark, BookOpen,
+  ShoppingCart, ShoppingBag, Landmark, BookOpen,
   BarChart3, Users, Settings2, Shield,
   FileText, Receipt, ArrowDownToLine, ArrowUpFromLine,
   CreditCard, ArrowLeftRight,
@@ -45,8 +45,7 @@ const financeSections: NavSection[] = [
   {
     title: "",
     items: [
-      { to: "/", label: "Dashboard", icon: LayoutDashboard },
-      { to: "/books-health", label: "Books Overview", icon: HeartPulse },
+      { to: "/", label: "Books Overview", icon: HeartPulse },
       { to: "/calendar", label: "Calendar", icon: Calendar },
     ],
   },
@@ -120,7 +119,7 @@ const assetsSections: NavSection[] = [
   {
     title: "",
     items: [
-      { to: "/", label: "Dashboard", icon: LayoutDashboard },
+      { to: "/", label: "Books Overview", icon: HeartPulse },
     ],
   },
   {
@@ -144,7 +143,7 @@ const liabilitiesSections: NavSection[] = [
   {
     title: "",
     items: [
-      { to: "/", label: "Dashboard", icon: LayoutDashboard },
+      { to: "/", label: "Books Overview", icon: HeartPulse },
     ],
   },
   {
@@ -161,7 +160,7 @@ const payrollSections: NavSection[] = [
   {
     title: "",
     items: [
-      { to: "/", label: "Dashboard", icon: LayoutDashboard },
+      { to: "/", label: "Books Overview", icon: HeartPulse },
     ],
   },
   {
@@ -192,7 +191,7 @@ const dataSections: NavSection[] = [
   {
     title: "",
     items: [
-      { to: "/", label: "Dashboard", icon: LayoutDashboard },
+      { to: "/", label: "Books Overview", icon: HeartPulse },
     ],
   },
   {
@@ -215,8 +214,7 @@ const tasksSections: NavSection[] = [
   {
     title: "",
     items: [
-      { to: "/", label: "Dashboard", icon: LayoutDashboard },
-      { to: "/books-health", label: "Books Overview", icon: HeartPulse },
+      { to: "/", label: "Books Overview", icon: HeartPulse },
       { to: "/calendar", label: "Calendar", icon: Calendar },
     ],
   },
@@ -261,7 +259,7 @@ const reportsSections: NavSection[] = [
   {
     title: "",
     items: [
-      { to: "/", label: "Dashboard", icon: LayoutDashboard },
+      { to: "/", label: "Books Overview", icon: HeartPulse },
     ],
   },
   {
@@ -299,7 +297,7 @@ const aiSections: NavSection[] = [
   {
     title: "",
     items: [
-      { to: "/", label: "Dashboard", icon: LayoutDashboard },
+      { to: "/", label: "Books Overview", icon: HeartPulse },
     ],
   },
   {
@@ -558,7 +556,7 @@ export function Layout() {
         <div className="flex-1 flex flex-col min-h-0">
           <main className="flex-1 overflow-auto">
             <div className="p-6">
-              {mode === "tasks" && (location.pathname === "/calendar" || location.pathname === "/books-health") && <SessionPlanner />}
+              {mode === "tasks" && (location.pathname === "/calendar" || location.pathname === "/") && <SessionPlanner />}
               <Outlet />
             </div>
           </main>
