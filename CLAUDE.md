@@ -135,6 +135,17 @@ npm run dev          # Vite dev server on http://localhost:3000
 npm run build
 ```
 
+## Pre-Commit Checks (MANDATORY)
+
+Before committing ANY change to `.ts` or `.tsx` files, run both:
+
+```bash
+npx tsc --noEmit     # Type check — catches strict-mode errors
+npx vite build       # Full production build — catches import/asset issues
+```
+
+The production Dockerfile runs `tsc -b && vite build` — if either fails, the deploy fails. The Vite dev server is lenient and will NOT catch these errors. Never commit web app code without passing both checks.
+
 ## Help Content
 
 Help YAML files live in `src/locales/en-AU/help/`. Each page has a YAML file with:
