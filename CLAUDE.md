@@ -140,11 +140,15 @@ npm run build
 Before committing ANY change to `.ts` or `.tsx` files, run both:
 
 ```bash
-npx tsc --noEmit     # Type check — catches strict-mode errors
+npx tsc -b           # Build-mode type check — matches production exactly
 npx vite build       # Full production build — catches import/asset issues
 ```
 
-The production Dockerfile runs `tsc -b && vite build` — if either fails, the deploy fails. The Vite dev server is lenient and will NOT catch these errors. Never commit web app code without passing both checks.
+Use `tsc -b` (not `tsc --noEmit`) — the production Dockerfile runs `tsc -b && vite build` and `tsc -b` is stricter (catches unused variables, unused imports). Never commit web app code without passing both checks.
+
+### Feature branches: merge master before checking
+
+When working on a feature branch, **merge master into the branch** before running the pre-commit checks. TypeScript errors often surface from the combination of two PRs that each pass individually but fail together (e.g. a function signature change in one PR + a call site in another). The check must run on the combined code, not just the branch's diff.
 
 ## Help Content
 

@@ -8,7 +8,6 @@ import { PageLoader } from "@/components/primitives"
 // Lazy-load all page components — each becomes a separate chunk.
 // Pages only load when the user navigates to them.
 const LoginPage = lazy(() => import("@/domains/auth/pages/LoginPage").then(m => ({ default: m.LoginPage })))
-const DashboardPage = lazy(() => import("@/domains/dashboard/pages/DashboardPage").then(m => ({ default: m.DashboardPage })))
 const BooksHealthPage = lazy(() => import("@/domains/dashboard/pages/BooksHealthPage").then(m => ({ default: m.BooksHealthPage })))
 const CalendarPage = lazy(() => import("@/domains/calendar/pages/CalendarPage").then(m => ({ default: m.CalendarPage })))
 

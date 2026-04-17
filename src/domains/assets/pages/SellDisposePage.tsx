@@ -36,7 +36,7 @@ export function SellDisposePage() {
       return
     }
     // API not built yet
-    feedback.info("Coming soon", "Asset disposal will be available once the API is ready")
+    feedback.info("Coming soon — asset disposal will be available once the API is ready")
   }
 
   const header = (

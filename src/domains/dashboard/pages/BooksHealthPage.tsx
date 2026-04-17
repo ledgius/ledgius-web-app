@@ -439,7 +439,7 @@ export function BooksHealthPage() {
   usePageHelp(pageHelpContent.dashboard)
   usePagePolicies(["reporting", "tax"])
   const { data, isLoading, refetch, isFetching } = useBooksHealth()
-  const { data: dashMetrics, isLoading: dashLoading } = useDashboard()
+  const { data: dashMetrics, isLoading: _dashLoading } = useDashboard()
   const { data: dashTimelineData } = useCalendarTimeline(7)
   const dashCompleteTask = useCompleteCalendarTask()
   const navigate = useNavigate()

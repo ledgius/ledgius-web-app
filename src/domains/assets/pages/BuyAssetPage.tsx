@@ -34,7 +34,7 @@ export function BuyAssetPage() {
       return
     }
     // API not built yet — show coming soon feedback
-    feedback.info("Coming soon", "Asset creation will be available once the API is ready")
+    feedback.info("Coming soon — asset creation will be available once the API is ready")
   }
 
   const header = (

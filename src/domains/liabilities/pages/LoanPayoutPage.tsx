@@ -40,7 +40,7 @@ export function LoanPayoutPage() {
       return
     }
     // API not built yet
-    feedback.info("Coming soon", "Loan payout will be available once the API is ready")
+    feedback.info("Coming soon — loan payout will be available once the API is ready")
   }
 
   const header = (
