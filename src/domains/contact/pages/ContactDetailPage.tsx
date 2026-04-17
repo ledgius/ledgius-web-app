@@ -11,6 +11,16 @@ import { useContactDetail } from "../hooks/useContacts"
 import { useEntityActivity } from "@/hooks/useEntityActivity"
 import { api } from "@/shared/lib/api"
 import { useQueryClient } from "@tanstack/react-query"
+import { Mail, Phone, MapPin } from "lucide-react"
+
+const CHANNEL_LABELS: Record<string, string> = {
+  email: "Email",
+  phone_office: "Office Phone",
+  phone_mobile: "Mobile",
+  phone_fax: "Fax",
+  phone_other: "Other Phone",
+  website: "Website",
+}
 
 export function ContactDetailPage() {
   usePageHelp(pageHelpContent.contactDetail)
@@ -20,10 +30,13 @@ export function ContactDetailPage() {
   const feedback = useFeedback()
   const qc = useQueryClient()
   const contactId = parseInt(id ?? "0")
-  const { data: contact, isLoading, error: loadError } = useContactDetail(contactId)
+  const { data: detail, isLoading, error: loadError } = useContactDetail(contactId)
   const { data: activity, isLoading: activityLoading } = useEntityActivity("contacts", contactId)
 
-  // Editable fields — always editable, Save disabled until dirty
+  const contact = detail?.credit_account
+  const channels = detail?.channels ?? []
+  const addresses = detail?.addresses ?? []
+
   const [creditLimit, setCreditLimit] = useState("")
   const [terms, setTerms] = useState("")
   const [discount, setDiscount] = useState("")
@@ -31,7 +44,6 @@ export function ContactDetailPage() {
   const [saving, setSaving] = useState(false)
   const [initialised, setInitialised] = useState(false)
 
-  // Populate form when data loads
   useEffect(() => {
     if (contact && !initialised) {
       setCreditLimit(String(contact.credit_limit ?? 0))
@@ -49,7 +61,6 @@ export function ContactDetailPage() {
   const handleCancel = useCallback(() => navigate(backPath), [navigate, backPath])
   useEscapeKey(handleCancel)
 
-  // Track dirty state
   const isDirty = initialised && contact ? (
     creditLimit !== String(contact.credit_limit ?? 0) ||
     terms !== String(contact.terms ?? 30) ||
@@ -66,8 +77,8 @@ export function ContactDetailPage() {
         discount: parseFloat(discount) || 0,
         discount_terms: parseInt(discountTerms) || 0,
       })
-      qc.invalidateQueries({ queryKey: ["contacts", contactId] })
-      setInitialised(false) // re-sync from server
+      qc.invalidateQueries({ queryKey: ["contacts", contactId, "detail"] })
+      setInitialised(false)
       feedback.success("Contact saved")
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to save"
@@ -100,12 +111,17 @@ export function ContactDetailPage() {
   const handleStatusChange = async (newStatus: string) => {
     try {
       await api.patch(`/contacts/${contactId}/status`, { status: newStatus })
-      qc.invalidateQueries({ queryKey: ["contacts", contactId] })
+      qc.invalidateQueries({ queryKey: ["contacts", contactId, "detail"] })
       feedback.success(`Contact ${newStatus === "active" ? "activated" : newStatus === "on_hold" ? "put on hold" : "archived"}`)
     } catch (err: unknown) {
       feedback.error("Status change failed", err instanceof Error ? err.message : "")
     }
   }
+
+  const primaryEmail = channels.find(c => c.contact_class === "email" && c.is_primary)
+  const phones = channels.filter(c => c.contact_class.startsWith("phone_"))
+  const billingAddr = addresses.find(a => a.class_name === "billing" && a.is_primary)
+  const shippingAddr = addresses.find(a => a.class_name === "shipping" && a.is_primary)
 
   const header = (
     <div>
@@ -154,6 +170,51 @@ export function ContactDetailPage() {
           )}
         </dl>
       </PageSection>
+
+      {(channels.length > 0 || addresses.length > 0) && (
+        <PageSection title="Contact Information">
+          <div className="space-y-3 text-sm">
+            {primaryEmail && (
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-gray-400" />
+                <a href={`mailto:${primaryEmail.value}`} className="text-primary-600 hover:underline">{primaryEmail.value}</a>
+              </div>
+            )}
+            {phones.map(p => (
+              <div key={p.id} className="flex items-center gap-2">
+                <Phone className="w-4 h-4 text-gray-400" />
+                <span>{p.value}</span>
+                <span className="text-xs text-gray-400">({CHANNEL_LABELS[p.contact_class] ?? p.contact_class})</span>
+              </div>
+            ))}
+            {billingAddr && (
+              <div className="flex items-start gap-2 mt-2">
+                <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
+                <div>
+                  <p className="text-xs font-medium text-gray-500 mb-0.5">Billing Address</p>
+                  <p>{billingAddr.location.line_one}</p>
+                  {billingAddr.location.line_two && <p>{billingAddr.location.line_two}</p>}
+                  <p>{[billingAddr.location.city, billingAddr.location.state, billingAddr.location.mail_code].filter(Boolean).join(" ")}</p>
+                </div>
+              </div>
+            )}
+            {shippingAddr && (
+              <div className="flex items-start gap-2 mt-2">
+                <MapPin className="w-4 h-4 text-gray-400 mt-0.5" />
+                <div>
+                  <p className="text-xs font-medium text-gray-500 mb-0.5">Shipping Address</p>
+                  <p>{shippingAddr.location.line_one}</p>
+                  {shippingAddr.location.line_two && <p>{shippingAddr.location.line_two}</p>}
+                  <p>{[shippingAddr.location.city, shippingAddr.location.state, shippingAddr.location.mail_code].filter(Boolean).join(" ")}</p>
+                </div>
+              </div>
+            )}
+            {channels.length === 0 && addresses.length === 0 && (
+              <p className="text-gray-400">No contact channels or addresses recorded</p>
+            )}
+          </div>
+        </PageSection>
+      )}
 
       <PageSection title="Credit Account">
         <div className="space-y-3">
