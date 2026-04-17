@@ -1,3 +1,4 @@
+import { BackLink } from "@/components/primitives"
 import { useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
@@ -163,6 +164,7 @@ export function PaymentsPage() {
 
   return (
     <PageShell header={header} loading={isLoading}>
+      <BackLink />
       <InfoPanel title="About Payments" storageKey="payments-info">
         <p>
           <strong>A payment is money that has already left your bank account</strong> — via bank transfer, direct debit,

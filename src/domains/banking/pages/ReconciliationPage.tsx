@@ -1,4 +1,5 @@
 // Spec references: R-0019, A-0019
+import { BackLink } from "@/components/primitives"
 import { useState, useEffect, useCallback, useRef } from "react"
 import { Link } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
@@ -1302,6 +1303,7 @@ export function ReconciliationPage() {
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <div className="flex flex-col h-full min-h-0">
+      <BackLink />
 
       {/* ── Page header ─────────────────────────────────────────────────────── */}
       <div className="shrink-0 mb-4">

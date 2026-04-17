@@ -1,3 +1,4 @@
+import { BackLink } from "@/components/primitives"
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import { CheckCircle2, Circle, Clock } from "lucide-react"
@@ -70,6 +71,7 @@ export function BASPage() {
 
   return (
     <PageShell header={header}>
+      <BackLink />
       <InfoPanel title="Prepare your BAS" storageKey="bas-info">
         <div className="space-y-2">
           <StepRow
@@ -141,7 +143,7 @@ export function BASPage() {
 
       {isLoading ? <p>Loading...</p> : bas ? (
         <div className="space-y-6">
-          <div className="bg-white border rounded-lg p-4">
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
             <h3 className="font-semibold mb-3">Period: {bas.period.label}</h3>
             <div className="grid grid-cols-3 gap-4">
               <SummaryCard label="1A - GST on Sales" value={bas["1A"]} />
@@ -150,7 +152,7 @@ export function BASPage() {
             </div>
           </div>
 
-          <div className="bg-white border rounded-lg p-4">
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
             <h3 className="font-semibold mb-3">GST Sales (G-labels)</h3>
             <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm">
               <LabelRow code="G1" label="Total sales" value={bas.G1} />
@@ -159,7 +161,7 @@ export function BASPage() {
             </div>
           </div>
 
-          <div className="bg-white border rounded-lg p-4">
+          <div className="bg-white border border-gray-200 rounded-lg p-4">
             <h3 className="font-semibold mb-3">GST Purchases (G-labels)</h3>
             <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-sm">
               <LabelRow code="G11" label="Non-capital purchases" value={bas.G11} />
@@ -177,7 +179,7 @@ export function BASPage() {
 
           {showDetail && detail && (
             <div className="space-y-4">
-              <div className="bg-white border rounded-lg p-4">
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
                 <h4 className="font-semibold mb-2">Sales ({detail.sales?.length ?? 0})</h4>
                 <table className="w-full text-sm">
                   <thead><tr className="text-left text-xs text-gray-500 border-b">
@@ -196,7 +198,7 @@ export function BASPage() {
                   </tbody>
                 </table>
               </div>
-              <div className="bg-white border rounded-lg p-4">
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
                 <h4 className="font-semibold mb-2">Purchases ({detail.purchases?.length ?? 0})</h4>
                 <table className="w-full text-sm">
                   <thead><tr className="text-left text-xs text-gray-500 border-b">

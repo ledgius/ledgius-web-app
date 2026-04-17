@@ -1,8 +1,7 @@
 // Spec references: A-0023.
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { MoneyValue } from "@/components/financial"
-import { DecisionQueue, type DecisionQueueItem } from "@/components/workflow"
+// MoneyValue + DecisionQueue removed — health panels below provide richer detail
 import { useDashboard } from "../hooks/useDashboard"
 import {
   Landmark, FileText, Receipt, DollarSign,
@@ -16,7 +15,7 @@ import {
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { cn } from "@/shared/lib/utils"
-import { PageShell, PageSection } from "@/components/layout"
+import { PageShell } from "@/components/layout"
 import { HealthPanel } from "@/components/layout/HealthPanel"
 import { InfoPanel, Skeleton } from "@/components/primitives"
 import { useBooksHealth, type AgeBuckets, type PeriodCloseChecklist } from "../hooks/useBooksHealth"
@@ -447,31 +446,10 @@ export function BooksHealthPage() {
   const dashPendingItems = (dashTimelineData?.items ?? []).filter((i) => !i.done)
   // overdue count computed inside the merged InfoPanel
 
-  const dashArOutstanding = dashMetrics ? parseFloat(dashMetrics.ar_outstanding) : 0
-  const dashApOutstanding = dashMetrics ? parseFloat(dashMetrics.ap_outstanding) : 0
-  const dashGstPosition = dashMetrics ? parseFloat(dashMetrics.gst_position) : 0
-
-  const dashReceivablesItems: DecisionQueueItem[] = dashArOutstanding > 0
-    ? [{
-        id: "ar-outstanding",
-        label: "Outstanding receivables",
-        amount: dashArOutstanding,
-        actionLabel: "Review",
-        onAction: () => navigate("/invoices"),
-        variant: "warning",
-      }]
-    : []
-
-  const dashPayablesItems: DecisionQueueItem[] = dashApOutstanding > 0
-    ? [{
-        id: "ap-outstanding",
-        label: "Outstanding payables",
-        amount: dashApOutstanding,
-        actionLabel: "Review",
-        onAction: () => navigate("/bills"),
-        variant: "warning",
-      }]
-    : []
+  // Financial position + work queues removed — the health panels
+  // (Receivables, Payables, Cash Position) show the same data with
+  // richer detail (aged buckets, overdue counts, trends).
+  void dashMetrics
 
   const header = (
     <div className="flex items-start justify-between gap-4">
@@ -611,54 +589,6 @@ export function BooksHealthPage() {
           </InfoPanel>
         )
       })()}
-
-      {/* Financial position summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <PageSection title="Receivables" variant="card">
-          <MoneyValue amount={dashArOutstanding} size="xl" colorNegative={false} />
-          <p className="text-xs text-gray-500 mt-1">Outstanding AR</p>
-        </PageSection>
-        <PageSection title="Payables" variant="card">
-          <MoneyValue amount={dashApOutstanding} size="xl" colorNegative={false} />
-          <p className="text-xs text-gray-500 mt-1">Outstanding AP</p>
-        </PageSection>
-        <PageSection title="GST Position" variant="card">
-          <MoneyValue amount={dashGstPosition} size="xl" />
-          <p className="text-xs text-gray-500 mt-1">{dashGstPosition >= 0 ? "Owing to ATO" : "Refund expected"}</p>
-        </PageSection>
-      </div>
-
-      {/* Work queues */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <DecisionQueue
-          title="Receivables requiring attention"
-          items={dashReceivablesItems}
-          emptyMessage="All receivables are current."
-          headerAction={
-            <button
-              type="button"
-              className="text-xs text-primary-600 hover:underline"
-              onClick={() => navigate("/invoices")}
-            >
-              View all
-            </button>
-          }
-        />
-        <DecisionQueue
-          title="Payables requiring attention"
-          items={dashPayablesItems}
-          emptyMessage="All payables are current."
-          headerAction={
-            <button
-              type="button"
-              className="text-xs text-primary-600 hover:underline"
-              onClick={() => navigate("/bills")}
-            >
-              View all
-            </button>
-          }
-        />
-      </div>
 
       {/* ── Row 1: 4 panels ── */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">

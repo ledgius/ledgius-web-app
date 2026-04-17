@@ -1,3 +1,4 @@
+import { BackLink } from "@/components/primitives"
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import { PageShell } from "@/components/layout"
@@ -240,6 +241,7 @@ export function CapturedReceiptsPage() {
 
   return (
     <PageShell header={header} loading={isLoading}>
+      <BackLink />
       <InfoPanel title="About Captured Receipts" storageKey="captured-receipts-info">
         <p>
           <strong>Captured Receipts</strong> are photos and PDFs of supplier receipts that you've uploaded for OCR
