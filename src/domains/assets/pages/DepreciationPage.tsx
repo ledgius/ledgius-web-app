@@ -40,7 +40,7 @@ export function DepreciationPage() {
   const totalBookValue = rows.reduce((sum, r) => sum + r.book_value, 0)
 
   const handleRunDepreciation = () => {
-    feedback.info("Coming soon", "Depreciation run will be available once the API is ready")
+    feedback.info("Coming soon — depreciation run will be available once the API is ready")
   }
 
   const header = (
