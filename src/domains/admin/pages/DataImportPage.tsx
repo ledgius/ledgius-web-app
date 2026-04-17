@@ -322,15 +322,19 @@ export function DataImportPage() {
 
   // ── No batch yet — show format selector + upload config ──
 
+  const infoPanel = (
+    <InfoPanel title="How data import works" storageKey="import-info">
+      <p><strong>1. Choose format &amp; upload</strong> — select MYOB, Xero, or Generic CSV, configure options, and add your files.</p>
+      <p><strong>2. Start Import</strong> — click to upload files and begin the analysis pipeline.</p>
+      <p><strong>3. Analyse &amp; map</strong> — review staged accounts, contacts, and transactions.</p>
+      <p><strong>4. Preview &amp; commit</strong> — verify the data looks correct, then commit to import into your ledger.</p>
+    </InfoPanel>
+  )
+
   if (!batch) {
     return (
       <PageShell header={header}>
-        <InfoPanel title="How data import works" storageKey="import-info">
-          <p><strong>1. Choose format &amp; upload</strong> — select MYOB, Xero, or Generic CSV, configure options, and add your files.</p>
-          <p><strong>2. Start Import</strong> — click to upload files and begin the analysis pipeline.</p>
-          <p><strong>3. Analyse &amp; map</strong> — review staged accounts, contacts, and transactions.</p>
-          <p><strong>4. Preview &amp; commit</strong> — verify the data looks correct, then commit to import into your ledger.</p>
-        </InfoPanel>
+        {infoPanel}
         {formatSelector}
 
         {selectedSource && (
@@ -441,7 +445,8 @@ export function DataImportPage() {
 
   return (
     <PageShell header={header}>
-      {/* Format selector — stays visible so user sees what they chose */}
+      {/* Info + format selector — stay visible through all stages */}
+      {infoPanel}
       {formatSelector}
 
       {/* Pipeline progress — click completed steps to navigate back */}
