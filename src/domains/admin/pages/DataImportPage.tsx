@@ -248,21 +248,29 @@ export function DataImportPage() {
         </InfoPanel>
         <PageSection title="Choose Import Source">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {sourceOptions.map((src) => (
-              <button
-                key={src.id}
-                type="button"
-                onClick={() => createBatch(src.id)}
-                disabled={loading}
-                className="text-left rounded-lg border border-gray-200 bg-white p-4 hover:border-primary-300 hover:bg-primary-50 transition-colors"
-              >
-                <div className="flex items-center gap-3 mb-2">
-                  <Database className="h-5 w-5 text-gray-400" />
-                  <span className="font-medium text-gray-900">{src.name}</span>
-                </div>
-                <p className="text-xs text-gray-500">{src.description}</p>
-              </button>
-            ))}
+            {sourceOptions.map((src) => {
+              const brandStyles: Record<string, { border: string; bg: string; icon: string }> = {
+                xero:  { border: "hover:border-[#13B5EA]", bg: "hover:bg-[#13B5EA]/10", icon: "text-[#13B5EA]" },
+                myob:  { border: "hover:border-[#6D28D9]", bg: "hover:bg-[#6D28D9]/10", icon: "text-[#6D28D9]" },
+                csv:   { border: "hover:border-gray-400",   bg: "hover:bg-gray-100",     icon: "text-gray-400"  },
+              }
+              const brand = brandStyles[src.id] ?? brandStyles.csv
+              return (
+                <button
+                  key={src.id}
+                  type="button"
+                  onClick={() => createBatch(src.id)}
+                  disabled={loading}
+                  className={`text-left rounded-lg border-2 border-gray-200 bg-white p-4 ${brand.border} ${brand.bg} transition-colors`}
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <Database className={`h-5 w-5 ${brand.icon}`} />
+                    <span className="font-medium text-gray-900">{src.name}</span>
+                  </div>
+                  <p className="text-xs text-gray-500">{src.description}</p>
+                </button>
+              )
+            })}
           </div>
         </PageSection>
       </PageShell>

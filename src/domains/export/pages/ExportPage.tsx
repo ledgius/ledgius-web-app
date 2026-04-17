@@ -129,16 +129,25 @@ export function ExportPage() {
 
       <PageSection title="Export Format">
         <div className="flex gap-3">
-          {FORMAT_OPTIONS.map(opt => (
-            <button
-              key={opt.key}
-              onClick={() => setFormat(opt.key)}
-              className={`flex-1 text-left p-3 rounded-lg border-2 transition-colors ${format === opt.key ? "border-primary-500 bg-primary-50" : "border-gray-200 bg-white hover:border-gray-300"}`}
-            >
-              <span className={`text-sm font-semibold ${format === opt.key ? "text-primary-700" : "text-gray-900"}`}>{opt.label}</span>
-              <p className="text-xs text-gray-500 mt-0.5">{opt.description}</p>
-            </button>
-          ))}
+          {FORMAT_OPTIONS.map(opt => {
+            const selected = format === opt.key
+            const brandStyles: Record<string, { border: string; bg: string; text: string }> = {
+              xero:  { border: "border-[#13B5EA]", bg: "bg-[#13B5EA]/10", text: "text-[#0B7FA5]" },
+              myob:  { border: "border-[#6D28D9]", bg: "bg-[#6D28D9]/10", text: "text-[#6D28D9]" },
+              csv:   { border: "border-gray-400",   bg: "bg-gray-100",     text: "text-gray-700"  },
+            }
+            const brand = brandStyles[opt.key]
+            return (
+              <button
+                key={opt.key}
+                onClick={() => setFormat(opt.key)}
+                className={`flex-1 text-left p-3 rounded-lg border-2 transition-colors ${selected ? `${brand.border} ${brand.bg}` : "border-gray-200 bg-white hover:border-gray-300"}`}
+              >
+                <span className={`text-sm font-semibold ${selected ? brand.text : "text-gray-900"}`}>{opt.label}</span>
+                <p className="text-xs text-gray-500 mt-0.5">{opt.description}</p>
+              </button>
+            )
+          })}
         </div>
       </PageSection>
 
