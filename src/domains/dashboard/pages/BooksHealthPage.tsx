@@ -445,7 +445,7 @@ export function BooksHealthPage() {
   const navigate = useNavigate()
 
   const dashPendingItems = (dashTimelineData?.items ?? []).filter((i) => !i.done)
-  const dashOverdueCount = dashPendingItems.filter((i) => i.overdue).length
+  // overdue count computed inside the merged InfoPanel
 
   const dashArOutstanding = dashMetrics ? parseFloat(dashMetrics.ar_outstanding) : 0
   const dashApOutstanding = dashMetrics ? parseFloat(dashMetrics.ap_outstanding) : 0
@@ -516,97 +516,101 @@ export function BooksHealthPage() {
 
   return (
     <PageShell header={header} loading={isLoading}>
-      <InfoPanel title={actions.length === 0 ? "All clear" : `Actions (${actions.length})`} storageKey="books-health-info">
-        {actions.length === 0 ? (
-          <p className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-            <span>No immediate actions needed. Your books look healthy — all panels green, no overdue entries.</span>
-          </p>
-        ) : (
-          <>
-            <p>Based on your current Health Check signals, here's what to work on — in priority order:</p>
-            <ul className="mt-1.5 space-y-1">
-              {actions.map((a, i) => (
-                <li key={i} className="flex items-start gap-2">
-                  <span className={cn(
-                    "inline-block h-2.5 w-2.5 rounded-full mt-1 shrink-0",
-                    a.severity === "red" ? "bg-red-500" : "bg-amber-400"
-                  )} />
-                  <span>
-                    <Link to={a.link} className="underline font-medium hover:text-blue-900">{a.title}</Link>
-                    {a.detail && <span className="text-blue-600"> — {a.detail}</span>}
-                  </span>
-                </li>
-              ))}
-            </ul>
-            <p className="mt-2 text-blue-500 text-[11px]">
-              Reference material (what each panel means, status colours, aged buckets, timeline sources) has moved to{" "}
-              <strong>F1 Help</strong>.
-            </p>
-          </>
-        )}
-      </InfoPanel>
+      {(() => {
+        // Merge health-derived actions + calendar timeline into one list.
+        // Calendar items that duplicate health actions (overdue invoices/bills)
+        // are filtered out — the health actions have richer detail.
+        const calendarDedupKeywords = actions.flatMap(a => {
+          const kw: string[] = []
+          if (a.link === "/invoices") kw.push("invoice")
+          if (a.link === "/payments" || a.link === "/bills") kw.push("bill")
+          return kw
+        })
+        const uniqueCalendarItems = dashPendingItems.filter(item => {
+          const lower = item.title.toLowerCase()
+          return !calendarDedupKeywords.some(kw => lower.includes(kw))
+        })
+        const totalItems = actions.length + uniqueCalendarItems.length
+        const totalOverdue = actions.filter(a => a.severity === "red").length +
+          uniqueCalendarItems.filter(i => i.overdue).length
 
-      {/* ── Dashboard: Today's action items ── */}
-      <InfoPanel
-        title={
-          dashPendingItems.length === 0
-            ? "All clear for today"
-            : `Today (${dashPendingItems.length})${dashOverdueCount > 0 ? ` — ${dashOverdueCount} overdue` : ""}`
-        }
-        storageKey="dashboard-today-info"
-      >
-        {dashPendingItems.length === 0 ? (
-          <p className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-            <span>Nothing pending in the next 7 days. Good time to catch up on reconciliations.</span>
-          </p>
-        ) : (
-          <ul className="space-y-1">
-            {dashPendingItems.map((item) => {
-              const isTask = item.type === "task"
-              const icon = item.overdue ? (
-                <AlertTriangle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
-              ) : isTask ? (
-                <button
-                  type="button"
-                  onClick={() => dashCompleteTask.mutate(item.id)}
-                  disabled={dashCompleteTask.isPending}
-                  className="shrink-0 mt-0.5 text-blue-400 hover:text-green-500 disabled:opacity-50"
-                  title="Mark as done"
-                  aria-label={`Mark "${item.title}" as done`}
-                >
-                  <Circle className="h-4 w-4" />
-                </button>
-              ) : (
-                <Circle className="h-4 w-4 text-blue-300 shrink-0 mt-0.5" />
-              )
-              const dateLabel = new Date(item.date).toLocaleDateString("en-AU", { day: "numeric", month: "short" })
-              return (
-                <li key={item.id} className="flex items-start gap-2">
-                  {icon}
-                  <span className="flex-1">
-                    {item.link ? (
-                      <button onClick={() => navigate(item.link!)} className="underline font-medium text-left hover:text-blue-900">
-                        {item.title}
-                      </button>
-                    ) : (
-                      <span className="font-medium">{item.title}</span>
-                    )}
-                    <span className={item.overdue ? "ml-2 text-red-700 font-medium" : "ml-2 text-blue-600"}>
-                      {item.overdue ? `overdue (was due ${dateLabel})` : dateLabel}
-                    </span>
-                    {item.description && <span className="block text-blue-600 text-[11px] mt-0.5">{item.description}</span>}
-                  </span>
-                </li>
-              )
-            })}
-          </ul>
-        )}
-        <p className="mt-2 text-blue-500 text-[11px]">
-          Manual tasks (circles) can be checked off here. Auto-generated items (BAS, payroll, due dates) clear when the underlying work is done.
-        </p>
-      </InfoPanel>
+        return (
+          <InfoPanel
+            title={totalItems === 0 ? "All clear" : `Actions (${totalItems})${totalOverdue > 0 ? ` — ${totalOverdue} overdue` : ""}`}
+            storageKey="books-overview-actions"
+          >
+            {totalItems === 0 ? (
+              <p className="flex items-center gap-2">
+                <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                <span>No immediate actions needed. Your books look healthy — all panels green, nothing overdue.</span>
+              </p>
+            ) : (
+              <>
+                {actions.length > 0 && (
+                  <ul className="space-y-1">
+                    {actions.map((a, i) => (
+                      <li key={`health-${i}`} className="flex items-start gap-2">
+                        <span className={cn(
+                          "inline-block h-2.5 w-2.5 rounded-full mt-1.5 shrink-0",
+                          a.severity === "red" ? "bg-red-500" : "bg-amber-400"
+                        )} />
+                        <span>
+                          <Link to={a.link} className="underline font-medium hover:text-blue-900">{a.title}</Link>
+                          {a.detail && <span className="text-blue-600"> — {a.detail}</span>}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {uniqueCalendarItems.length > 0 && (
+                  <ul className={cn("space-y-1", actions.length > 0 && "mt-2 pt-2 border-t border-blue-100")}>
+                    {uniqueCalendarItems.map((item) => {
+                      const isTask = item.type === "task"
+                      const icon = item.overdue ? (
+                        <AlertTriangle className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                      ) : isTask ? (
+                        <button
+                          type="button"
+                          onClick={() => dashCompleteTask.mutate(item.id)}
+                          disabled={dashCompleteTask.isPending}
+                          className="shrink-0 mt-0.5 text-blue-400 hover:text-green-500 disabled:opacity-50"
+                          title="Mark as done"
+                        >
+                          <Circle className="h-4 w-4" />
+                        </button>
+                      ) : (
+                        <Circle className="h-4 w-4 text-blue-300 shrink-0 mt-0.5" />
+                      )
+                      const dateLabel = new Date(item.date).toLocaleDateString("en-AU", { day: "numeric", month: "short" })
+                      return (
+                        <li key={item.id} className="flex items-start gap-2">
+                          {icon}
+                          <span className="flex-1">
+                            {item.link ? (
+                              <button onClick={() => navigate(item.link!)} className="underline font-medium text-left hover:text-blue-900">
+                                {item.title}
+                              </button>
+                            ) : (
+                              <span className="font-medium">{item.title}</span>
+                            )}
+                            <span className={item.overdue ? "ml-2 text-red-700 font-medium" : "ml-2 text-blue-600"}>
+                              {item.overdue ? `overdue (was due ${dateLabel})` : dateLabel}
+                            </span>
+                            {item.description && <span className="block text-blue-600 text-[11px] mt-0.5">{item.description}</span>}
+                          </span>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                )}
+                <p className="mt-2 text-blue-500 text-[11px]">
+                  Manual tasks (circles) can be checked off. Auto-generated items clear when the underlying work is done.
+                </p>
+              </>
+            )}
+          </InfoPanel>
+        )
+      })()}
 
       {/* Financial position summary */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
