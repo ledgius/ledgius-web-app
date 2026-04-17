@@ -37,7 +37,7 @@ interface NavSection {
   items: NavItem[]
 }
 
-type SidebarMode = "finance" | "tasks" | "reports" | "ai"
+type SidebarMode = "finance" | "tasks" | "reports" | "ai" | "assets" | "liabilities" | "payroll" | "data"
 
 // ── Mode definitions ──
 
@@ -46,7 +46,7 @@ const financeSections: NavSection[] = [
     title: "",
     items: [
       { to: "/", label: "Dashboard", icon: LayoutDashboard },
-      { to: "/books-health", label: "Health Check", icon: HeartPulse },
+      { to: "/books-health", label: "Books Overview", icon: HeartPulse },
       { to: "/calendar", label: "Calendar", icon: Calendar },
     ],
   },
@@ -72,11 +72,8 @@ const financeSections: NavSection[] = [
     title: "Banking",
     icon: CreditCard,
     items: [
-      { to: "/bank-import-transactions", label: "Import Transactions", icon: Upload },
-      { to: "/settings/bank-feeds", label: "Live Bank Feeds", icon: Radio },
       { to: "/bank-reconciliation", label: "Reconciliation", icon: GitMerge },
       { to: "/captured-receipts", label: "Captured Receipts", icon: Camera },
-      { to: "/logbook", label: "Vehicle Logbook", icon: Car },
       { to: "/transfers", label: "Transfers", icon: ArrowLeftRight },
     ],
   },
@@ -91,29 +88,11 @@ const financeSections: NavSection[] = [
     ],
   },
   {
-    title: "Reports",
-    icon: BarChart3,
-    items: [
-      { to: "/reports", label: "Financial Reports", icon: BarChart3 },
-      { to: "/bas", label: "BAS / GST", icon: Calculator },
-    ],
-  },
-  {
     title: "Contacts",
     icon: Users,
     items: [
       { to: "/customers", label: "Customers", icon: Users },
       { to: "/vendors", label: "Vendors", icon: Users },
-    ],
-  },
-  {
-    title: "Payroll",
-    icon: Wallet,
-    items: [
-      { to: "/employees", label: "Employees", icon: UserCheck },
-      { to: "/pay-runs", label: "Pay Runs", icon: Wallet },
-      { to: "/payg-config", label: "PAYG Withholding", icon: Percent },
-      { to: "/super-rates", label: "Super Rates", icon: PiggyBank },
     ],
   },
   {
@@ -126,8 +105,6 @@ const financeSections: NavSection[] = [
       { to: "/recurring", label: "Recurring", icon: Repeat },
       { to: "/templates", label: "Templates", icon: ClipboardList },
       { to: "/users", label: "Users & Roles", icon: UsersRound },
-      { to: "/import", label: "Data Import", icon: Import },
-      { to: "/export", label: "Data Export", icon: Upload },
     ],
   },
   {
@@ -139,19 +116,112 @@ const financeSections: NavSection[] = [
   },
 ]
 
+const assetsSections: NavSection[] = [
+  {
+    title: "",
+    items: [
+      { to: "/", label: "Dashboard", icon: LayoutDashboard },
+    ],
+  },
+  {
+    title: "Fixed Assets",
+    items: [
+      { to: "/", label: "Asset Register", icon: Package },
+      { to: "/", label: "Buy Asset", icon: ShoppingCart },
+      { to: "/", label: "Sell / Dispose Asset", icon: ArrowUpFromLine },
+      { to: "/", label: "Depreciation", icon: TrendingUp },
+    ],
+  },
+  {
+    title: "Vehicles",
+    items: [
+      { to: "/logbook", label: "Vehicle Logbook", icon: Car },
+    ],
+  },
+]
+
+const liabilitiesSections: NavSection[] = [
+  {
+    title: "",
+    items: [
+      { to: "/", label: "Dashboard", icon: LayoutDashboard },
+    ],
+  },
+  {
+    title: "Loans",
+    items: [
+      { to: "/", label: "Loan Register", icon: Landmark },
+      { to: "/", label: "Loan Payments", icon: ArrowUpFromLine },
+      { to: "/", label: "Loan Payout", icon: CheckCircle },
+    ],
+  },
+]
+
+const payrollSections: NavSection[] = [
+  {
+    title: "",
+    items: [
+      { to: "/", label: "Dashboard", icon: LayoutDashboard },
+    ],
+  },
+  {
+    title: "Payroll",
+    items: [
+      { to: "/pay-runs", label: "Pay Runs", icon: Wallet },
+      { to: "/employees", label: "Employees", icon: UserCheck },
+    ],
+  },
+  {
+    title: "Leave",
+    items: [
+      { to: "/", label: "Leave Balances", icon: Calendar },
+      { to: "/", label: "Leave Requests", icon: ClipboardCheck },
+    ],
+  },
+  {
+    title: "Compliance",
+    items: [
+      { to: "/payg-config", label: "PAYG Withholding", icon: Percent },
+      { to: "/super-rates", label: "Super Guarantee", icon: PiggyBank },
+    ],
+  },
+]
+
+const dataSections: NavSection[] = [
+  {
+    title: "",
+    items: [
+      { to: "/", label: "Dashboard", icon: LayoutDashboard },
+    ],
+  },
+  {
+    title: "Bank Feeds",
+    items: [
+      { to: "/settings/bank-feeds", label: "Live Bank Feeds", icon: Radio },
+      { to: "/bank-import-transactions", label: "Import Transactions", icon: Upload },
+    ],
+  },
+  {
+    title: "Import / Export",
+    items: [
+      { to: "/import", label: "Data Import", icon: Import },
+      { to: "/export", label: "Data Export", icon: Upload },
+    ],
+  },
+]
+
 const tasksSections: NavSection[] = [
   {
     title: "",
     items: [
       { to: "/", label: "Dashboard", icon: LayoutDashboard },
-      { to: "/books-health", label: "Health Check", icon: HeartPulse },
+      { to: "/books-health", label: "Books Overview", icon: HeartPulse },
       { to: "/calendar", label: "Calendar", icon: Calendar },
     ],
   },
   {
     title: "Banking",
     items: [
-      { to: "/bank-import-transactions", label: "Import Transactions", icon: Upload },
       { to: "/bank-reconciliation", label: "Reconcile Bank", icon: GitMerge },
       { to: "/transfers", label: "Bank Transfers", icon: ArrowLeftRight },
     ],
@@ -172,18 +242,9 @@ const tasksSections: NavSection[] = [
     ],
   },
   {
-    title: "Payroll",
-    items: [
-      { to: "/pay-runs", label: "Run Payroll", icon: Wallet },
-      { to: "/employees", label: "Manage Employees", icon: UserCheck },
-    ],
-  },
-  {
     title: "Compliance",
     items: [
       { to: "/bas", label: "BAS / GST", icon: Calculator },
-      { to: "/payg-config", label: "PAYG Withholding", icon: Percent },
-      { to: "/super-rates", label: "Super Guarantee", icon: PiggyBank },
     ],
   },
   {
@@ -191,15 +252,6 @@ const tasksSections: NavSection[] = [
     items: [
       { to: "/reports", label: "Month-end Review", icon: ClipboardCheck },
       { to: "/audit-log", label: "Audit Log", icon: Shield },
-    ],
-  },
-  {
-    title: "Setup",
-    items: [
-      { to: "/import", label: "Data Import", icon: Import },
-      { to: "/export", label: "Data Export", icon: Upload },
-      { to: "/accounts", label: "Chart of Accounts", icon: BookOpen },
-      { to: "/tax-codes", label: "Tax Codes", icon: Settings2 },
     ],
   },
 ]
@@ -262,6 +314,10 @@ const aiSections: NavSection[] = [
 
 const modeNavMap: Record<SidebarMode, NavSection[]> = {
   finance: financeSections,
+  assets: assetsSections,
+  liabilities: liabilitiesSections,
+  payroll: payrollSections,
+  data: dataSections,
   tasks: tasksSections,
   reports: reportsSections,
   ai: aiSections,
@@ -269,6 +325,10 @@ const modeNavMap: Record<SidebarMode, NavSection[]> = {
 
 const modeLabels: { key: SidebarMode; label: string; icon: LucideIcon }[] = [
   { key: "finance", label: "Finance", icon: Landmark },
+  { key: "assets", label: "Assets", icon: Package },
+  { key: "liabilities", label: "Liabilities", icon: CreditCard },
+  { key: "payroll", label: "Payroll", icon: Wallet },
+  { key: "data", label: "Data", icon: Import },
   { key: "tasks", label: "Tasks", icon: CheckCircle },
   { key: "reports", label: "Reports", icon: BarChart3 },
   { key: "ai", label: "AI", icon: Sparkles },
