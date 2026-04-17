@@ -1,14 +1,14 @@
-import { useState } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
 import { usePageHelp } from "@/hooks/usePageHelp"
 import { PageShell, PageSection } from "@/components/layout"
-import { Button, InlineAlert, Badge, Combobox, InfoPanel } from "@/components/primitives"
+import { Button, InlineAlert, Badge, Combobox, InfoPanel, Skeleton } from "@/components/primitives"
 import { StatusStepper, type StatusStep } from "@/components/financial"
-import { MoneyValue } from "@/components/financial"
+import { MoneyValue, DateValue } from "@/components/financial"
 import { useFeedback } from "@/components/feedback"
 import { useAccounts } from "@/domains/account/hooks/useAccounts"
 import { useCustomers, useVendors } from "@/domains/contact/hooks/useContacts"
 import { api } from "@/shared/lib/api"
-import { Upload, FileText, Database, CheckCircle, AlertCircle, ArrowRight, Trash2, RefreshCw } from "lucide-react"
+import { Upload, Database, CheckCircle, AlertCircle, ArrowRight, Trash2, RefreshCw } from "lucide-react"
 
 const pipelineSteps: StatusStep[] = [
   { key: "upload", label: "Upload" },
@@ -107,19 +107,6 @@ export function DataImportPage() {
   ]
 
   // ── Actions ──
-
-  const createBatch = async (sourceSystem: string) => {
-    setLoading(true)
-    try {
-      const b = await api.post<ImportBatch>("/import/batches", { source_system: sourceSystem, import_mode: importMode, import_strategy: importStrategy })
-      setBatch(b)
-      feedback.success(`Import batch created for ${sourceSystem}`)
-    } catch (err: unknown) {
-      feedback.error("Failed to create batch", err instanceof Error ? err.message : "")
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const uploadFile = async (fileType: string, file: File, contactType?: string) => {
     if (!batch) return
@@ -259,7 +246,6 @@ export function DataImportPage() {
               onClick={() => {
                 if (!batch) {
                   setSelectedSource(src.id as ImportSource)
-                  createBatch(src.id)
                 }
               }}
               disabled={!!batch}
@@ -375,18 +361,18 @@ export function DataImportPage() {
 
             {/* Upload dropzones — files buffered client-side */}
             <PageSection title="Upload Files">
-              <div className="space-y-3">
-                <UploadRow label="Single File Import" type="accounts" onUpload={(f) => bufferFile("accounts", f)} hint="MYOB AO, CeeData — contains accounts + transactions in one file" />
+              <DropZone label="Single File Import" onFileSelected={(f) => bufferFile("accounts", f)} hint="MYOB AO, CeeData — contains accounts + transactions in one file" />
 
-                <div className="relative py-2">
-                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
-                  <div className="relative flex justify-center"><span className="bg-white px-3 text-xs text-gray-400">or upload individual files</span></div>
-                </div>
+              <div className="relative py-3">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
+                <div className="relative flex justify-center"><span className="bg-white px-3 text-xs text-gray-400">or upload individual files</span></div>
+              </div>
 
-                <UploadRow label="Chart of Accounts" type="accounts" onUpload={(f) => bufferFile("accounts", f)} />
-                <UploadRow label="Customers" type="contacts" onUpload={(f) => bufferFile("contacts", f, "customer")} optional />
-                <UploadRow label="Vendors" type="contacts" onUpload={(f) => bufferFile("contacts", f, "vendor")} optional />
-                <UploadRow label="Transactions" type="transactions" onUpload={(f) => bufferFile("transactions", f)} />
+              <div className="grid grid-cols-4 gap-3">
+                <DropZone label="Chart of Accounts" onFileSelected={(f) => bufferFile("accounts", f)} compact />
+                <DropZone label="Customers" onFileSelected={(f) => bufferFile("contacts", f, "customer")} optional compact />
+                <DropZone label="Vendors" onFileSelected={(f) => bufferFile("contacts", f, "vendor")} optional compact />
+                <DropZone label="Transactions" onFileSelected={(f) => bufferFile("transactions", f)} compact />
               </div>
 
               {/* Buffered files summary */}
@@ -412,6 +398,11 @@ export function DataImportPage() {
               {bufferedFiles.length === 0 && (
                 <p className="text-xs text-gray-400 mt-1.5">Add at least one file to begin</p>
               )}
+            </div>
+
+            {/* Import run history */}
+            <div className="mt-6">
+              <RecentImports />
             </div>
           </>
         )}
@@ -500,18 +491,18 @@ export function DataImportPage() {
               <span className="text-xs text-gray-400">(manually map your accounts to existing Ledgius accounts)</span>
             </label>
           </div>
-          <div className="space-y-3">
-            <UploadRow label="Single File Import" type="accounts" onUpload={(f) => uploadFile("accounts", f)} hint="MYOB AO, CeeData — contains accounts + transactions in one file" />
+          <DropZone label="Single File Import" onFileSelected={(f) => uploadFile("accounts", f)} hint="MYOB AO, CeeData — contains accounts + transactions in one file" />
 
-            <div className="relative py-2">
-              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
-              <div className="relative flex justify-center"><span className="bg-white px-3 text-xs text-gray-400">or upload individual files</span></div>
-            </div>
+          <div className="relative py-3">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
+            <div className="relative flex justify-center"><span className="bg-white px-3 text-xs text-gray-400">or upload individual files</span></div>
+          </div>
 
-            <UploadRow label="Chart of Accounts" type="accounts" onUpload={(f) => uploadFile("accounts", f)} />
-            <UploadRow label="Customers" type="contacts" onUpload={(f) => uploadFile("contacts", f, "customer")} optional />
-            <UploadRow label="Vendors" type="contacts" onUpload={(f) => uploadFile("contacts", f, "vendor")} optional />
-            <UploadRow label="Transactions" type="transactions" onUpload={(f) => uploadFile("transactions", f)} />
+          <div className="grid grid-cols-4 gap-3">
+            <DropZone label="Chart of Accounts" onFileSelected={(f) => uploadFile("accounts", f)} compact />
+            <DropZone label="Customers" onFileSelected={(f) => uploadFile("contacts", f, "customer")} optional compact />
+            <DropZone label="Vendors" onFileSelected={(f) => uploadFile("contacts", f, "vendor")} optional compact />
+            <DropZone label="Transactions" onFileSelected={(f) => uploadFile("transactions", f)} compact />
           </div>
 
           {/* Files uploaded summary */}
@@ -925,40 +916,232 @@ function PostImportTask({ children }: { children: React.ReactNode }) {
   )
 }
 
-function UploadRow({ label, type: _type, onUpload, optional, hint }: { label: string; type: string; onUpload: (file: File) => void; optional?: boolean; hint?: string }) {
+interface ImportBatchSummary {
+  id: number
+  source_system: string
+  status: string
+  accounts_total: number
+  contacts_total: number
+  txn_total: number
+  txn_imported: number
+  created_at: string
+  created_by_name: string | null
+  source_files: { name: string; type: string; rows: number }[]
+}
+
+function DropZone({
+  label,
+  onFileSelected,
+  optional,
+  hint,
+  compact,
+}: {
+  label: string
+  onFileSelected: (file: File) => void
+  optional?: boolean
+  hint?: string
+  compact?: boolean
+}) {
   const [file, setFile] = useState<File | null>(null)
+  const [dragOver, setDragOver] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const handleFile = useCallback((f: File) => {
+    setFile(f)
+    onFileSelected(f)
+  }, [onFileSelected])
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(false)
+    const f = e.dataTransfer.files[0]
+    if (f) handleFile(f)
+  }, [handleFile])
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(true)
+  }, [])
+
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(true)
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(false)
+  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]
-    if (f) {
-      setFile(f)
-      onUpload(f)
+    if (f) handleFile(f)
+  }
+
+  const handleClick = () => inputRef.current?.click()
+
+  if (compact) {
+    return (
+      <div className="rounded-lg border border-gray-200 bg-white p-3">
+        <div className="flex items-center gap-1.5 mb-2">
+          <p className="text-xs font-medium text-gray-900">{label}</p>
+          {optional && <Badge variant="default" className="text-[10px] px-1.5 py-0">optional</Badge>}
+        </div>
+        <div
+          role="button"
+          tabIndex={0}
+          onClick={handleClick}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleClick() }}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          className={`rounded-md border-2 border-dashed p-3 text-center cursor-pointer transition-colors ${
+            dragOver
+              ? "border-primary-400 bg-primary-50"
+              : file
+                ? "border-green-300 bg-green-50"
+                : "border-gray-300 hover:border-gray-400"
+          }`}
+        >
+          {file ? (
+            <div className="flex items-center justify-center gap-1.5">
+              <CheckCircle className="h-3.5 w-3.5 text-green-500 shrink-0" />
+              <span className="text-xs text-green-700 font-mono truncate">{file.name}</span>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-1">
+              <Upload className="h-4 w-4 text-gray-400" />
+              <span className="text-xs text-gray-400">Drop or click</span>
+            </div>
+          )}
+          <input ref={inputRef} type="file" accept=".csv,.txt" onChange={handleChange} className="hidden" />
+        </div>
+      </div>
+    )
+  }
+
+  // Full-width variant for "Single File Import"
+  return (
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={handleClick}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleClick() }}
+      onDrop={handleDrop}
+      onDragOver={handleDragOver}
+      onDragEnter={handleDragEnter}
+      onDragLeave={handleDragLeave}
+      className={`rounded-lg border-2 border-dashed p-4 cursor-pointer transition-colors ${
+        dragOver
+          ? "border-primary-400 bg-primary-50"
+          : file
+            ? "border-green-300 bg-green-50"
+            : "border-gray-300 hover:border-gray-400"
+      }`}
+    >
+      <div className="flex items-center gap-4">
+        <div className={`rounded-full p-2 ${file ? "bg-green-100" : "bg-gray-100"}`}>
+          {file
+            ? <CheckCircle className="h-5 w-5 text-green-500" />
+            : <Upload className="h-5 w-5 text-gray-400" />
+          }
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-gray-900">
+            {label}
+            {optional && <span className="ml-2 text-xs font-normal text-gray-400">Optional</span>}
+          </p>
+          {file ? (
+            <p className="text-xs text-green-700 font-mono mt-0.5 truncate">{file.name} — {(file.size / 1024).toFixed(0)} KB</p>
+          ) : (
+            <p className="text-xs text-gray-400 mt-0.5">{hint ?? "Drop a file here or click to browse"}</p>
+          )}
+        </div>
+      </div>
+      <input ref={inputRef} type="file" accept=".csv,.txt" onChange={handleChange} className="hidden" />
+    </div>
+  )
+}
+
+function RecentImports() {
+  const [batches, setBatches] = useState<ImportBatchSummary[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchBatches = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const data = await api.get<ImportBatchSummary[]>("/import/batches")
+      setBatches(data ?? [])
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to load import history")
+    } finally {
+      setLoading(false)
     }
+  }, [])
+
+  useEffect(() => { fetchBatches() }, [fetchBatches])
+
+  const statusBadge = (status: string) => {
+    const variant = status === "verified" ? "success"
+      : status === "committed" ? "info"
+      : status === "failed" ? "danger"
+      : status === "cancelled" ? "default"
+      : "warning"
+    return <Badge variant={variant}>{status}</Badge>
   }
 
   return (
-    <div className="flex items-center gap-4 rounded-lg border border-gray-200 bg-white px-4 py-3">
-      <FileText className="h-5 w-5 text-gray-400 shrink-0" />
-      <div className="flex-1 min-w-0">
-        <p className="text-sm font-medium text-gray-900">
-          {label}
-          {optional && <span className="ml-2 text-xs font-normal text-gray-400">Optional — auto-created from transactions</span>}
-        </p>
-        {hint && <p className="text-xs text-gray-400 mt-0.5">{hint}</p>}
-      </div>
-      {file ? (
-        <div className="flex items-center gap-2">
-          <CheckCircle className="h-3.5 w-3.5 text-green-500" />
-          <span className="text-xs text-primary-600 font-mono">{file.name}</span>
-        </div>
+    <PageSection
+      title="Recent Imports"
+      actions={
+        <Button variant="ghost" size="sm" onClick={fetchBatches} disabled={loading}>
+          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+          Refresh
+        </Button>
+      }
+    >
+      {loading ? (
+        <Skeleton variant="table" rows={3} columns={7} />
+      ) : error ? (
+        <InlineAlert variant="error">{error}</InlineAlert>
+      ) : batches.length === 0 ? (
+        <p className="text-sm text-gray-400 py-4 text-center">No previous imports</p>
       ) : (
-        <label className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-gray-100 text-gray-600 text-xs hover:bg-gray-200 cursor-pointer transition-colors">
-          <Upload className="h-3 w-3" />
-          Choose
-          <input type="file" accept=".csv,.txt" onChange={handleChange} className="hidden" />
-        </label>
+        <div className="border border-gray-200 rounded-lg overflow-hidden">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Source</th>
+                <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Files</th>
+                <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Accounts</th>
+                <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Contacts</th>
+                <th className="px-3 py-2 text-right text-xs font-medium text-gray-500 uppercase">Transactions</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase">Imported By</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100 bg-white">
+              {batches.map((b) => (
+                <tr key={b.id}>
+                  <td className="px-3 py-2 text-xs"><DateValue value={b.created_at} /></td>
+                  <td className="px-3 py-2 text-xs uppercase font-medium">{b.source_system}</td>
+                  <td className="px-3 py-2 text-xs text-right tabular-nums">{b.source_files?.length ?? 0}</td>
+                  <td className="px-3 py-2 text-xs text-right tabular-nums">{b.accounts_total}</td>
+                  <td className="px-3 py-2 text-xs text-right tabular-nums">{b.contacts_total}</td>
+                  <td className="px-3 py-2 text-xs text-right tabular-nums">{b.txn_imported}</td>
+                  <td className="px-3 py-2">{statusBadge(b.status)}</td>
+                  <td className="px-3 py-2 text-xs text-gray-500">{b.created_by_name ?? "—"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
-    </div>
+    </PageSection>
   )
 }
 
