@@ -1,0 +1,30 @@
+page: /loans
+title: Loan Register
+spec: R-0063
+sections:
+  - heading: What is this?
+    body: >
+      Your loan register — every financing arrangement your business
+      carries. Bank loans, equipment finance, chattel mortgages,
+      vehicle finance. Each loan tracks the balance, repayment schedule,
+      and accumulated interest.
+
+  - heading: Why it matters
+    body: >
+      {{warn:Interest on business loans is tax-deductible}} but only
+      if properly recorded. Each payment must be split into principal
+      (reduces the liability) and interest (deductible expense). Without
+      this split, your balance sheet and tax return are both wrong.
+
+  - heading: Common loan types
+    body: >
+      - **Bank loan** — unsecured or secured business loan
+      - **Chattel mortgage** — equipment/vehicle finance (asset is security)
+      - **Business line of credit** — revolving facility
+      - **Hire purchase** — asset ownership transfers at end of term
+
+  - heading: Policies
+    body: >
+      - ITAA 1997 s8-1 (General deductions — interest on business borrowings)
+      - AASB 9 (Financial Instruments — loan measurement)
+      - ATO guide to claiming interest deductions

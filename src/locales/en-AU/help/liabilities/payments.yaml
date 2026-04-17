@@ -1,0 +1,30 @@
+page: /loans/payments
+title: Loan Payments
+spec: R-0063
+sections:
+  - heading: What is this?
+    body: >
+      Record loan repayments. Each payment is split into principal
+      (reduces the loan balance on your balance sheet) and interest
+      (expense on your P&L). The {{term:GL}} entries are created
+      automatically.
+
+  - heading: Principal vs Interest
+    body: >
+      - **Principal** — debit liability account, credit bank
+      - **Interest** — debit interest expense, credit bank
+
+      {{good:The split is calculated automatically from the loan's
+      interest rate.}} You can override if your lender's statement
+      shows a different breakdown.
+
+  - heading: Reconciliation
+    body: >
+      Compare the loan balance shown here against your lender's
+      statement periodically. If they differ, check for missed payments,
+      rounding, or fee adjustments.
+
+  - heading: Policies
+    body: >
+      - ITAA 1997 s8-1 (Interest deductibility)
+      - ATO mixed-purpose loan apportionment rules

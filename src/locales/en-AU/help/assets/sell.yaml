@@ -1,0 +1,29 @@
+page: /assets/sell
+title: Sell / Dispose Asset
+spec: R-0062
+sections:
+  - heading: What is this?
+    body: >
+      Record the sale, scrapping, or disposal of a fixed asset. The
+      system calculates the gain or loss (sale proceeds minus current
+      book value) and creates the closing {{term:GL}} entries.
+
+  - heading: Disposal types
+    body: >
+      - **Sold** — asset exchanged for cash or receivable
+      - **Scrapped** — asset written off with no proceeds
+      - **Donated** — asset given away (proceeds = $0)
+      - **Traded In** — asset used as part-payment for a new one
+
+  - heading: Capital gains
+    body: >
+      {{warn:A gain on disposal may be a CGT event (A1).}} If you sell
+      a business asset for more than its written-down value, the gain
+      is assessable income. Consult your accountant for CGT discount
+      eligibility.
+
+  - heading: Policies
+    body: >
+      - ITAA 1997 s104-10 (CGT event A1 — disposal)
+      - ATO guide to capital gains for small business
+      - AASB 116 §67-72 (Derecognition)

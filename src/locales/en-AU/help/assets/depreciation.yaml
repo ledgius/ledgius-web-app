@@ -1,0 +1,31 @@
+page: /assets/depreciation
+title: Depreciation
+spec: R-0062
+sections:
+  - heading: What is this?
+    body: >
+      Depreciation reduces the book value of your assets over their
+      useful life. Run it monthly or quarterly to keep your accounts
+      accurate. Each run posts journal entries: debit depreciation
+      expense, credit accumulated depreciation.
+
+  - heading: How it works
+    body: >
+      - **Straight Line**: (cost − residual) ÷ useful life, prorated
+      - **Diminishing Value**: book value × (200% ÷ life) × (days ÷ 365)
+      - **Instant Write-off**: full cost in the purchase period
+
+      {{good:Ledgius calculates per the ATO formula automatically.}}
+      You just click "Run Depreciation" each period.
+
+  - heading: When to run
+    body: >
+      Run depreciation at least quarterly (before BAS lodgement) or
+      monthly for accurate P&L. The depreciation expense flows through
+      to your tax return and reduces assessable income.
+
+  - heading: Policies
+    body: >
+      - ATO TR 2022/1 (Depreciation of depreciating assets)
+      - ITAA 1997 Division 40 (Capital allowances)
+      - ATO effective life determination (updated annually)

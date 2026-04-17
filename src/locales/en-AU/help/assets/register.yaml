@@ -1,0 +1,31 @@
+page: /assets
+title: Asset Register
+spec: R-0062
+sections:
+  - heading: What is this?
+    body: >
+      Your fixed asset register — every capital item your business owns.
+      Plant, equipment, vehicles, computers, furniture. Each asset carries
+      its purchase cost, depreciation method, and current book value.
+
+  - heading: Why it matters
+    body: >
+      {{warn:The ATO requires you to track every depreciating asset.}}
+      Depreciation reduces your taxable income, and the instant asset
+      write-off threshold changes annually. Getting this wrong means
+      overpaying tax or facing audit adjustments.
+
+  - heading: Categories
+    body: >
+      - **Plant & Equipment** — tools, machinery, workshop gear
+      - **Motor Vehicles** — cars, utes, trucks (links to Vehicle Logbook)
+      - **Office Equipment** — desks, chairs, fit-out
+      - **IT Equipment** — computers, servers, software licences
+      - **Furniture & Fittings** — shelving, display units
+
+  - heading: Policies
+    body: >
+      - ATO TR 2022/1 — Depreciation of depreciating assets
+      - ITAA 1997 Division 40 — Capital allowances
+      - AASB 116 — Property, Plant and Equipment
+      - ATO Instant Asset Write-off thresholds (check annually)
