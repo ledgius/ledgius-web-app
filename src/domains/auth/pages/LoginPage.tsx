@@ -158,18 +158,8 @@ export function LoginPage() {
               Continue with Google
             </button>
 
-            <button
-              onClick={handleMicrosoftSSO}
-              className="w-full flex items-center justify-center gap-3 py-2.5 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors"
-            >
-              <svg className="h-4 w-4" viewBox="0 0 21 21">
-                <rect x="1" y="1" width="9" height="9" fill="#F25022"/>
-                <rect x="11" y="1" width="9" height="9" fill="#7FBA00"/>
-                <rect x="1" y="11" width="9" height="9" fill="#00A4EF"/>
-                <rect x="11" y="11" width="9" height="9" fill="#FFB900"/>
-              </svg>
-              Continue with Microsoft
-            </button>
+            {/* Microsoft SSO — postponed until later in 2026. Re-enable by
+                uncommenting and restoring the handleMicrosoftSSO handler. */}
 
             {/* Divider */}
             <div className="relative">
