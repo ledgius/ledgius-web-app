@@ -27,6 +27,12 @@ export function CreateContactPage() {
   const [curr, setCurr] = useState("AUD")
   const [creditLimit, setCreditLimit] = useState("")
   const [terms, setTerms] = useState("30")
+  const [email, setEmail] = useState("")
+  const [phone, setPhone] = useState("")
+  const [addrLine1, setAddrLine1] = useState("")
+  const [addrCity, setAddrCity] = useState("")
+  const [addrState, setAddrState] = useState("")
+  const [addrPostcode, setAddrPostcode] = useState("")
   const [error, setError] = useState("")
   const [submitting, setSubmitting] = useState(false)
 
@@ -46,6 +52,15 @@ export function CreateContactPage() {
         curr,
         credit_limit: parseFloat(creditLimit) || 0,
         terms: parseInt(terms) || 30,
+        email: email || undefined,
+        phones: phone ? [{ class: "phone_office", value: phone }] : undefined,
+        postal_address: addrLine1 ? {
+          line_one: addrLine1,
+          city: addrCity,
+          state: addrState || undefined,
+          country_id: 15,
+          mail_code: addrPostcode || undefined,
+        } : undefined,
       })
       qc.invalidateQueries({ queryKey: [type === "vendor" ? "vendors" : "customers"] })
       feedback.success("Contact created")
@@ -84,6 +99,30 @@ export function CreateContactPage() {
             <input type="text" value={legalName} onChange={e => setLegalName(e.target.value)} className="w-full border rounded px-2 py-1.5 text-sm" /></div>
           <div><label className="block text-xs font-medium text-gray-600 mb-1">ABN</label>
             <input type="text" value={taxId} onChange={e => setTaxId(e.target.value)} className="w-full border rounded px-2 py-1.5 text-sm" placeholder="XX XXX XXX XXX" /></div>
+          <div className="grid grid-cols-2 gap-4">
+            <div><label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} className="w-full border rounded px-2 py-1.5 text-sm" placeholder="billing@example.com" /></div>
+            <div><label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
+              <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} className="w-full border rounded px-2 py-1.5 text-sm" placeholder="02 9000 0000" /></div>
+          </div>
+        </div>
+      </PageSection>
+        <PageSection title="Billing Address">
+          <div className="space-y-4">
+            <div><label className="block text-xs font-medium text-gray-600 mb-1">Street Address</label>
+              <input type="text" value={addrLine1} onChange={e => setAddrLine1(e.target.value)} className="w-full border rounded px-2 py-1.5 text-sm" /></div>
+            <div className="grid grid-cols-3 gap-4">
+              <div><label className="block text-xs font-medium text-gray-600 mb-1">City / Suburb</label>
+                <input type="text" value={addrCity} onChange={e => setAddrCity(e.target.value)} className="w-full border rounded px-2 py-1.5 text-sm" /></div>
+              <div><label className="block text-xs font-medium text-gray-600 mb-1">State</label>
+                <input type="text" value={addrState} onChange={e => setAddrState(e.target.value)} className="w-full border rounded px-2 py-1.5 text-sm" placeholder="NSW" maxLength={3} /></div>
+              <div><label className="block text-xs font-medium text-gray-600 mb-1">Postcode</label>
+                <input type="text" value={addrPostcode} onChange={e => setAddrPostcode(e.target.value)} className="w-full border rounded px-2 py-1.5 text-sm" placeholder="2000" maxLength={4} /></div>
+            </div>
+          </div>
+        </PageSection>
+        <PageSection title="Account Settings">
+          <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div><label className="block text-xs font-medium text-gray-600 mb-1">Currency</label>
               <input type="text" value={curr} onChange={e => setCurr(e.target.value)} className="w-full border rounded px-2 py-1.5 text-sm" maxLength={3} /></div>
