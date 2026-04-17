@@ -1,0 +1,29 @@
+page: /assets/buy
+title: Buy Asset
+spec: R-0062
+sections:
+  - heading: What is this?
+    body: >
+      Record a new asset purchase. The asset is added to the register
+      and the appropriate {{term:GL}} entries are created: debit the
+      asset account, credit your bank or {{term:AP}} account.
+
+  - heading: Depreciation method
+    body: >
+      - **Straight Line** — equal annual amounts over the useful life
+      - **Diminishing Value** — higher in early years, reduces over time
+        (ATO formula: book value × 200% ÷ useful life)
+      - **Instant Write-off** — fully depreciated in the purchase period
+        if cost ≤ ATO threshold for the financial year
+
+  - heading: GST on capital purchases
+    body: >
+      {{good:Use tax code CAP for capital acquisitions.}} This ensures
+      the GST is reported correctly on your BAS at label G10 (Capital
+      acquisitions).
+
+  - heading: Policies
+    body: >
+      - ATO Instant Asset Write-off thresholds
+      - ITAA 1997 s40-70 (Effective life)
+      - ATO TR 2022/1 (Depreciation methods)

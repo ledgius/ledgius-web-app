@@ -71,6 +71,15 @@ const FeedbackDashboardPage = lazy(() => import("@/domains/admin/pages/FeedbackD
 const PlatformAdminPage = lazy(() => import("@/domains/admin/pages/PlatformAdminPage").then(m => ({ default: m.PlatformAdminPage })))
 const FeedbackStatusPage = lazy(() => import("@/domains/admin/pages/FeedbackStatusPage").then(m => ({ default: m.FeedbackStatusPage })))
 
+const AssetRegisterPage = lazy(() => import("@/domains/assets/pages/AssetRegisterPage").then(m => ({ default: m.AssetRegisterPage })))
+const BuyAssetPage = lazy(() => import("@/domains/assets/pages/BuyAssetPage").then(m => ({ default: m.BuyAssetPage })))
+const SellDisposePage = lazy(() => import("@/domains/assets/pages/SellDisposePage").then(m => ({ default: m.SellDisposePage })))
+const DepreciationPage = lazy(() => import("@/domains/assets/pages/DepreciationPage").then(m => ({ default: m.DepreciationPage })))
+
+const LoanRegisterPage = lazy(() => import("@/domains/liabilities/pages/LoanRegisterPage").then(m => ({ default: m.LoanRegisterPage })))
+const LoanPaymentsPage = lazy(() => import("@/domains/liabilities/pages/LoanPaymentsPage").then(m => ({ default: m.LoanPaymentsPage })))
+const LoanPayoutPage = lazy(() => import("@/domains/liabilities/pages/LoanPayoutPage").then(m => ({ default: m.LoanPayoutPage })))
+
 const AuditLogPage = lazy(() => import("@/domains/audit/pages/AuditLogPage").then(m => ({ default: m.AuditLogPage })))
 const ReportsPage = lazy(() => import("@/domains/reporting/pages/ReportsPage").then(m => ({ default: m.ReportsPage })))
 const BASPage = lazy(() => import("@/domains/tax/pages/BASPage").then(m => ({ default: m.BASPage })))
@@ -151,6 +160,17 @@ export const router = createBrowserRouter([
       { path: "employees/new", element: <S><CreateEmployeePage /></S> },
       { path: "employees/:id", element: <S><EmployeeDetailPage /></S> },
       { path: "pay-runs", element: <S><PayRunsPage /></S> },
+
+      // Fixed Assets
+      { path: "assets", element: <S><AssetRegisterPage /></S> },
+      { path: "assets/buy", element: <S><BuyAssetPage /></S> },
+      { path: "assets/sell", element: <S><SellDisposePage /></S> },
+      { path: "assets/depreciation", element: <S><DepreciationPage /></S> },
+
+      // Loans / Liabilities
+      { path: "loans", element: <S><LoanRegisterPage /></S> },
+      { path: "loans/payments", element: <S><LoanPaymentsPage /></S> },
+      { path: "loans/payout", element: <S><LoanPayoutPage /></S> },
 
       // Admin
       { path: "payg-config", element: <S><PAYGConfigPage /></S> },

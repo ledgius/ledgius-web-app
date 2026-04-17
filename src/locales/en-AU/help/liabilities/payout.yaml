@@ -1,0 +1,28 @@
+page: /loans/payout
+title: Loan Payout
+spec: R-0063
+sections:
+  - heading: What is this?
+    body: >
+      Close out a loan by recording the final payout. This zeros the
+      loan balance, records any early termination fee, and creates the
+      closing {{term:GL}} entries. The loan is marked "closed" in the
+      register but retained for audit.
+
+  - heading: Early termination
+    body: >
+      Some lenders charge a fee for early payout. Record it here and
+      it will be posted as a separate expense entry. The payout summary
+      shows your estimated savings from paying off early vs completing
+      the original term.
+
+  - heading: After payout
+    body: >
+      {{good:The loan remains visible in the register}} with status
+      "closed" and a zero balance. This preserves the audit trail of
+      all payments made over the life of the loan.
+
+  - heading: Policies
+    body: >
+      - National Credit Code (early termination rights)
+      - ASIC guidance on early repayment fees

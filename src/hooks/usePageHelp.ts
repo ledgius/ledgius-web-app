@@ -410,6 +410,72 @@ export const pageHelpContent = {
     ],
   },
 
+  // ── Fixed Assets ──
+  assetRegister: {
+    title: "Asset Register",
+    sections: [
+      { heading: "What is this?", body: "Your fixed asset register tracks every capital item — plant, equipment, vehicles, IT. Each asset carries its purchase cost, depreciation method, and current book value." },
+      { heading: "Categories", body: "Assets are grouped by category: Plant & Equipment, Motor Vehicles, Office Equipment, Furniture & Fittings, and IT Equipment. Each category may have different depreciation rates." },
+      { heading: "Status", body: "Active = currently in use and depreciating. Disposed = sold, scrapped, or donated. Fully Depreciated = book value has reached zero but the asset is still in use." },
+      { heading: "Tip", body: "Click any asset to view its full depreciation history and current details." },
+    ],
+  },
+  buyAsset: {
+    title: "Buy Asset",
+    sections: [
+      { heading: "What is this?", body: "Record a new asset purchase. The asset will be added to the register and depreciation will be calculated automatically based on the method selected." },
+      { heading: "Depreciation methods", body: "Straight Line = equal annual amounts over the useful life. Diminishing Value = higher depreciation in early years. Instant Write-off = fully expensed in the purchase period (subject to ATO thresholds)." },
+      { heading: "GL Account", body: "Select the appropriate asset account in the general ledger. This determines where the asset appears on the Balance Sheet." },
+      { heading: "Tip", body: "For instant write-off, check the current ATO threshold before recording — it changes each financial year." },
+    ],
+  },
+  sellAsset: {
+    title: "Sell / Dispose Asset",
+    sections: [
+      { heading: "What is this?", body: "Record the sale or disposal of an asset. The system calculates the gain or loss based on the current book value vs sale proceeds." },
+      { heading: "Gain or loss", body: "If sale proceeds exceed book value, you have a gain on disposal (income). If book value exceeds proceeds, you have a loss (expense). Both create journal entries automatically." },
+      { heading: "Disposal reasons", body: "Sold = exchanged for cash. Scrapped = written off with no proceeds. Donated = given away at nil value. Traded In = used as part-payment for a replacement asset." },
+      { heading: "Tip", body: "For scrapped assets, enter $0 as the sale price. The full book value becomes a loss on disposal." },
+    ],
+  },
+  depreciation: {
+    title: "Depreciation",
+    sections: [
+      { heading: "What is this?", body: "Depreciation reduces the book value of your assets over their useful life. This page shows the depreciation schedule for all registered assets." },
+      { heading: "Running depreciation", body: "Click 'Run Depreciation' to calculate and post depreciation entries for the current period. This creates journal entries debiting depreciation expense and crediting accumulated depreciation." },
+      { heading: "Methods", body: "Straight Line spreads the cost evenly. Diminishing Value front-loads the expense. Instant Write-off expenses the full amount immediately." },
+      { heading: "Tip", body: "Run depreciation monthly or quarterly to keep your accounts accurate. Year-end depreciation should reconcile with the ATO's depreciation schedules." },
+    ],
+  },
+
+  // ── Loans / Liabilities ──
+  loanRegister: {
+    title: "Loan Register",
+    sections: [
+      { heading: "What is this?", body: "Your loan register tracks every financing arrangement — bank loans, equipment finance, vehicle chattel mortgages. Each loan carries its balance, repayment schedule, and interest rate." },
+      { heading: "Key fields", body: "Original amount = the total borrowed. Current balance = amount still owing. Interest rate = the annual rate applied. Repayment frequency = how often payments are due." },
+      { heading: "Tip", body: "Keep loan details up to date to ensure accurate Balance Sheet reporting and cash flow forecasting." },
+    ],
+  },
+  loanPayments: {
+    title: "Loan Payments",
+    sections: [
+      { heading: "What is this?", body: "Record loan repayments. Each payment splits into principal (reduces the loan balance) and interest (recorded as an expense)." },
+      { heading: "Principal vs interest", body: "Principal payments reduce the liability on the Balance Sheet. Interest payments are recorded as a finance expense on the Profit & Loss." },
+      { heading: "Journal entries", body: "Each payment creates a journal entry: debit Loan Account (principal) + debit Interest Expense (interest), credit Bank Account (total)." },
+      { heading: "Tip", body: "Match loan payments against your bank statement during reconciliation to keep balances accurate." },
+    ],
+  },
+  loanPayout: {
+    title: "Loan Payout",
+    sections: [
+      { heading: "What is this?", body: "Close out a loan by recording the final payout. This zeros the loan balance, records any early termination fees, and creates the closing journal entries." },
+      { heading: "Early termination", body: "Some loans charge a fee for early payout. Record this separately — it appears as a finance expense, distinct from interest." },
+      { heading: "Savings", body: "The savings calculation compares the remaining interest you would have paid over the full term against the early termination fee. A positive number means paying out early saves money." },
+      { heading: "Tip", body: "Request a formal payout figure from your lender before recording — the amount may include accrued interest to the payout date." },
+    ],
+  },
+
   // ── Super Obligations ──
   superObligations: {
     title: "Super Guarantee Obligations",
