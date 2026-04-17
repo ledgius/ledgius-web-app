@@ -277,18 +277,140 @@ export function DataImportPage() {
     </PageSection>
   )
 
-  // ── No batch yet — show format selector + info ──
+  // ── Buffered files (before batch creation) ──
+  const [bufferedFiles, setBufferedFiles] = useState<{ type: string; file: File; contactType?: string }[]>([])
+
+  const bufferFile = (type: string, file: File, contactType?: string) => {
+    setBufferedFiles(prev => [...prev.filter(f => !(f.type === type && f.contactType === contactType)), { type, file, contactType }])
+    feedback.success(`${file.name} ready for upload`)
+  }
+
+  const startImport = async () => {
+    if (!selectedSource || bufferedFiles.length === 0) return
+    setLoading(true)
+    try {
+      const b = await api.post<ImportBatch>("/import/batches", { source_system: selectedSource, import_mode: importMode, import_strategy: importStrategy })
+      setBatch(b)
+      for (const bf of bufferedFiles) {
+        const reader = new FileReader()
+        const content = await new Promise<string>((resolve, reject) => {
+          reader.onload = () => {
+            const base64 = (reader.result as string).split(",")[1]
+            resolve(base64)
+          }
+          reader.onerror = reject
+          reader.readAsDataURL(bf.file)
+        })
+        const updated = await api.post<ImportBatch>(`/import/batches/${b.id}/upload`, {
+          file_type: bf.type,
+          file_name: bf.file.name,
+          content,
+          contact_type: bf.contactType,
+        })
+        setBatch(updated)
+      }
+      setBufferedFiles([])
+      feedback.success("Files uploaded — ready to analyse")
+      const accts = await api.get<StagingAccount[]>(`/import/batches/${b.id}/accounts`)
+      setStagingAccounts(accts)
+    } catch (err: unknown) {
+      feedback.error(err instanceof Error ? err.message : "Import failed")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // ── No batch yet — show format selector + upload config ──
 
   if (!batch) {
     return (
       <PageShell header={header}>
         <InfoPanel title="How data import works" storageKey="import-info">
-          <p><strong>1. Choose source</strong> — select MYOB, Xero, or Generic CSV. MYOB AO and CeeData formats are auto-detected.</p>
-          <p><strong>2. Upload files</strong> — upload your transaction file and optionally a Chart of Accounts file to enrich account types.</p>
-          <p><strong>3. Analyse &amp; map</strong> — review staged accounts, contacts, and transactions. Map accounts to your Ledgius chart of accounts.</p>
+          <p><strong>1. Choose format &amp; upload</strong> — select MYOB, Xero, or Generic CSV, configure options, and add your files.</p>
+          <p><strong>2. Start Import</strong> — click to upload files and begin the analysis pipeline.</p>
+          <p><strong>3. Analyse &amp; map</strong> — review staged accounts, contacts, and transactions.</p>
           <p><strong>4. Preview &amp; commit</strong> — verify the data looks correct, then commit to import into your ledger.</p>
         </InfoPanel>
         {formatSelector}
+
+        {selectedSource && (
+          <>
+            {/* Import options */}
+            <div className="flex items-center gap-4 mb-4 p-3 rounded-lg border border-gray-200 bg-gray-50">
+              <span className="text-xs font-medium text-gray-600">Import mode:</span>
+              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                <input type="radio" name="import_mode_pre" checked={importMode === "full_history"} onChange={() => setImportMode("full_history")} />
+                <span>Full history</span>
+                <span className="text-xs text-gray-400">(all transactions)</span>
+              </label>
+              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                <input type="radio" name="import_mode_pre" checked={importMode === "opening_balances"} onChange={() => setImportMode("opening_balances")} />
+                <span>Opening balances only</span>
+              </label>
+            </div>
+            <div className="flex items-center gap-4 mb-4 p-3 rounded-lg border border-gray-200 bg-gray-50">
+              <span className="text-xs font-medium text-gray-600">Account strategy:</span>
+              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                <input type="radio" name="import_strategy_pre" checked={importStrategy === "import_as_new"} onChange={() => setImportStrategy("import_as_new")} />
+                <span>Import as new</span>
+              </label>
+              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                <input type="radio" name="import_strategy_pre" checked={importStrategy === "map_to_existing"} onChange={() => setImportStrategy("map_to_existing")} />
+                <span>Map to existing</span>
+              </label>
+            </div>
+
+            {/* MYOB-specific guidance */}
+            {selectedSource === "myob" && (
+              <div className="mb-4 p-3 rounded-lg border border-primary-200 bg-primary-50 text-sm text-primary-800">
+                <strong>Recommended:</strong> Export two files from MYOB. <strong>(1)</strong> Go to <em>Import and export data → Export</em>,
+                select Data type <strong>"Data for your accountant"</strong> and Export file type <strong>"MYOB AO"</strong> or <strong>"CeeData"</strong>.
+                <strong>(2)</strong> Also export your <strong>Chart of Accounts</strong> from MYOB (<em>Reports → Accounts → Chart of Accounts</em>).
+              </div>
+            )}
+
+            {/* Upload dropzones — files buffered client-side */}
+            <PageSection title="Upload Files">
+              <div className="space-y-3">
+                <UploadRow label="Single File Import" type="accounts" onUpload={(f) => bufferFile("accounts", f)} hint="MYOB AO, CeeData — contains accounts + transactions in one file" />
+
+                <div className="relative py-2">
+                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
+                  <div className="relative flex justify-center"><span className="bg-white px-3 text-xs text-gray-400">or upload individual files</span></div>
+                </div>
+
+                <UploadRow label="Chart of Accounts" type="accounts" onUpload={(f) => bufferFile("accounts", f)} />
+                <UploadRow label="Customers" type="contacts" onUpload={(f) => bufferFile("contacts", f, "customer")} optional />
+                <UploadRow label="Vendors" type="contacts" onUpload={(f) => bufferFile("contacts", f, "vendor")} optional />
+                <UploadRow label="Transactions" type="transactions" onUpload={(f) => bufferFile("transactions", f)} />
+              </div>
+
+              {/* Buffered files summary */}
+              {bufferedFiles.length > 0 && (
+                <div className="mt-4 space-y-1">
+                  {bufferedFiles.map((f, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs text-gray-500">
+                      <CheckCircle className="h-3 w-3 text-green-500" />
+                      <span className="font-mono">{f.file.name}</span>
+                      <span>— {(f.file.size / 1024).toFixed(0)} KB</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </PageSection>
+
+            {/* Start Import — creates batch + uploads all buffered files */}
+            <div className="mt-4">
+              <Button onClick={startImport} loading={loading} disabled={bufferedFiles.length === 0}>
+                <Upload className="h-4 w-4" />
+                Start Import ({bufferedFiles.length} file{bufferedFiles.length !== 1 ? "s" : ""})
+              </Button>
+              {bufferedFiles.length === 0 && (
+                <p className="text-xs text-gray-400 mt-1.5">Add at least one file to begin</p>
+              )}
+            </div>
+          </>
+        )}
       </PageShell>
     )
   }
