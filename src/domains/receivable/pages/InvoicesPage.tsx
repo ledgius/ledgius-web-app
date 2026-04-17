@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react"
 import { Link, useNavigate } from "react-router-dom"
+import { BackLink } from "@/components/primitives"
 import { PageShell } from "@/components/layout"
 import { Button, InfoPanel } from "@/components/primitives"
 import { DataTable, type Column } from "@/shared/components/DataTable"
@@ -99,6 +100,7 @@ export function InvoicesPage() {
 
   return (
     <PageShell header={header} loading={isLoading}>
+      <BackLink />
       <InfoPanel title="About Invoices" storageKey="invoices-info">
         <p>
           <strong>Invoices</strong> are bills you issue to customers — money they owe you. Each invoice records the

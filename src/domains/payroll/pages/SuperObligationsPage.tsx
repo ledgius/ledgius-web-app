@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react"
+import { BackLink } from "@/components/primitives"
 import { PageShell, PageSection } from "@/components/layout"
 import { StatusPill, MoneyValue, DateValue } from "@/components/financial"
 import { InlineAlert } from "@/components/primitives"
@@ -44,6 +45,7 @@ export function SuperObligationsPage() {
   const overdue = quarters.filter(q => q.status === "overdue")
   return (
     <PageShell header={header}>
+      <BackLink />
       {error && <InlineAlert variant="error" className="mb-4">{error}</InlineAlert>}
 
       {overdue.length > 0 && (

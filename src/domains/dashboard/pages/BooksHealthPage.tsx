@@ -555,7 +555,7 @@ export function BooksHealthPage() {
                           a.severity === "red" ? "bg-red-500" : "bg-amber-400"
                         )} />
                         <span>
-                          <Link to={a.link} className="underline font-medium hover:text-blue-900">{a.title}</Link>
+                          <Link to={a.link} state={{ from: "/" }} className="underline font-medium hover:text-blue-900">{a.title}</Link>
                           {a.detail && <span className="text-blue-600"> — {a.detail}</span>}
                         </span>
                       </li>
@@ -587,7 +587,7 @@ export function BooksHealthPage() {
                           {icon}
                           <span className="flex-1">
                             {item.link ? (
-                              <button onClick={() => navigate(item.link!)} className="underline font-medium text-left hover:text-blue-900">
+                              <button onClick={() => navigate(item.link!, { state: { from: "/" } })} className="underline font-medium text-left hover:text-blue-900">
                                 {item.title}
                               </button>
                             ) : (

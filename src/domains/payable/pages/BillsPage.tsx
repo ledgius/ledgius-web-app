@@ -2,6 +2,7 @@ import { useState, useMemo } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
+import { BackLink } from "@/components/primitives"
 import { PageShell } from "@/components/layout"
 import { Button, InfoPanel } from "@/components/primitives"
 import { DataTable, type Column } from "@/shared/components/DataTable"
@@ -84,6 +85,7 @@ export function BillsPage() {
 
   return (
     <PageShell header={header} loading={isLoading}>
+      <BackLink />
       <InfoPanel title="About Bills" storageKey="bills-info">
         <p>
           <strong>Bills</strong> are money you owe your suppliers. Each bill records an obligation with a due date and an

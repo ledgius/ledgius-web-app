@@ -19,3 +19,5 @@ export { Combobox } from "./Combobox"
 export type { ComboboxProps, ComboboxOption } from "./Combobox"
 
 export { PageLoader } from "./PageLoader"
+
+export { BackLink } from "./BackLink"
