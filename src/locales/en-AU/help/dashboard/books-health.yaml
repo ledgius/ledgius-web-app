@@ -41,6 +41,16 @@ sections:
       Overdue entries appear at the top with a pulsing red dot. Completed items show a green tick with strikethrough.
       Click any card with a chevron to jump to the relevant page.
 
+  - heading: Performance tab
+    body: |
+      The **Performance** tab shows financial performance for the current {{term:FY}}:
+      - **Income** — total revenue this financial year with a mini bar chart comparing the last three months against the prior year (if data exists).
+      - **Expenses** — total expenses this financial year, same comparison.
+      - **Net Profit** — revenue minus expenses, with a trend arrow showing movement vs the prior year.
+
+      The main chart plots revenue bars (green), expense bars (amber), and a net profit line (blue) for each month Jul–Jun.
+      If prior year data exists, lighter transparent bars appear behind the current year for comparison.
+
   - heading: Tip
     body: >
       Use this page as your morning checklist. If every panel is green and the timeline is empty, your books are in
