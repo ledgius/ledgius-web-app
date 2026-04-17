@@ -924,7 +924,7 @@ interface ImportBatchSummary {
   contacts_total: number
   txn_total: number
   txn_imported: number
-  created_at: string
+  started_at: string | null
   created_by_name: string | null
   source_files: { name: string; type: string; rows: number }[]
 }
@@ -1127,7 +1127,7 @@ function RecentImports() {
             <tbody className="divide-y divide-gray-100 bg-white">
               {batches.map((b) => (
                 <tr key={b.id}>
-                  <td className="px-3 py-2 text-xs"><DateValue value={b.created_at} /></td>
+                  <td className="px-3 py-2 text-xs">{b.started_at ? <DateValue value={b.started_at} /> : "—"}</td>
                   <td className="px-3 py-2 text-xs uppercase font-medium">{b.source_system}</td>
                   <td className="px-3 py-2 text-xs text-right tabular-nums">{b.source_files?.length ?? 0}</td>
                   <td className="px-3 py-2 text-xs text-right tabular-nums">{b.accounts_total}</td>
