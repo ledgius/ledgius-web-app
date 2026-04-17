@@ -924,7 +924,7 @@ interface ImportBatchSummary {
   txn_total: number
   txn_imported: number
   started_at: string | null
-  created_by_name: string | null
+  imported_by: string | null
   source_files: { name: string; type: string; rows: number }[]
 }
 
@@ -1125,7 +1125,7 @@ function RecentImports() {
                   <td className="px-3 py-2 text-xs text-right tabular-nums">{b.contacts_total}</td>
                   <td className="px-3 py-2 text-xs text-right tabular-nums">{b.txn_imported}</td>
                   <td className="px-3 py-2">{statusBadge(b.status)}</td>
-                  <td className="px-3 py-2 text-xs text-gray-500">{b.created_by_name ?? "—"}</td>
+                  <td className="px-3 py-2 text-xs text-gray-500">{b.imported_by ?? "—"}</td>
                 </tr>
               ))}
             </tbody>
