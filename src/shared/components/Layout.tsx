@@ -182,7 +182,8 @@ const payrollSections: NavSection[] = [
     title: "Compliance",
     items: [
       { to: "/payg-config", label: "PAYG Withholding", icon: Percent },
-      { to: "/super-rates", label: "Super Guarantee", icon: PiggyBank },
+      { to: "/super-rates", label: "Super Rates", icon: PiggyBank },
+      { to: "/super-obligations", label: "Super Obligations", icon: ClipboardCheck },
     ],
   },
 ]

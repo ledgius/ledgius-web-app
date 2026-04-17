@@ -60,6 +60,7 @@ const EmployeesPage = lazy(() => import("@/domains/payroll/pages/EmployeesPage")
 const CreateEmployeePage = lazy(() => import("@/domains/payroll/pages/CreateEmployeePage").then(m => ({ default: m.CreateEmployeePage })))
 const EmployeeDetailPage = lazy(() => import("@/domains/payroll/pages/EmployeeDetailPage").then(m => ({ default: m.EmployeeDetailPage })))
 const PayRunsPage = lazy(() => import("@/domains/payroll/pages/PayRunsPage").then(m => ({ default: m.PayRunsPage })))
+const SuperObligationsPage = lazy(() => import("@/domains/payroll/pages/SuperObligationsPage").then(m => ({ default: m.SuperObligationsPage })))
 
 const PAYGConfigPage = lazy(() => import("@/domains/admin/pages/PAYGConfigPage").then(m => ({ default: m.PAYGConfigPage })))
 const SuperRatesPage = lazy(() => import("@/domains/admin/pages/SuperRatesPage").then(m => ({ default: m.SuperRatesPage })))
@@ -155,6 +156,7 @@ export const router = createBrowserRouter([
       // Admin
       { path: "payg-config", element: <S><PAYGConfigPage /></S> },
       { path: "super-rates", element: <S><SuperRatesPage /></S> },
+      { path: "super-obligations", element: <S><SuperObligationsPage /></S> },
       { path: "users", element: <S><UsersPage /></S> },
 
       // Audit
