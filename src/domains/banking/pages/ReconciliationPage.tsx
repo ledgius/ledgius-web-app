@@ -15,6 +15,7 @@ import {
   useReconSummary,
   useReconRules,
   useBulkAccept,
+  useBulkAllocate,
   useCreateFromLine,
   type QueueItem,
   type QueueFilter,
@@ -155,6 +156,38 @@ function nextId(): string {
   return Math.random().toString(36).slice(2, 10)
 }
 
+/** Extract the meaningful business name from a bank transaction description,
+ * stripping transaction-specific identifiers like card numbers, amounts,
+ * reference numbers, currency codes, and fee descriptions. */
+function extractMeaningfulName(description: string): string {
+  let s = description
+  // Strip common prefixes
+  s = s.replace(/^(DEBIT CARD PURCHASE|CREDIT CARD PURCHASE|VISA PURCHASE|EFTPOS|DIRECT DEBIT|DIRECT CREDIT|DEPOSIT|WITHDRAWAL|OSKO PAYMENT|BPAY|TRANSFER)\s*/i, "")
+  // Strip card numbers (Card No. ~NNNNNN, Card No ~NNNNNN)
+  s = s.replace(/Card\s*No\.?\s*~?\d+/gi, "")
+  // Strip dollar amounts ($1,234.56 or 1,234.56 or 3955.00)
+  s = s.replace(/\$[\d,]+\.?\d*/g, "")
+  s = s.replace(/\b\d{1,3}(?:,\d{3})*\.\d{2}\b/g, "")
+  // Strip currency codes (AUD, USD, THB, NZD, etc.)
+  s = s.replace(/\b(AUD|USD|NZD|GBP|EUR|THB|SGD|JPY|CAD|HKD|CNY|INR)\b/gi, "")
+  // Strip "incl." fee descriptions
+  s = s.replace(/incl\.?\s*[^,]*/gi, "")
+  // Strip "Foreign Transaction Fee" and similar
+  s = s.replace(/Foreign\s+Transaction\s+Fee/gi, "")
+  // Strip reference-like patterns (long digit sequences, hex strings)
+  s = s.replace(/\b[A-F0-9]{8,}\b/gi, "")
+  s = s.replace(/\b\d{6,}\b/g, "")
+  // Strip date-like patterns (01/04, 2026-04-10, etc.)
+  s = s.replace(/\b\d{1,2}\/\d{1,2}(?:\/\d{2,4})?\b/g, "")
+  s = s.replace(/\b\d{4}-\d{2}-\d{2}\b/g, "")
+  // Strip 2C2P-style codes and asterisks
+  s = s.replace(/\*+/g, " ")
+  // Collapse whitespace
+  s = s.replace(/\s+/g, " ").trim()
+  // If we stripped too aggressively, fall back to original
+  return s.length >= 3 ? s : description.trim()
+}
+
 function highlightMatch(text: string, pattern: string): React.ReactNode {
   if (!pattern) return text
   const idx = text.toLowerCase().indexOf(pattern.toLowerCase())
@@ -194,6 +227,7 @@ function ExpansionPanel({
   onPatternChange,
   onMatchTypeChange,
   onSave,
+  onBulkAllocate,
   onCancel,
   saving,
 }: {
@@ -209,6 +243,7 @@ function ExpansionPanel({
   onPatternChange: (pattern: string) => void
   onMatchTypeChange: (matchType: "contains" | "exact" | "regex") => void
   onSave: (lines: AllocationLine[], createRule: boolean) => void
+  onBulkAllocate: (pattern: string, matchType: "contains" | "exact" | "regex", lines: AllocationLine[]) => void
   onCancel: () => void
   saving: boolean
 }) {
@@ -224,10 +259,11 @@ function ExpansionPanel({
     },
   ])
   const [createRule, setCreateRule] = useState(false)
-  const [auditExpanded, setAuditExpanded] = useState(false)
 
   // Rule editor state
-  const [rulePattern, setRulePattern] = useState(item.normalized_description || item.description || "")
+  const [rulePattern, setRulePattern] = useState(() =>
+    extractMeaningfulName(item.normalized_description || item.description || "")
+  )
   const [ruleMatchType, setRuleMatchType] = useState<"contains" | "exact" | "regex">("contains")
   const [ruleAmountMatch, setRuleAmountMatch] = useState<"any" | "exact" | "range" | "set">("any")
   const [ruleAmountExact, setRuleAmountExact] = useState(Math.abs(amount).toFixed(2))
@@ -414,9 +450,15 @@ function ExpansionPanel({
               size="sm"
               disabled={!canSave || saving}
               loading={saving}
-              onClick={() => onSave(lines, actionTab === "rule")}
+              onClick={() => {
+                if (actionTab === "rule" && rulePattern) {
+                  onBulkAllocate(rulePattern, ruleMatchType, lines)
+                } else {
+                  onSave(lines, false)
+                }
+              }}
             >
-              Save
+              {actionTab === "rule" ? `Save & Allocate${ruleMatchCount > 0 ? ` (${ruleMatchCount})` : ""}` : "Save"}
             </Button>
           </div>
 
@@ -681,22 +723,6 @@ function ExpansionPanel({
             </div>
           )}
 
-          {/* ── Audit (collapsed by default) ──────────────────────────────── */}
-          <div>
-            <button
-              type="button"
-              onClick={() => setAuditExpanded(!auditExpanded)}
-              className="flex items-center gap-2 text-xs font-medium text-gray-500 uppercase tracking-wide hover:text-gray-700 transition-colors"
-            >
-              <ChevronRight className={cn("h-3.5 w-3.5 transition-transform duration-150", auditExpanded && "rotate-90")} />
-              Audit
-            </button>
-            {auditExpanded && (
-              <div className="mt-2 px-3 py-3 bg-white border border-gray-200 rounded-lg text-sm text-gray-400">
-                Audit trail will appear here
-              </div>
-            )}
-          </div>
         </div>
       </td>
     </tr>
@@ -814,6 +840,7 @@ export function ReconciliationPage() {
 
   // Mutations
   const bulkAccept = useBulkAccept()
+  const bulkAllocate = useBulkAllocate()
   const createFromLine = useCreateFromLine()
 
   // Derived data
@@ -999,6 +1026,48 @@ export function ReconciliationPage() {
     }
   }, [queueRaw, createFromLine, feedback])
 
+  const handleBulkRuleAllocate = useCallback(async (
+    pattern: string,
+    matchType: "contains" | "exact" | "regex",
+    allocLines: AllocationLine[],
+  ) => {
+    if (allocLines.length === 0 || !allocLines[0].accountId) return
+
+    // Find all unallocated transactions matching the pattern
+    const unallocated = queueRaw.filter((q) => {
+      const s = reconStatusSemantic(q.reconciliation_status)
+      return s === "unmatched" || s === "suggested" || s === "needs_review"
+    })
+    const matchingIds = unallocated
+      .filter((q) => testRulePattern(q.normalized_description || q.description || "", pattern, matchType))
+      .map((q) => q.id)
+
+    if (matchingIds.length === 0) {
+      feedback.error("No matching transactions found")
+      return
+    }
+
+    try {
+      const result = await bulkAllocate.mutateAsync({
+        transaction_ids: matchingIds,
+        account_id: allocLines[0].accountId!,
+        tax_code_id: allocLines[0].taxCodeId ?? undefined,
+        contact_id: allocLines[0].contactId ?? undefined,
+        description: allocLines[0].description || "",
+        remember_rule: true,
+        rule_pattern: pattern,
+        rule_match_type: matchType,
+        rule_name: pattern,
+      })
+      const r = result as { allocated?: number }
+      feedback.success(`Rule created — ${r.allocated ?? matchingIds.length} transactions allocated`)
+      setExpandedLineId(null)
+      setRulePreviewPattern("")
+    } catch (err: unknown) {
+      feedback.error("Bulk allocate failed", err instanceof Error ? err.message : "Unknown error")
+    }
+  }, [queueRaw, bulkAllocate, feedback])
+
   // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -1086,13 +1155,13 @@ export function ReconciliationPage() {
                     setSelectedIds(new Set())
                   }}
                   placeholder="Select a bank account..."
-                  className="w-72"
+                  className="w-80"
                 />
               </div>
               {selectedAccountId > 0 && selectedAccount && (
                 <div className="flex items-center gap-1.5 text-sm">
                   <Landmark className="h-4 w-4 text-gray-400 shrink-0" />
-                  <span className="font-medium truncate max-w-[200px]" title={selectedAccount.description ?? undefined}>
+                  <span className="font-medium truncate max-w-[300px]" title={selectedAccount.description ?? undefined}>
                     {selectedAccount.description}
                   </span>
                 </div>
@@ -1350,7 +1419,8 @@ export function ReconciliationPage() {
                         onPatternChange={setRulePreviewPattern}
                         onMatchTypeChange={setRulePreviewMatchType}
                         onSave={handleSaveAllocation}
-                        saving={createFromLine.isPending}
+                        onBulkAllocate={handleBulkRuleAllocate}
+                        saving={createFromLine.isPending || bulkAllocate.isPending}
                       />
                     )
                   })
@@ -1398,6 +1468,7 @@ function TransactionRow({
   onPatternChange,
   onMatchTypeChange,
   onSave,
+  onBulkAllocate,
   saving,
 }: {
   item: QueueItem
@@ -1421,6 +1492,7 @@ function TransactionRow({
   onPatternChange: (pattern: string) => void
   onMatchTypeChange: (matchType: "contains" | "exact" | "regex") => void
   onSave: (lineId: number, lines: AllocationLine[], createRule: boolean) => void
+  onBulkAllocate: (pattern: string, matchType: "contains" | "exact" | "regex", lines: AllocationLine[]) => void
   saving: boolean
 }) {
   // Derive column display values
@@ -1602,6 +1674,7 @@ function TransactionRow({
           onPatternChange={onPatternChange}
           onMatchTypeChange={onMatchTypeChange}
           onSave={(lines, createRule) => { onPatternChange(""); onSave(item.id, lines, createRule) }}
+          onBulkAllocate={(pattern, matchType, lines) => { onPatternChange(""); onBulkAllocate(pattern, matchType, lines) }}
           onCancel={() => { onPatternChange(""); onRowClick(item.id) }}
           saving={saving}
         />

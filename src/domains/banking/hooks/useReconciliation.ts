@@ -289,6 +289,27 @@ export interface CreateRuleRequest {
   priority?: number
 }
 
+export interface BulkAllocateRequest {
+  transaction_ids: number[]
+  account_id: number
+  tax_code_id?: number | null
+  contact_id?: number | null
+  description: string
+  remember_rule: boolean
+  rule_pattern: string
+  rule_match_type: string
+  rule_name: string
+}
+
+export function useBulkAllocate() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (body: BulkAllocateRequest) =>
+      api.post("/reconciliation/bulk/allocate", body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: RECON_KEY }),
+  })
+}
+
 export function useCreateBankRule() {
   const qc = useQueryClient()
   return useMutation({
