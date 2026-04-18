@@ -9,15 +9,17 @@ import { useFeedback } from "@/components/feedback"
 import { useAccounts } from "@/domains/account/hooks/useAccounts"
 import { useTaxCodes } from "@/domains/taxcode/hooks/useTaxCodes"
 import { useCustomers, useVendors } from "@/domains/contact/hooks/useContacts"
-import { useImportBatches, useBankRules, type BankRule } from "@/domains/banking/hooks/useBanking"
+import { useImportBatches } from "@/domains/banking/hooks/useBanking"
 import {
   useReconQueue,
   useReconSummary,
+  useReconRules,
   useBulkAccept,
   useCreateFromLine,
   type QueueItem,
   type QueueFilter,
   type QueueSort,
+  type ReconRule,
 } from "../hooks/useReconciliation"
 import { cn } from "@/shared/lib/utils"
 import {
@@ -36,7 +38,7 @@ import {
 type SortColumn = "date" | "description" | "withdrawal" | "deposit" | "status"
 type SortDirection = "asc" | "desc"
 type FilterTab = "all" | "not_matched" | "matched"
-type ActionTab = "match" | "categories" | "transfer"
+type ActionTab = "rule" | "manual" | "link" | "transfer"
 
 interface AllocationLine {
   id: string
@@ -161,7 +163,7 @@ function ExpansionPanel({
   contacts,
   bankAccounts,
   selectedAccountId,
-  bankRules,
+  reconRules,
   onSave,
   onCancel,
   saving,
@@ -172,13 +174,12 @@ function ExpansionPanel({
   contacts: { id: number; name: string }[]
   bankAccounts: { id: number; accno: string; description: string | null }[]
   selectedAccountId: number
-  bankRules: BankRule[]
+  reconRules: ReconRule[]
   onSave: (lines: AllocationLine[], createRule: boolean) => void
   onCancel: () => void
   saving: boolean
 }) {
   const amount = parseAmount(item.amount)
-  const [actionTab, setActionTab] = useState<ActionTab>("categories")
   const [lines, setLines] = useState<AllocationLine[]>(() => [
     {
       id: nextId(),
@@ -191,15 +192,65 @@ function ExpansionPanel({
   ])
   const [createRule, setCreateRule] = useState(false)
   const [auditExpanded, setAuditExpanded] = useState(false)
+  const [selectedRuleId, setSelectedRuleId] = useState<number | null>(null)
 
-  // Find matched rule
+  // Find auto-matched recon rule
   const matchedRule = useMemo(() => {
     if (!item.description) return null
     const desc = item.description.toLowerCase()
-    return bankRules.find(
-      (r) => r.enabled && r.description_pattern && desc.includes(r.description_pattern.toLowerCase())
-    ) ?? null
-  }, [item.description, bankRules])
+    return reconRules.find((r) => {
+      if (r.disabled) return false
+      const pat = r.match_pattern?.toLowerCase()
+      if (!pat) return false
+      if (r.match_type === "exact") return desc === pat
+      if (r.match_type === "regex") {
+        try { return new RegExp(pat, "i").test(desc) } catch { return false }
+      }
+      return desc.includes(pat) // "contains" default
+    }) ?? null
+  }, [item.description, reconRules])
+
+  // Default tab: show rule tab if a rule matched, otherwise manual allocation
+  const [actionTab, setActionTab] = useState<ActionTab>(() =>
+    matchedRule ? "rule" : "manual"
+  )
+
+  // Apply matched rule defaults to first allocation line on mount
+  useEffect(() => {
+    if (!matchedRule) return
+    setSelectedRuleId(matchedRule.id)
+    setLines((prev) => {
+      const first = prev[0]
+      if (!first || first.accountId) return prev // already set
+      return [
+        {
+          ...first,
+          accountId: matchedRule.default_account_id ?? null,
+          taxCodeId: matchedRule.default_tax_code_id ?? null,
+          contactId: matchedRule.default_contact_id ?? null,
+        },
+        ...prev.slice(1),
+      ]
+    })
+  }, [matchedRule])
+
+  // Apply a manually-selected rule
+  const applyRule = useCallback((rule: ReconRule) => {
+    setSelectedRuleId(rule.id)
+    setLines((prev) => {
+      const first = prev[0]
+      if (!first) return prev
+      return [
+        {
+          ...first,
+          accountId: rule.default_account_id ?? first.accountId,
+          taxCodeId: rule.default_tax_code_id ?? first.taxCodeId,
+          contactId: rule.default_contact_id ?? first.contactId,
+        },
+        ...prev.slice(1),
+      ]
+    })
+  }, [])
 
   // Account options for the Combobox (exclude bank accounts from categories)
   const categoryAccountOptions = useMemo(() => {
@@ -266,225 +317,276 @@ function ExpansionPanel({
   const isBalanced = Math.abs(outOfBalance) < 0.01
   const canSave = lines.every((l) => l.accountId && l.taxCodeId && parseFloat(l.amount) > 0) && isBalanced
 
+  const activeRule = selectedRuleId
+    ? reconRules.find((r) => r.id === selectedRuleId) ?? null
+    : matchedRule
+
   return (
     <tr>
       <td colSpan={7} className="p-0">
         <div className="border-t border-b-2 border-gray-200 bg-gray-50 px-6 py-4 space-y-4">
 
-          {/* Section 1: Rule/Match */}
-          <div>
-            <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Rule / Match</h4>
-            {matchedRule ? (
-              <div className="flex items-center gap-2 text-sm text-gray-700">
-                <StatusPill status="matched" semantic="success" dot={false} className="text-xs" />
-                <span>Rule: <span className="font-medium">{matchedRule.name}</span></span>
-                {matchedRule.description_pattern && (
-                  <span className="text-xs text-gray-400 font-mono">({matchedRule.description_pattern})</span>
+          {/* Tab buttons */}
+          <div className="flex gap-1">
+            {([
+              { key: "rule" as ActionTab, label: "Allocation Rule", badge: matchedRule ? "1" : undefined },
+              { key: "manual" as ActionTab, label: "Manual Allocation" },
+              { key: "link" as ActionTab, label: "Link Existing" },
+              { key: "transfer" as ActionTab, label: "Transfer Money" },
+            ]).map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setActionTab(tab.key)}
+                className={cn(
+                  "px-3 py-1.5 rounded-md text-xs font-medium border transition-colors",
+                  actionTab === tab.key
+                    ? "bg-gray-900 text-white border-gray-900"
+                    : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"
                 )}
-              </div>
-            ) : (
-              <p className="text-sm text-gray-500">No rule matched</p>
-            )}
-            <div className="mt-2 max-w-xs">
-              <Combobox
-                options={bankRules
-                  .filter((r) => r.enabled)
-                  .map((r) => ({
-                    value: r.id,
-                    label: r.name,
-                    detail: r.description_pattern ?? undefined,
-                  }))}
-                value={null}
-                onChange={() => {}}
-                placeholder="Search rules..."
-              />
-            </div>
+              >
+                {tab.label}
+                {tab.badge && (
+                  <span className="ml-1.5 inline-flex items-center justify-center h-4 w-4 rounded-full bg-green-500 text-white text-[10px] font-bold">
+                    {tab.badge}
+                  </span>
+                )}
+              </button>
+            ))}
           </div>
 
-          {/* Section 2: Actions */}
-          <div>
-            <h4 className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Actions</h4>
-
-            {/* Tab buttons */}
-            <div className="flex gap-1 mb-4">
-              {([
-                { key: "match" as ActionTab, label: "Match to existing" },
-                { key: "categories" as ActionTab, label: "Select categories" },
-                { key: "transfer" as ActionTab, label: "Transfer money" },
-              ]).map((tab) => (
-                <button
-                  key={tab.key}
-                  type="button"
-                  onClick={() => setActionTab(tab.key)}
-                  className={cn(
-                    "px-3 py-1.5 rounded-md text-xs font-medium border transition-colors",
-                    actionTab === tab.key
-                      ? "bg-gray-900 text-white border-gray-900"
-                      : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"
-                  )}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Match to existing */}
-            {actionTab === "match" && (
-              <div className="text-sm text-gray-500 py-4 text-center border border-dashed border-gray-300 rounded-lg">
-                Match to an existing invoice, bill, or journal entry. Search by reference or amount.
-                <p className="text-xs text-gray-400 mt-1">Coming in Phase 2 (REC-048 to REC-051)</p>
-              </div>
-            )}
-
-            {/* Select categories */}
-            {actionTab === "categories" && (
-              <div className="space-y-3">
-                {/* Allocation lines */}
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
-                  {/* Line header */}
-                  <div className="grid grid-cols-[1fr_1fr_1.5fr_1fr_100px_32px] gap-2 px-3 py-2 bg-gray-100 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                    <span>Contact</span>
-                    <span>Description</span>
-                    <span>Account / Category</span>
-                    <span>Tax code</span>
-                    <span className="text-right">Amount ($)</span>
-                    <span />
-                  </div>
-
-                  {lines.map((line) => (
-                    <div
-                      key={line.id}
-                      className="grid grid-cols-[1fr_1fr_1.5fr_1fr_100px_32px] gap-2 px-3 py-2 border-t border-gray-100 items-start"
-                    >
-                      {/* Contact */}
-                      <Combobox
-                        options={contactOptions}
-                        value={line.contactId}
-                        onChange={(v) => updateLine(line.id, "contactId", v ? Number(v) : null)}
-                        placeholder="Contact..."
-                      />
-
-                      {/* Description */}
-                      <input
-                        type="text"
-                        value={line.description}
-                        onChange={(e) => updateLine(line.id, "description", e.target.value)}
-                        className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        placeholder="Description"
-                      />
-
-                      {/* Account / Category */}
-                      <Combobox
-                        options={categoryAccountOptions}
-                        value={line.accountId}
-                        onChange={(v) => updateLine(line.id, "accountId", v ? Number(v) : null)}
-                        placeholder="Select account..."
-                      />
-
-                      {/* Tax code */}
-                      <Combobox
-                        options={taxCodeOptions}
-                        value={line.taxCodeId}
-                        onChange={(v) => updateLine(line.id, "taxCodeId", v ? Number(v) : null)}
-                        placeholder="Tax..."
-                      />
-
-                      {/* Amount */}
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        value={line.amount}
-                        onChange={(e) => updateLine(line.id, "amount", e.target.value)}
-                        className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm text-right font-normal tabular-nums focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        placeholder="0.00"
-                      />
-
-                      {/* Remove */}
-                      <button
-                        type="button"
-                        onClick={() => removeLine(line.id)}
-                        disabled={lines.length <= 1}
-                        className="p-1 text-gray-400 hover:text-red-500 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
-                        title="Remove line"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Add line */}
-                <Button variant="ghost" size="sm" onClick={addLine}>
-                  <Plus className="h-3.5 w-3.5" />
-                  Add line
-                </Button>
-
-                {/* Subtotal + Out of Balance */}
-                <div className="flex items-center justify-end gap-8 pt-2 border-t border-gray-200">
-                  <div className="text-right">
-                    <p className="text-xs uppercase tracking-wide text-gray-500">Subtotal</p>
-                    <p className="text-sm font-normal tabular-nums text-gray-700">
-                      ${subtotal.toFixed(2)}
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs uppercase tracking-wide text-gray-500">Out of Balance</p>
-                    <p className={cn(
-                      "text-sm font-normal tabular-nums",
-                      isBalanced ? "text-green-600" : "text-red-600"
-                    )}>
-                      ${Math.abs(outOfBalance).toFixed(2)}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Bottom actions */}
-                <div className="flex items-center gap-3 pt-3 border-t border-gray-200">
-                  <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={createRule}
-                      onChange={(e) => setCreateRule(e.target.checked)}
-                      className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                    />
-                    Create rule for future matches
-                  </label>
-                  <div className="flex-1" />
-                  <Button variant="secondary" size="sm" onClick={onCancel}>
-                    Cancel
-                  </Button>
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    disabled={!canSave || saving}
-                    loading={saving}
-                    onClick={() => onSave(lines, createRule)}
-                  >
-                    Save
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {/* Transfer money */}
-            {actionTab === "transfer" && (
-              <div className="space-y-3 max-w-sm">
-                <p className="text-xs text-gray-500">Transfer between bank accounts (e.g. cheque to savings).</p>
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Target bank account</label>
+          {/* ── Tab: Allocation Rule ─────────────────────────────────────── */}
+          {actionTab === "rule" && (
+            <div className="space-y-4">
+              {/* Rule selector */}
+              <div className="flex items-start gap-4">
+                <div className="flex-1 max-w-sm">
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Select rule</label>
                   <Combobox
-                    options={bankAccountOptions}
-                    value={null}
-                    onChange={() => {}}
-                    placeholder="Select target account..."
+                    options={reconRules
+                      .filter((r) => !r.disabled)
+                      .map((r) => ({
+                        value: r.id,
+                        label: r.name,
+                        detail: r.match_pattern ?? undefined,
+                      }))}
+                    value={selectedRuleId}
+                    onChange={(v) => {
+                      if (!v) { setSelectedRuleId(null); return }
+                      const rule = reconRules.find((r) => r.id === Number(v))
+                      if (rule) applyRule(rule)
+                    }}
+                    placeholder="Search rules..."
                   />
                 </div>
-                <p className="text-xs text-gray-400">Phase 2 (REC-056 to REC-059) — full transfer support with two-sided matching.</p>
+                {activeRule && (
+                  <div className="flex-1 text-sm text-gray-600 pt-5">
+                    <div className="flex items-center gap-2">
+                      <StatusPill status="Rule matched" semantic="success" dot={false} className="text-xs" />
+                      <span className="font-medium">{activeRule.name}</span>
+                      <span className="text-xs text-gray-400 font-mono">({activeRule.match_type}: {activeRule.match_pattern})</span>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {activeRule.source === "smart" ? "Smart rule" : "Manual rule"} · confidence {(activeRule.confidence * 100).toFixed(0)}% · used {activeRule.use_count}×
+                    </p>
+                  </div>
+                )}
               </div>
-            )}
-          </div>
 
-          {/* Section 3: Audit (collapsed by default) */}
+              {/* Preview of what the rule will allocate */}
+              {activeRule && (
+                <div className="border border-gray-200 rounded-lg bg-white px-4 py-3 space-y-2">
+                  <h5 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Rule defaults</h5>
+                  <div className="grid grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <span className="text-xs text-gray-400">Account</span>
+                      <p className="text-gray-700">
+                        {activeRule.default_account_id
+                          ? accounts.find((a) => a.id === activeRule.default_account_id)
+                            ? `${accounts.find((a) => a.id === activeRule.default_account_id)!.accno} — ${accounts.find((a) => a.id === activeRule.default_account_id)!.description ?? ""}`
+                            : `#${activeRule.default_account_id}`
+                          : "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-400">Tax code</span>
+                      <p className="text-gray-700">
+                        {activeRule.default_tax_code_id
+                          ? taxCodes.find((tc) => tc.id === activeRule.default_tax_code_id)
+                            ? `${taxCodes.find((tc) => tc.id === activeRule.default_tax_code_id)!.code} — ${taxCodes.find((tc) => tc.id === activeRule.default_tax_code_id)!.name}`
+                            : `#${activeRule.default_tax_code_id}`
+                          : "—"}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-xs text-gray-400">Contact</span>
+                      <p className="text-gray-700">
+                        {activeRule.default_contact_id
+                          ? contacts.find((c) => c.id === activeRule.default_contact_id)?.name ?? `#${activeRule.default_contact_id}`
+                          : "—"}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Save with rule */}
+              <div className="flex items-center gap-3 pt-2 border-t border-gray-200">
+                <div className="flex-1" />
+                <Button variant="secondary" size="sm" onClick={onCancel}>Cancel</Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled={!canSave || saving}
+                  loading={saving}
+                  onClick={() => onSave(lines, false)}
+                >
+                  Apply Rule
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* ── Tab: Manual Allocation ───────────────────────────────────── */}
+          {actionTab === "manual" && (
+            <div className="space-y-3">
+              {/* Allocation lines */}
+              <div className="border border-gray-200 rounded-lg overflow-hidden">
+                {/* Line header */}
+                <div className="grid grid-cols-[1fr_1fr_1.5fr_1fr_100px_32px] gap-2 px-3 py-2 bg-gray-100 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  <span>Contact</span>
+                  <span>Description</span>
+                  <span>Account / Category</span>
+                  <span>Tax code</span>
+                  <span className="text-right">Amount ($)</span>
+                  <span />
+                </div>
+
+                {lines.map((line) => (
+                  <div
+                    key={line.id}
+                    className="grid grid-cols-[1fr_1fr_1.5fr_1fr_100px_32px] gap-2 px-3 py-2 border-t border-gray-100 items-start"
+                  >
+                    <Combobox
+                      options={contactOptions}
+                      value={line.contactId}
+                      onChange={(v) => updateLine(line.id, "contactId", v ? Number(v) : null)}
+                      placeholder="Contact..."
+                    />
+                    <input
+                      type="text"
+                      value={line.description}
+                      onChange={(e) => updateLine(line.id, "description", e.target.value)}
+                      className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder="Description"
+                    />
+                    <Combobox
+                      options={categoryAccountOptions}
+                      value={line.accountId}
+                      onChange={(v) => updateLine(line.id, "accountId", v ? Number(v) : null)}
+                      placeholder="Select account..."
+                    />
+                    <Combobox
+                      options={taxCodeOptions}
+                      value={line.taxCodeId}
+                      onChange={(v) => updateLine(line.id, "taxCodeId", v ? Number(v) : null)}
+                      placeholder="Tax..."
+                    />
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={line.amount}
+                      onChange={(e) => updateLine(line.id, "amount", e.target.value)}
+                      className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm text-right font-normal tabular-nums focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder="0.00"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeLine(line.id)}
+                      disabled={lines.length <= 1}
+                      className="p-1 text-gray-400 hover:text-red-500 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+                      title="Remove line"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <Button variant="ghost" size="sm" onClick={addLine}>
+                <Plus className="h-3.5 w-3.5" />
+                Add line
+              </Button>
+
+              {/* Subtotal + Out of Balance */}
+              <div className="flex items-center justify-end gap-8 pt-2 border-t border-gray-200">
+                <div className="text-right">
+                  <p className="text-xs uppercase tracking-wide text-gray-500">Subtotal</p>
+                  <p className="text-sm font-normal tabular-nums text-gray-700">${subtotal.toFixed(2)}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-xs uppercase tracking-wide text-gray-500">Out of Balance</p>
+                  <p className={cn(
+                    "text-sm font-normal tabular-nums",
+                    isBalanced ? "text-green-600" : "text-red-600"
+                  )}>
+                    ${Math.abs(outOfBalance).toFixed(2)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Bottom actions */}
+              <div className="flex items-center gap-3 pt-3 border-t border-gray-200">
+                <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={createRule}
+                    onChange={(e) => setCreateRule(e.target.checked)}
+                    className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                  />
+                  Create rule for future allocations
+                </label>
+                <div className="flex-1" />
+                <Button variant="secondary" size="sm" onClick={onCancel}>Cancel</Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  disabled={!canSave || saving}
+                  loading={saving}
+                  onClick={() => onSave(lines, createRule)}
+                >
+                  Save
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* ── Tab: Link Existing ───────────────────────────────────────── */}
+          {actionTab === "link" && (
+            <div className="text-sm text-gray-500 py-6 text-center border border-dashed border-gray-300 rounded-lg">
+              Link to an existing invoice, bill, or journal entry. Search by reference or amount.
+              <p className="text-xs text-gray-400 mt-1">Coming in Phase 2 (REC-048 to REC-051)</p>
+            </div>
+          )}
+
+          {/* ── Tab: Transfer Money ──────────────────────────────────────── */}
+          {actionTab === "transfer" && (
+            <div className="space-y-3 max-w-sm">
+              <p className="text-xs text-gray-500">Transfer between bank accounts (e.g. cheque to savings).</p>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Target bank account</label>
+                <Combobox
+                  options={bankAccountOptions}
+                  value={null}
+                  onChange={() => {}}
+                  placeholder="Select target account..."
+                />
+              </div>
+              <p className="text-xs text-gray-400">Phase 2 (REC-056 to REC-059) — full transfer support with two-sided matching.</p>
+            </div>
+          )}
+
+          {/* ── Audit (collapsed by default) ──────────────────────────────── */}
           <div>
             <button
               type="button"
@@ -606,8 +708,8 @@ export function ReconciliationPage() {
   const { data: queue, isLoading: queueLoading, error: queueError } = useReconQueue(selectedAccountId, "risk_first" as QueueSort, "all" as QueueFilter)
   const { data: reconSummary } = useReconSummary(selectedAccountId)
   const { data: importBatches } = useImportBatches(selectedAccountId)
-  const { data: bankRulesData } = useBankRules(selectedAccountId)
-  const bankRules = (bankRulesData ?? []) as BankRule[]
+  const { data: reconRulesData } = useReconRules()
+  const reconRules = (reconRulesData ?? []) as ReconRule[]
 
   // Mutations
   const bulkAccept = useBulkAccept()
@@ -770,17 +872,22 @@ export function ReconciliationPage() {
 
   const handleSaveAllocation = useCallback(async (
     lineId: number,
-    lines: AllocationLine[],
+    allocLines: AllocationLine[],
     shouldCreateRule: boolean
   ) => {
     const item = queueRaw.find((q) => q.id === lineId)
-    if (!item || lines.length === 0 || !lines[0].accountId) return
+    if (!item || allocLines.length === 0 || !allocLines[0].accountId) return
 
     try {
       await createFromLine.mutateAsync({
         lineId,
-        account_id: lines[0].accountId,
-        description: lines[0].description || item.description || "",
+        lines: allocLines.map((l) => ({
+          account_id: l.accountId!,
+          tax_code_id: l.taxCodeId ?? undefined,
+          contact_id: l.contactId ?? undefined,
+          description: l.description || item.description || "",
+          amount: parseFloat(l.amount) || 0,
+        })),
         remember_rule: shouldCreateRule,
       })
       feedback.success("Transaction categorised and matched")
@@ -1106,7 +1213,7 @@ export function ReconciliationPage() {
                         contacts={allContacts}
                         bankAccounts={bankAccounts}
                         selectedAccountId={selectedAccountId}
-                        bankRules={bankRules}
+                        reconRules={reconRules}
                         onSave={handleSaveAllocation}
                         saving={createFromLine.isPending}
                       />
@@ -1147,7 +1254,7 @@ function TransactionRow({
   contacts,
   bankAccounts,
   selectedAccountId,
-  bankRules,
+  reconRules,
   onSave,
   saving,
 }: {
@@ -1163,7 +1270,7 @@ function TransactionRow({
   contacts: { id: number; name: string }[]
   bankAccounts: { id: number; accno: string; description: string | null }[]
   selectedAccountId: number
-  bankRules: BankRule[]
+  reconRules: ReconRule[]
   onSave: (lineId: number, lines: AllocationLine[], createRule: boolean) => void
   saving: boolean
 }) {
@@ -1248,7 +1355,7 @@ function TransactionRow({
           contacts={contacts}
           bankAccounts={bankAccounts}
           selectedAccountId={selectedAccountId}
-          bankRules={bankRules}
+          reconRules={reconRules}
           onSave={(lines, createRule) => onSave(item.id, lines, createRule)}
           onCancel={() => onRowClick(item.id)}
           saving={saving}

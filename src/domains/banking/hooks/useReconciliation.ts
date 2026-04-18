@@ -114,6 +114,31 @@ export interface RunPipelineRequest {
   account_id: number
 }
 
+export interface ReconRule {
+  id: number
+  name: string
+  match_pattern: string
+  match_type: string // "contains" | "exact" | "regex"
+  default_account_id: number | null
+  default_tax_code_id: number | null
+  default_contact_id: number | null
+  auto_apply: boolean
+  is_split: boolean
+  split_lines: unknown[] | null
+  confidence: number
+  source: string // "manual" | "smart"
+  use_count: number
+  disabled: boolean
+}
+
+export interface AllocationLinePayload {
+  account_id: number
+  tax_code_id?: number | null
+  contact_id?: number | null
+  description: string
+  amount: number
+}
+
 // ── Query Keys ────────────────────────────────────────────────────────────────
 
 const RECON_KEY = ["reconciliation"]
@@ -174,6 +199,13 @@ export function useReconPrecedents(accountId: number) {
     queryKey: [...RECON_KEY, "precedents", accountId],
     queryFn: () => api.get<ReconciliationPrecedent[]>(`/reconciliation/precedents?account_id=${accountId}`),
     enabled: accountId > 0,
+  })
+}
+
+export function useReconRules() {
+  return useQuery({
+    queryKey: [...RECON_KEY, "rules"],
+    queryFn: () => api.get<ReconRule[]>("/bank-reconciliation/rules"),
   })
 }
 
@@ -241,8 +273,7 @@ export function useCreateFromLine() {
       ...body
     }: {
       lineId: number
-      account_id: number
-      description: string
+      lines: AllocationLinePayload[]
       remember_rule: boolean
       rule_pattern?: string
     }) => api.post(`/reconciliation/lines/${lineId}/create`, body),
