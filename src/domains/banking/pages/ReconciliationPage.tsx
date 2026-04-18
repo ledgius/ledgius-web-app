@@ -1043,7 +1043,7 @@ export function ReconciliationPage() {
                 setSelectedIds(new Set())
               }}
               placeholder="Select a bank account..."
-              className="w-60"
+              className="w-80"
             />
           </StatCell>
 
