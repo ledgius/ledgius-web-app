@@ -11,7 +11,7 @@ import {
   TrendingUp, TrendingDown, Minus,
   AlertCircle, Calendar, AlertTriangle, Circle,
   CheckCircle, Lock, ClipboardList, Wallet, Calculator,
-  ChevronRight,
+  ChevronRight, Clock,
 } from "lucide-react"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
@@ -20,6 +20,8 @@ import { PageShell } from "@/components/layout"
 import { HealthPanel } from "@/components/layout/HealthPanel"
 import { InfoPanel, Skeleton } from "@/components/primitives"
 import { useBooksHealth, type AgeBuckets, type PeriodCloseChecklist } from "../hooks/useBooksHealth"
+import { useActiveSnoozes, useSnoozeAction, findSnoozeForLink, ACTION_KEY_MAP } from "../hooks/useSnooze"
+import { useNotification } from "@/components/feedback"
 import { useCalendarTimeline, useCompleteCalendarTask, type TimelineItem as APITimelineItem } from "@/domains/calendar/hooks/useCalendar"
 import type { LucideIcon } from "lucide-react"
 
@@ -448,6 +450,9 @@ export function BooksHealthPage() {
   const { data: dashTimelineData } = useCalendarTimeline(7)
   const dashCompleteTask = useCompleteCalendarTask()
   const navigate = useNavigate()
+  const notify = useNotification()
+  const { data: activeSnoozes } = useActiveSnoozes()
+  const snoozeMutation = useSnoozeAction()
 
   const dashPendingItems = (dashTimelineData?.items ?? []).filter((i) => !i.done)
   // overdue count computed inside the merged InfoPanel
@@ -534,7 +539,7 @@ export function BooksHealthPage() {
         // are filtered out — the health actions have richer detail.
         const calendarDedupKeywords = actions.flatMap(a => {
           const kw: string[] = []
-          if (a.link === "/invoices") kw.push("invoice")
+          if (a.link.startsWith("/invoices")) kw.push("invoice")
           if (a.link === "/payments" || a.link === "/bills") kw.push("bill")
           return kw
         })
@@ -560,18 +565,50 @@ export function BooksHealthPage() {
               <>
                 {actions.length > 0 && (
                   <ul className="space-y-1">
-                    {actions.map((a, i) => (
-                      <li key={`health-${i}`} className="flex items-start gap-2">
-                        <span className={cn(
-                          "inline-block h-2.5 w-2.5 rounded-full mt-1.5 shrink-0",
-                          a.severity === "red" ? "bg-red-500" : "bg-amber-400"
-                        )} />
-                        <span>
-                          <Link to={a.link} state={{ from: "/" }} className="underline font-medium hover:text-blue-900">{a.title}</Link>
-                          {a.detail && <span className="text-blue-600"> — {a.detail}</span>}
-                        </span>
-                      </li>
-                    ))}
+                    {actions.map((a, i) => {
+                      const snooze = findSnoozeForLink(a.link, activeSnoozes)
+                      const actionKey = ACTION_KEY_MAP[a.link]
+                      if (snooze) {
+                        const until = new Date(snooze.snoozed_until).toLocaleDateString("en-AU", { day: "numeric", month: "short", year: "numeric" })
+                        return (
+                          <li key={`health-${i}`} className="flex items-start gap-2 opacity-50">
+                            <span className="inline-block h-2.5 w-2.5 rounded-full mt-1.5 shrink-0 bg-gray-300" />
+                            <span className="text-gray-400">Snoozed until {until}</span>
+                          </li>
+                        )
+                      }
+                      return (
+                        <li key={`health-${i}`} className="flex items-start gap-2">
+                          <span className={cn(
+                            "inline-block h-2.5 w-2.5 rounded-full mt-1.5 shrink-0",
+                            a.severity === "red" ? "bg-red-500" : "bg-amber-400"
+                          )} />
+                          <span className="flex-1">
+                            <Link to={a.link} state={{ from: "/" }} className="underline font-medium hover:text-blue-900">{a.title}</Link>
+                            {a.detail && <span className="text-blue-600"> — {a.detail}</span>}
+                          </span>
+                          {actionKey && (
+                            <button
+                              type="button"
+                              title="Snooze for 7 days"
+                              disabled={snoozeMutation.isPending}
+                              onClick={() => {
+                                snoozeMutation.mutate(
+                                  { action_key: actionKey, days: 7 },
+                                  {
+                                    onSuccess: () => notify.success(`Snoozed for 7 days`),
+                                    onError: () => notify.error("Failed to snooze action"),
+                                  }
+                                )
+                              }}
+                              className="shrink-0 mt-0.5 p-0.5 rounded text-blue-300 hover:text-blue-600 hover:bg-blue-50 disabled:opacity-50 transition-colors"
+                            >
+                              <Clock className="h-3.5 w-3.5" />
+                            </button>
+                          )}
+                        </li>
+                      )
+                    })}
                   </ul>
                 )}
                 {uniqueCalendarItems.length > 0 && (
@@ -938,7 +975,7 @@ function deriveActions(bh: BH | undefined): HealthAction[] {
         severity: ninetyPlus > 0 ? "red" : "amber",
         title: `Chase ${overdue} overdue invoice${overdue === 1 ? "" : "s"} (AR)`,
         detail: ninetyPlus > 0 ? `${ninetyPlus} over 90 days` : undefined,
-        link: "/invoices",
+        link: "/invoices?filter=overdue",
       })
     }
   }

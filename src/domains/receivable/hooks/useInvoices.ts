@@ -15,10 +15,11 @@ export interface InvoiceSummary {
   is_return: boolean
 }
 
-export function useInvoices() {
+export function useInvoices(filter?: string) {
+  const path = filter ? `/invoices?filter=${encodeURIComponent(filter)}` : "/invoices"
   return useQuery({
-    queryKey: ["invoices"],
-    queryFn: () => api.get<InvoiceSummary[]>("/invoices"),
+    queryKey: ["invoices", filter ?? "all"],
+    queryFn: () => api.get<InvoiceSummary[]>(path),
   })
 }
 
