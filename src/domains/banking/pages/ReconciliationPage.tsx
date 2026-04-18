@@ -9,15 +9,17 @@ import { useFeedback } from "@/components/feedback"
 import { useAccounts } from "@/domains/account/hooks/useAccounts"
 import { useTaxCodes } from "@/domains/taxcode/hooks/useTaxCodes"
 import { useCustomers, useVendors } from "@/domains/contact/hooks/useContacts"
-import { useImportBatches, useBankRules, type BankRule } from "@/domains/banking/hooks/useBanking"
+import { useImportBatches } from "@/domains/banking/hooks/useBanking"
 import {
   useReconQueue,
   useReconSummary,
+  useReconRules,
   useBulkAccept,
   useCreateFromLine,
   type QueueItem,
   type QueueFilter,
   type QueueSort,
+  type ReconRule,
 } from "../hooks/useReconciliation"
 import { cn } from "@/shared/lib/utils"
 import {
@@ -161,7 +163,7 @@ function ExpansionPanel({
   contacts,
   bankAccounts,
   selectedAccountId,
-  bankRules,
+  reconRules,
   onSave,
   onCancel,
   saving,
@@ -172,7 +174,7 @@ function ExpansionPanel({
   contacts: { id: number; name: string }[]
   bankAccounts: { id: number; accno: string; description: string | null }[]
   selectedAccountId: number
-  bankRules: BankRule[]
+  reconRules: ReconRule[]
   onSave: (lines: AllocationLine[], createRule: boolean) => void
   onCancel: () => void
   saving: boolean
@@ -192,14 +194,57 @@ function ExpansionPanel({
   const [createRule, setCreateRule] = useState(false)
   const [auditExpanded, setAuditExpanded] = useState(false)
 
-  // Find matched rule
+  // Find auto-matched recon rule
   const matchedRule = useMemo(() => {
     if (!item.description) return null
     const desc = item.description.toLowerCase()
-    return bankRules.find(
-      (r) => r.enabled && r.description_pattern && desc.includes(r.description_pattern.toLowerCase())
-    ) ?? null
-  }, [item.description, bankRules])
+    return reconRules.find((r) => {
+      if (r.disabled) return false
+      const pat = r.match_pattern?.toLowerCase()
+      if (!pat) return false
+      if (r.match_type === "exact") return desc === pat
+      if (r.match_type === "regex") {
+        try { return new RegExp(pat, "i").test(desc) } catch { return false }
+      }
+      return desc.includes(pat) // "contains" default
+    }) ?? null
+  }, [item.description, reconRules])
+
+  // Apply matched rule defaults to first allocation line on mount
+  useEffect(() => {
+    if (!matchedRule) return
+    setLines((prev) => {
+      const first = prev[0]
+      if (!first || first.accountId) return prev // already set
+      return [
+        {
+          ...first,
+          accountId: matchedRule.default_account_id ?? null,
+          taxCodeId: matchedRule.default_tax_code_id ?? null,
+          contactId: matchedRule.default_contact_id ?? null,
+        },
+        ...prev.slice(1),
+      ]
+    })
+  }, [matchedRule])
+
+  // Apply a manually-selected rule
+  const applyRule = useCallback((rule: ReconRule) => {
+    setLines((prev) => {
+      const first = prev[0]
+      if (!first) return prev
+      return [
+        {
+          ...first,
+          accountId: rule.default_account_id ?? first.accountId,
+          taxCodeId: rule.default_tax_code_id ?? first.taxCodeId,
+          contactId: rule.default_contact_id ?? first.contactId,
+        },
+        ...prev.slice(1),
+      ]
+    })
+    setActionTab("categories")
+  }, [])
 
   // Account options for the Combobox (exclude bank accounts from categories)
   const categoryAccountOptions = useMemo(() => {
@@ -278,8 +323,8 @@ function ExpansionPanel({
               <div className="flex items-center gap-2 text-sm text-gray-700">
                 <StatusPill status="matched" semantic="success" dot={false} className="text-xs" />
                 <span>Rule: <span className="font-medium">{matchedRule.name}</span></span>
-                {matchedRule.description_pattern && (
-                  <span className="text-xs text-gray-400 font-mono">({matchedRule.description_pattern})</span>
+                {matchedRule.match_pattern && (
+                  <span className="text-xs text-gray-400 font-mono">({matchedRule.match_pattern})</span>
                 )}
               </div>
             ) : (
@@ -287,15 +332,19 @@ function ExpansionPanel({
             )}
             <div className="mt-2 max-w-xs">
               <Combobox
-                options={bankRules
-                  .filter((r) => r.enabled)
+                options={reconRules
+                  .filter((r) => !r.disabled)
                   .map((r) => ({
                     value: r.id,
                     label: r.name,
-                    detail: r.description_pattern ?? undefined,
+                    detail: r.match_pattern ?? undefined,
                   }))}
-                value={null}
-                onChange={() => {}}
+                value={matchedRule?.id ?? null}
+                onChange={(v) => {
+                  if (!v) return
+                  const rule = reconRules.find((r) => r.id === Number(v))
+                  if (rule) applyRule(rule)
+                }}
                 placeholder="Search rules..."
               />
             </div>
@@ -606,8 +655,8 @@ export function ReconciliationPage() {
   const { data: queue, isLoading: queueLoading, error: queueError } = useReconQueue(selectedAccountId, "risk_first" as QueueSort, "all" as QueueFilter)
   const { data: reconSummary } = useReconSummary(selectedAccountId)
   const { data: importBatches } = useImportBatches(selectedAccountId)
-  const { data: bankRulesData } = useBankRules(selectedAccountId)
-  const bankRules = (bankRulesData ?? []) as BankRule[]
+  const { data: reconRulesData } = useReconRules()
+  const reconRules = (reconRulesData ?? []) as ReconRule[]
 
   // Mutations
   const bulkAccept = useBulkAccept()
@@ -770,17 +819,22 @@ export function ReconciliationPage() {
 
   const handleSaveAllocation = useCallback(async (
     lineId: number,
-    lines: AllocationLine[],
+    allocLines: AllocationLine[],
     shouldCreateRule: boolean
   ) => {
     const item = queueRaw.find((q) => q.id === lineId)
-    if (!item || lines.length === 0 || !lines[0].accountId) return
+    if (!item || allocLines.length === 0 || !allocLines[0].accountId) return
 
     try {
       await createFromLine.mutateAsync({
         lineId,
-        account_id: lines[0].accountId,
-        description: lines[0].description || item.description || "",
+        lines: allocLines.map((l) => ({
+          account_id: l.accountId!,
+          tax_code_id: l.taxCodeId ?? undefined,
+          contact_id: l.contactId ?? undefined,
+          description: l.description || item.description || "",
+          amount: parseFloat(l.amount) || 0,
+        })),
         remember_rule: shouldCreateRule,
       })
       feedback.success("Transaction categorised and matched")
@@ -1106,7 +1160,7 @@ export function ReconciliationPage() {
                         contacts={allContacts}
                         bankAccounts={bankAccounts}
                         selectedAccountId={selectedAccountId}
-                        bankRules={bankRules}
+                        reconRules={reconRules}
                         onSave={handleSaveAllocation}
                         saving={createFromLine.isPending}
                       />
@@ -1147,7 +1201,7 @@ function TransactionRow({
   contacts,
   bankAccounts,
   selectedAccountId,
-  bankRules,
+  reconRules,
   onSave,
   saving,
 }: {
@@ -1163,7 +1217,7 @@ function TransactionRow({
   contacts: { id: number; name: string }[]
   bankAccounts: { id: number; accno: string; description: string | null }[]
   selectedAccountId: number
-  bankRules: BankRule[]
+  reconRules: ReconRule[]
   onSave: (lineId: number, lines: AllocationLine[], createRule: boolean) => void
   saving: boolean
 }) {
@@ -1248,7 +1302,7 @@ function TransactionRow({
           contacts={contacts}
           bankAccounts={bankAccounts}
           selectedAccountId={selectedAccountId}
-          bankRules={bankRules}
+          reconRules={reconRules}
           onSave={(lines, createRule) => onSave(item.id, lines, createRule)}
           onCancel={() => onRowClick(item.id)}
           saving={saving}
