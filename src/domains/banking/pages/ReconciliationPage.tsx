@@ -209,6 +209,11 @@ function testRulePattern(description: string, pattern: string, matchType: "conta
   if (matchType === "regex") {
     try { return new RegExp(pat, "i").test(description) } catch { return false }
   }
+  // Contains: support * as wildcard (e.g., "DEPOSIT*Square" → /DEPOSIT.*Square/i)
+  if (pat.includes("*")) {
+    const escaped = pat.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*")
+    try { return new RegExp(escaped, "i").test(description) } catch { return false }
+  }
   return desc.includes(pat)
 }
 
@@ -1159,7 +1164,7 @@ export function ReconciliationPage() {
                 />
               </div>
               {selectedAccountId > 0 && selectedAccount && (
-                <div className="flex items-center gap-1.5 text-sm">
+                <div className="flex items-center gap-1.5 text-sm py-[7px]">
                   <Landmark className="h-4 w-4 text-gray-400 shrink-0" />
                   <span className="font-medium truncate max-w-[300px]" title={selectedAccount.description ?? undefined}>
                     {selectedAccount.description}
@@ -1168,13 +1173,13 @@ export function ReconciliationPage() {
               )}
               {selectedAccountId > 0 && (
                 <>
-                  <div className="text-sm border-l border-gray-200 pl-5">
+                  <div className="text-sm border-l border-gray-200 pl-5 py-[7px]">
                     <MoneyValue amount={bankBalance} size="sm" colorNegative className="font-normal tabular-nums" />
                   </div>
-                  <div className="text-sm">
+                  <div className="text-sm py-[7px]">
                     <MoneyValue amount={bookBalance} size="sm" colorNegative className="font-normal tabular-nums" />
                   </div>
-                  <div className="text-sm">
+                  <div className="text-sm py-[7px]">
                     <MoneyValue
                       amount={variance}
                       size="sm"
@@ -1185,12 +1190,12 @@ export function ReconciliationPage() {
                 </>
               )}
               {selectedAccountId > 0 && totalTransactions > 0 && (
-                <div className="text-sm font-normal tabular-nums text-gray-700">
+                <div className="text-sm font-normal tabular-nums text-gray-700 py-[7px]">
                   {reconciledCount} of {totalTransactions}
                 </div>
               )}
               {selectedAccountId > 0 && lastUpdated && (
-                <div className="text-sm text-right">
+                <div className="text-sm text-right py-[7px]">
                   <DateValue value={lastUpdated} format="relative" className="text-gray-600" />
                 </div>
               )}
