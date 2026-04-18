@@ -1267,8 +1267,8 @@ export function ReconciliationPage() {
                     align="right"
                   />
                   <th className="px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide text-center w-14">Rule</th>
-                  <th className="px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide w-24">Linked</th>
-                  <th className="px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide w-28">Allocated</th>
+                  <th className="px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide text-center w-24">Linked</th>
+                  <th className="px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide text-center w-28">Allocated</th>
                   <SortHeader
                     label="Status"
                     column="status"
@@ -1493,12 +1493,12 @@ function TransactionRow({
         </td>
 
         {/* Linked */}
-        <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
+        <td className="px-3 py-2.5 text-center" onClick={(e) => e.stopPropagation()}>
           <span className="text-xs text-gray-300">&mdash;</span>
         </td>
 
         {/* Allocated */}
-        <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
+        <td className="px-3 py-2.5 text-center" onClick={(e) => e.stopPropagation()}>
           {isAllocated && allocInfo ? (
             <span
               className="text-xs font-mono text-gray-600 cursor-default"
