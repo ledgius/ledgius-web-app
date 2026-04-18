@@ -21,3 +21,6 @@ export type { ComboboxProps, ComboboxOption } from "./Combobox"
 export { PageLoader } from "./PageLoader"
 
 export { BackLink } from "./BackLink"
+
+export { StatBar, StatCell } from "./StatBar"
+export type { StatBarProps, StatCellProps } from "./StatBar"

@@ -2,7 +2,7 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
-import { Button, Combobox, Skeleton, InlineAlert, InfoPanel } from "@/components/primitives"
+import { Button, Combobox, Skeleton, InlineAlert, InfoPanel, StatBar, StatCell } from "@/components/primitives"
 import { MoneyValue, DateValue, StatusPill } from "@/components/financial"
 import { PageShell } from "@/components/layout"
 import { useFeedback } from "@/components/feedback"
@@ -615,20 +615,20 @@ function ExpansionPanel({
               </Button>
 
               {/* Subtotal + Out of Balance */}
-              <div className="flex items-center justify-end gap-8 pt-2 border-t border-gray-200">
-                <div className="text-right">
-                  <p className="text-xs uppercase tracking-wide text-gray-500">Subtotal</p>
-                  <p className="text-sm font-normal tabular-nums text-gray-700">${subtotal.toFixed(2)}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs uppercase tracking-wide text-gray-500">Out of Balance</p>
-                  <p className={cn(
-                    "text-sm font-normal tabular-nums",
-                    isBalanced ? "text-green-600" : "text-red-600"
-                  )}>
-                    ${Math.abs(outOfBalance).toFixed(2)}
-                  </p>
-                </div>
+              <div className="flex justify-end pt-2 border-t border-gray-200">
+                <StatBar>
+                  <StatCell label="Subtotal" align="right">
+                    <span className="font-normal tabular-nums">${subtotal.toFixed(2)}</span>
+                  </StatCell>
+                  <StatCell label="Out of Balance" align="right">
+                    <span className={cn(
+                      "font-normal tabular-nums",
+                      isBalanced ? "text-green-600" : "text-red-600"
+                    )}>
+                      ${Math.abs(outOfBalance).toFixed(2)}
+                    </span>
+                  </StatCell>
+                </StatBar>
               </div>
 
               {/* Create rule checkbox */}
@@ -1032,9 +1032,8 @@ export function ReconciliationPage() {
 
       {/* Bank Account Header (REC-008 to REC-010) */}
       <div className="border border-gray-300 rounded-lg bg-white px-5 py-3">
-        <div className="flex items-end gap-6 flex-wrap">
-          <div className="w-64 shrink-0">
-            <p className="text-xs text-gray-500 mb-1">Bank Account</p>
+        <StatBar>
+          <StatCell label="Bank Account">
             <Combobox
               options={accountOptions}
               value={selectedAccountId || null}
@@ -1044,67 +1043,50 @@ export function ReconciliationPage() {
                 setSelectedIds(new Set())
               }}
               placeholder="Select a bank account..."
+              className="w-56"
             />
-          </div>
+          </StatCell>
 
           {selectedAccountId > 0 && selectedAccount && (
-            <div className="max-w-[200px] shrink-0">
-              <p className="text-xs text-gray-500 mb-1">Account Name</p>
-              <div className="flex items-center gap-1.5 h-[34px]">
+            <StatCell label="Account Name">
+              <span className="flex items-center gap-1.5">
                 <Landmark className="h-4 w-4 text-gray-400 shrink-0" />
-                <span className="text-sm font-medium text-gray-800 truncate" title={selectedAccount.description ?? undefined}>
+                <span className="font-medium truncate max-w-[180px]" title={selectedAccount.description ?? undefined}>
                   {selectedAccount.description}
                 </span>
-              </div>
-            </div>
+              </span>
+            </StatCell>
           )}
 
           {selectedAccountId > 0 && (
             <>
-              <div className="border-l border-gray-200 pl-6">
-                <p className="text-xs text-gray-500 mb-1">Bank balance</p>
-                <div className="h-[34px] flex items-center">
-                  <MoneyValue amount={bankBalance} size="sm" colorNegative className="font-normal tabular-nums" />
-                </div>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500 mb-1">Book balance</p>
-                <div className="h-[34px] flex items-center">
-                  <MoneyValue amount={bookBalance} size="sm" colorNegative className="font-normal tabular-nums" />
-                </div>
-              </div>
-              <div>
-                <p className="text-xs text-gray-500 mb-1">Variance</p>
-                <div className="h-[34px] flex items-center">
-                  <MoneyValue
-                    amount={variance}
-                    size="sm"
-                    colorNegative
-                    className={cn("font-normal tabular-nums", Math.abs(variance) < 0.01 ? "text-green-600" : "text-red-600")}
-                  />
-                </div>
-              </div>
+              <StatCell label="Bank balance" separator>
+                <MoneyValue amount={bankBalance} size="sm" colorNegative className="font-normal tabular-nums" />
+              </StatCell>
+              <StatCell label="Book balance">
+                <MoneyValue amount={bookBalance} size="sm" colorNegative className="font-normal tabular-nums" />
+              </StatCell>
+              <StatCell label="Variance">
+                <MoneyValue
+                  amount={variance}
+                  size="sm"
+                  colorNegative
+                  className={cn("font-normal tabular-nums", Math.abs(variance) < 0.01 ? "text-green-600" : "text-red-600")}
+                />
+              </StatCell>
               {totalTransactions > 0 && (
-                <div>
-                  <p className="text-xs text-gray-500 mb-1">Reconciled</p>
-                  <div className="h-[34px] flex items-center">
-                    <p className="text-sm font-normal tabular-nums text-gray-700">
-                      {reconciledCount} of {totalTransactions}
-                    </p>
-                  </div>
-                </div>
+                <StatCell label="Reconciled">
+                  <span className="font-normal tabular-nums">{reconciledCount} of {totalTransactions}</span>
+                </StatCell>
               )}
               {lastUpdated && (
-                <div className="ml-auto text-right">
-                  <p className="text-xs text-gray-500 mb-1">Last updated</p>
-                  <div className="h-[34px] flex items-center justify-end">
-                    <DateValue value={lastUpdated} format="relative" className="text-sm text-gray-600" />
-                  </div>
-                </div>
+                <StatCell label="Last updated" align="right" className="ml-auto">
+                  <DateValue value={lastUpdated} format="relative" className="text-gray-600" />
+                </StatCell>
               )}
             </>
           )}
-        </div>
+        </StatBar>
       </div>
 
       {/* No account selected */}
