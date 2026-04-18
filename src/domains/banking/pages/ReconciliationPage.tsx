@@ -75,15 +75,15 @@ function reconStatusSemantic(status: string): string {
 function statusLabel(status: string): string {
   switch (reconStatusSemantic(status)) {
     case "unmatched":
-      return "Not matched"
+      return "Unallocated"
     case "suggested":
       return "Suggested"
     case "allocated":
-      return "Matched"
+      return "Allocated"
     case "approved":
       return "Approved"
     case "needs_review":
-      return "Review"
+      return "Unallocated"
     default:
       return status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
   }
@@ -164,6 +164,7 @@ function ExpansionPanel({
   bankAccounts,
   selectedAccountId,
   reconRules,
+  initialTab,
   onSave,
   onCancel,
   saving,
@@ -175,6 +176,7 @@ function ExpansionPanel({
   bankAccounts: { id: number; accno: string; description: string | null }[]
   selectedAccountId: number
   reconRules: ReconRule[]
+  initialTab?: ActionTab | null
   onSave: (lines: AllocationLine[], createRule: boolean) => void
   onCancel: () => void
   saving: boolean
@@ -194,6 +196,14 @@ function ExpansionPanel({
   const [auditExpanded, setAuditExpanded] = useState(false)
   const [selectedRuleId, setSelectedRuleId] = useState<number | null>(null)
 
+  // Rule editor state
+  const [rulePattern, setRulePattern] = useState(item.normalized_description || item.description || "")
+  const [ruleMatchType, setRuleMatchType] = useState<"contains" | "exact" | "regex">("contains")
+  const [ruleAmountMatch, setRuleAmountMatch] = useState<"any" | "exact" | "range">("any")
+  const [ruleAmountExact, setRuleAmountExact] = useState(Math.abs(amount).toFixed(2))
+  const [ruleAmountMin, setRuleAmountMin] = useState("")
+  const [ruleAmountMax, setRuleAmountMax] = useState("")
+
   // Find auto-matched recon rule
   const matchedRule = useMemo(() => {
     if (!item.description) return null
@@ -210,9 +220,9 @@ function ExpansionPanel({
     }) ?? null
   }, [item.description, reconRules])
 
-  // Default tab: show rule tab if a rule matched, otherwise manual allocation
+  // Default tab: use initialTab if provided, otherwise manual allocation
   const [actionTab, setActionTab] = useState<ActionTab>(() =>
-    matchedRule ? "rule" : "manual"
+    initialTab ?? "manual"
   )
 
   // Apply matched rule defaults to first allocation line on mount
@@ -323,14 +333,14 @@ function ExpansionPanel({
 
   return (
     <tr>
-      <td colSpan={7} className="p-0">
+      <td colSpan={10} className="p-0">
         <div className="border-t border-b-2 border-gray-200 bg-gray-50 px-6 py-4 space-y-4">
 
           {/* Tab buttons */}
           <div className="flex gap-1">
             {([
-              { key: "rule" as ActionTab, label: "Allocation Rule", badge: matchedRule ? "1" : undefined },
               { key: "manual" as ActionTab, label: "Manual Allocation" },
+              { key: "rule" as ActionTab, label: "Allocation Rule", badge: matchedRule ? "1" : undefined },
               { key: "link" as ActionTab, label: "Link Existing" },
               { key: "transfer" as ActionTab, label: "Transfer Money" },
             ]).map((tab) => (
@@ -358,79 +368,164 @@ function ExpansionPanel({
           {/* ── Tab: Allocation Rule ─────────────────────────────────────── */}
           {actionTab === "rule" && (
             <div className="space-y-4">
-              {/* Rule selector */}
-              <div className="flex items-start gap-4">
-                <div className="flex-1 max-w-sm">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Select rule</label>
-                  <Combobox
-                    options={reconRules
-                      .filter((r) => !r.disabled)
-                      .map((r) => ({
-                        value: r.id,
-                        label: r.name,
-                        detail: r.match_pattern ?? undefined,
-                      }))}
-                    value={selectedRuleId}
-                    onChange={(v) => {
-                      if (!v) { setSelectedRuleId(null); return }
-                      const rule = reconRules.find((r) => r.id === Number(v))
-                      if (rule) applyRule(rule)
-                    }}
-                    placeholder="Search rules..."
-                  />
-                </div>
-                {activeRule && (
-                  <div className="flex-1 text-sm text-gray-600 pt-5">
-                    <div className="flex items-center gap-2">
-                      <StatusPill status="Rule matched" semantic="success" dot={false} className="text-xs" />
-                      <span className="font-medium">{activeRule.name}</span>
-                      <span className="text-xs text-gray-400 font-mono">({activeRule.match_type}: {activeRule.match_pattern})</span>
-                    </div>
-                    <p className="text-xs text-gray-400 mt-1">
-                      {activeRule.source === "smart" ? "Smart rule" : "Manual rule"} · confidence {(activeRule.confidence * 100).toFixed(0)}% · used {activeRule.use_count}×
-                    </p>
+              {/* Existing rule selector */}
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Apply existing rule</label>
+                <div className="flex items-start gap-4">
+                  <div className="max-w-sm flex-shrink-0">
+                    <Combobox
+                      options={reconRules
+                        .filter((r) => !r.disabled)
+                        .map((r) => ({
+                          value: r.id,
+                          label: r.name,
+                          detail: r.match_pattern ?? undefined,
+                        }))}
+                      value={selectedRuleId}
+                      onChange={(v) => {
+                        if (!v) { setSelectedRuleId(null); return }
+                        const rule = reconRules.find((r) => r.id === Number(v))
+                        if (rule) {
+                          applyRule(rule)
+                          setRulePattern(rule.match_pattern)
+                          setRuleMatchType(rule.match_type as "contains" | "exact" | "regex")
+                        }
+                      }}
+                      placeholder="Search rules..."
+                    />
                   </div>
-                )}
+                  {activeRule && (
+                    <div className="text-sm text-gray-600 pt-0.5">
+                      <span className="font-medium">{activeRule.name}</span>
+                      <span className="text-xs text-gray-400 ml-2">
+                        {activeRule.source === "smart" ? "Smart" : "Manual"} · {(activeRule.confidence * 100).toFixed(0)}% · used {activeRule.use_count}×
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
 
-              {/* Preview of what the rule will allocate */}
-              {activeRule && (
-                <div className="border border-gray-200 rounded-lg bg-white px-4 py-3 space-y-2">
-                  <h5 className="text-xs font-medium text-gray-500 uppercase tracking-wide">Rule defaults</h5>
-                  <div className="grid grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <span className="text-xs text-gray-400">Account</span>
-                      <p className="text-gray-700">
-                        {activeRule.default_account_id
-                          ? accounts.find((a) => a.id === activeRule.default_account_id)
-                            ? `${accounts.find((a) => a.id === activeRule.default_account_id)!.accno} — ${accounts.find((a) => a.id === activeRule.default_account_id)!.description ?? ""}`
-                            : `#${activeRule.default_account_id}`
-                          : "—"}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-xs text-gray-400">Tax code</span>
-                      <p className="text-gray-700">
-                        {activeRule.default_tax_code_id
-                          ? taxCodes.find((tc) => tc.id === activeRule.default_tax_code_id)
-                            ? `${taxCodes.find((tc) => tc.id === activeRule.default_tax_code_id)!.code} — ${taxCodes.find((tc) => tc.id === activeRule.default_tax_code_id)!.name}`
-                            : `#${activeRule.default_tax_code_id}`
-                          : "—"}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-xs text-gray-400">Contact</span>
-                      <p className="text-gray-700">
-                        {activeRule.default_contact_id
-                          ? contacts.find((c) => c.id === activeRule.default_contact_id)?.name ?? `#${activeRule.default_contact_id}`
-                          : "—"}
-                      </p>
-                    </div>
+              {/* Divider */}
+              <div className="flex items-center gap-3">
+                <div className="flex-1 border-t border-gray-200" />
+                <span className="text-xs text-gray-400">or define new rule</span>
+                <div className="flex-1 border-t border-gray-200" />
+              </div>
+
+              {/* Rule pattern editor */}
+              <div className="border border-gray-200 rounded-lg bg-white px-4 py-4 space-y-4">
+                {/* Pattern + match type */}
+                <div className="grid grid-cols-[1fr_160px] gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Match pattern</label>
+                    <input
+                      type="text"
+                      value={rulePattern}
+                      onChange={(e) => setRulePattern(e.target.value)}
+                      className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      placeholder="Transaction description pattern..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Match type</label>
+                    <select
+                      value={ruleMatchType}
+                      onChange={(e) => setRuleMatchType(e.target.value as "contains" | "exact" | "regex")}
+                      className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    >
+                      <option value="contains">Contains</option>
+                      <option value="exact">Exact match</option>
+                      <option value="regex">Regex</option>
+                    </select>
                   </div>
                 </div>
-              )}
 
-              {/* Save with rule */}
+                {/* Amount matching */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">Amount match</label>
+                  <div className="flex items-center gap-3">
+                    <select
+                      value={ruleAmountMatch}
+                      onChange={(e) => setRuleAmountMatch(e.target.value as "any" | "exact" | "range")}
+                      className="border border-gray-300 rounded px-2.5 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    >
+                      <option value="any">Any amount</option>
+                      <option value="exact">Exact amount</option>
+                      <option value="range">Amount range</option>
+                    </select>
+                    {ruleAmountMatch === "exact" && (
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={ruleAmountExact}
+                        onChange={(e) => setRuleAmountExact(e.target.value)}
+                        className="w-28 border border-gray-300 rounded px-2.5 py-1.5 text-sm text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        placeholder="0.00"
+                      />
+                    )}
+                    {ruleAmountMatch === "range" && (
+                      <>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={ruleAmountMin}
+                          onChange={(e) => setRuleAmountMin(e.target.value)}
+                          className="w-28 border border-gray-300 rounded px-2.5 py-1.5 text-sm text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          placeholder="Min"
+                        />
+                        <span className="text-xs text-gray-400">to</span>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={ruleAmountMax}
+                          onChange={(e) => setRuleAmountMax(e.target.value)}
+                          className="w-28 border border-gray-300 rounded px-2.5 py-1.5 text-sm text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          placeholder="Max"
+                        />
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Rule allocation defaults */}
+                <div className="grid grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Default account</label>
+                    <Combobox
+                      options={categoryAccountOptions}
+                      value={lines[0]?.accountId ?? null}
+                      onChange={(v) => {
+                        if (lines[0]) updateLine(lines[0].id, "accountId", v ? Number(v) : null)
+                      }}
+                      placeholder="Select account..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Default tax code</label>
+                    <Combobox
+                      options={taxCodeOptions}
+                      value={lines[0]?.taxCodeId ?? null}
+                      onChange={(v) => {
+                        if (lines[0]) updateLine(lines[0].id, "taxCodeId", v ? Number(v) : null)
+                      }}
+                      placeholder="Tax..."
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Default contact</label>
+                    <Combobox
+                      options={contactOptions}
+                      value={lines[0]?.contactId ?? null}
+                      onChange={(v) => {
+                        if (lines[0]) updateLine(lines[0].id, "contactId", v ? Number(v) : null)
+                      }}
+                      placeholder="Contact..."
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Save / apply */}
               <div className="flex items-center gap-3 pt-2 border-t border-gray-200">
                 <div className="flex-1" />
                 <Button variant="secondary" size="sm" onClick={onCancel}>Cancel</Button>
@@ -439,9 +534,9 @@ function ExpansionPanel({
                   size="sm"
                   disabled={!canSave || saving}
                   loading={saving}
-                  onClick={() => onSave(lines, false)}
+                  onClick={() => onSave(lines, true)}
                 >
-                  Apply Rule
+                  Save &amp; Create Rule
                 </Button>
               </div>
             </div>
@@ -696,6 +791,7 @@ export function ReconciliationPage() {
   // State
   const [selectedAccountId, setSelectedAccountId] = useState(0)
   const [expandedLineId, setExpandedLineId] = useState<number | null>(null)
+  const [expandedTab, setExpandedTab] = useState<ActionTab | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [sortColumn, setSortColumn] = useState<SortColumn>("date")
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc")
@@ -832,8 +928,9 @@ export function ReconciliationPage() {
     })
   }, [])
 
-  const handleRowClick = useCallback((id: number) => {
-    setExpandedLineId((prev) => (prev === id ? null : id))
+  const handleRowClick = useCallback((id: number, tab?: ActionTab) => {
+    setExpandedLineId((prev) => (prev === id && !tab ? null : id))
+    setExpandedTab(tab ?? null)
   }, [])
 
   const handleCheckbox = useCallback((id: number, checked: boolean) => {
@@ -1147,7 +1244,7 @@ export function ReconciliationPage() {
                     onSort={handleSort}
                   />
                   <SortHeader
-                    label="Bank Transaction"
+                    label="Transaction Description"
                     column="description"
                     currentColumn={sortColumn}
                     currentDirection={sortDirection}
@@ -1169,6 +1266,9 @@ export function ReconciliationPage() {
                     onSort={handleSort}
                     align="right"
                   />
+                  <th className="px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide text-center w-14">Rule</th>
+                  <th className="px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide w-24">Linked</th>
+                  <th className="px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide w-28">Allocated</th>
                   <SortHeader
                     label="Status"
                     column="status"
@@ -1182,7 +1282,7 @@ export function ReconciliationPage() {
               <tbody>
                 {sortedQueue.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-12 text-center">
+                    <td colSpan={10} className="px-4 py-12 text-center">
                       <p className="text-sm text-gray-500 mb-1">No transactions match the current filters</p>
                       <p className="text-xs text-gray-400">
                         {searchText
@@ -1206,6 +1306,7 @@ export function ReconciliationPage() {
                         isWithdrawal={isWithdrawal}
                         isExpanded={isExpanded}
                         isSelected={isSelected}
+                        initialTab={isExpanded ? expandedTab : null}
                         onRowClick={handleRowClick}
                         onCheckbox={handleCheckbox}
                         accounts={allAccounts}
@@ -1247,6 +1348,7 @@ function TransactionRow({
   isWithdrawal,
   isExpanded,
   isSelected,
+  initialTab,
   onRowClick,
   onCheckbox,
   accounts,
@@ -1263,7 +1365,8 @@ function TransactionRow({
   isWithdrawal: boolean
   isExpanded: boolean
   isSelected: boolean
-  onRowClick: (id: number) => void
+  initialTab: ActionTab | null
+  onRowClick: (id: number, tab?: ActionTab) => void
   onCheckbox: (id: number, checked: boolean) => void
   accounts: { id: number; accno: string; description: string | null; category: string }[]
   taxCodes: { id: number; code: string; name: string; rate: string }[]
@@ -1274,6 +1377,52 @@ function TransactionRow({
   onSave: (lineId: number, lines: AllocationLine[], createRule: boolean) => void
   saving: boolean
 }) {
+  // Derive column display values
+  const hasRule = useMemo(() => {
+    if (!item.description) return false
+    const desc = item.description.toLowerCase()
+    return reconRules.some((r) => {
+      if (r.disabled) return false
+      const pat = r.match_pattern?.toLowerCase()
+      if (!pat) return false
+      if (r.match_type === "exact") return desc === pat
+      if (r.match_type === "regex") {
+        try { return new RegExp(pat, "i").test(desc) } catch { return false }
+      }
+      return desc.includes(pat)
+    })
+  }, [item.description, reconRules])
+
+  const matchedRuleName = useMemo(() => {
+    if (!item.description) return null
+    const desc = item.description.toLowerCase()
+    return reconRules.find((r) => {
+      if (r.disabled) return false
+      const pat = r.match_pattern?.toLowerCase()
+      if (!pat) return false
+      if (r.match_type === "exact") return desc === pat
+      if (r.match_type === "regex") {
+        try { return new RegExp(pat, "i").test(desc) } catch { return false }
+      }
+      return desc.includes(pat)
+    })?.name ?? null
+  }, [item.description, reconRules])
+
+  const sem = reconStatusSemantic(item.reconciliation_status)
+  const isAllocated = sem === "allocated" || sem === "approved"
+
+  // Parse allocation info from match_explanation if available
+  const allocInfo = useMemo(() => {
+    const ex = item.match_explanation as Record<string, unknown> | null
+    if (!ex || ex.action !== "create") return null
+    const exLines = ex.lines as Array<{ account_id: number; amount: number }> | undefined
+    if (!exLines || exLines.length === 0) return null
+    return exLines.map((l) => {
+      const acct = accounts.find((a) => a.id === l.account_id)
+      return acct ? acct.accno : `#${l.account_id}`
+    })
+  }, [item.match_explanation, accounts])
+
   return (
     <>
       <tr
@@ -1327,6 +1476,43 @@ function TransactionRow({
           ) : null}
         </td>
 
+        {/* Rule */}
+        <td className="px-3 py-2.5 text-center" onClick={(e) => e.stopPropagation()}>
+          {hasRule ? (
+            <button
+              type="button"
+              onClick={() => onRowClick(item.id, "rule")}
+              className="text-xs font-medium text-green-600 hover:text-green-800 transition-colors"
+              title={matchedRuleName ?? "Rule matched"}
+            >
+              Y
+            </button>
+          ) : (
+            <span className="text-xs text-gray-300">&mdash;</span>
+          )}
+        </td>
+
+        {/* Linked */}
+        <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
+          <span className="text-xs text-gray-300">&mdash;</span>
+        </td>
+
+        {/* Allocated */}
+        <td className="px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
+          {isAllocated && allocInfo ? (
+            <span
+              className="text-xs font-mono text-gray-600 cursor-default"
+              title={allocInfo.join(" / ")}
+            >
+              {allocInfo.length === 1
+                ? allocInfo[0]
+                : `${allocInfo[0]} \u2026`}
+            </span>
+          ) : (
+            <span className="text-xs text-gray-400">N</span>
+          )}
+        </td>
+
         {/* Status */}
         <td className="px-3 py-2.5">
           <StatusPill
@@ -1356,6 +1542,7 @@ function TransactionRow({
           bankAccounts={bankAccounts}
           selectedAccountId={selectedAccountId}
           reconRules={reconRules}
+          initialTab={initialTab}
           onSave={(lines, createRule) => onSave(item.id, lines, createRule)}
           onCancel={() => onRowClick(item.id)}
           saving={saving}
