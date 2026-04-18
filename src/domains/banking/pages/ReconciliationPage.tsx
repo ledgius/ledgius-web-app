@@ -351,7 +351,7 @@ function ExpansionPanel({
                 className={cn(
                   "px-3 py-1.5 rounded-md text-xs font-medium border transition-colors",
                   actionTab === tab.key
-                    ? "bg-gray-900 text-white border-gray-900"
+                    ? "bg-gray-700 text-white border-gray-700"
                     : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"
                 )}
               >
@@ -1155,7 +1155,7 @@ export function ReconciliationPage() {
                   className={cn(
                     "px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
                     filterTab === tab.key
-                      ? "bg-gray-900 text-white"
+                      ? "bg-gray-700 text-white"
                       : "text-gray-600 hover:bg-gray-100"
                   )}
                 >

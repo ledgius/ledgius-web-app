@@ -55,7 +55,7 @@ export function InfoPanel({
   }
 
   return (
-    <div className={cn("bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 mb-4", className)}>
+    <div className={cn("bg-blue-50 border border-blue-200 rounded-lg px-4 py-3", className)}>
       <div className="flex items-start gap-3">
         {collapsible ? (
           <button
