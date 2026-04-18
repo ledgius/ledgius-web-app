@@ -24,6 +24,7 @@ import {
 import { cn } from "@/shared/lib/utils"
 import {
   ChevronDown,
+  ChevronRight,
   ChevronUp,
   Search,
   X,
@@ -1525,13 +1526,9 @@ function TransactionRow({
           />
         </td>
 
-        {/* Chevron */}
+        {/* Expand/collapse */}
         <td className="w-8 px-2 py-2.5 text-gray-400">
-          {isExpanded ? (
-            <ChevronUp className="h-4 w-4" />
-          ) : (
-            <ChevronDown className="h-4 w-4" />
-          )}
+          <ChevronRight className={cn("h-4 w-4 transition-transform duration-150", isExpanded && "rotate-90")} />
         </td>
       </tr>
 
