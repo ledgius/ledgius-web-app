@@ -506,7 +506,7 @@ export function BooksHealthPage() {
   return (
     <PageShell header={header} loading={isLoading}>
       {/* ── Tab selector ── */}
-      <div className="mb-6">
+      <div>
         <div className="inline-flex rounded-lg bg-gray-100 p-1">
           {([
             { key: "current" as const, label: "Current" },

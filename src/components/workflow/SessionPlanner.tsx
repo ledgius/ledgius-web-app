@@ -141,17 +141,17 @@ export function SessionPlanner() {
 
   return (
     <div className={cn(
-      "mb-5 rounded-lg border px-4 py-3",
+      "rounded-lg border px-4 py-2.5",
       hasUrgent
-        ? "bg-red-50 border-red-200"
+        ? "bg-amber-50 border-amber-200"
         : "bg-blue-50 border-blue-200"
     )}>
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           {/* Summary line */}
           <div className="flex items-center gap-2 mb-2.5">
-            <Clock className={cn("w-3.5 h-3.5 flex-shrink-0", hasUrgent ? "text-red-500" : "text-blue-500")} />
-            <span className={cn("text-xs font-semibold", hasUrgent ? "text-red-700" : "text-blue-700")}>
+            <Clock className={cn("w-3.5 h-3.5 flex-shrink-0", hasUrgent ? "text-amber-500" : "text-blue-500")} />
+            <span className={cn("text-xs font-semibold", hasUrgent ? "text-amber-800" : "text-blue-700")}>
               This session
             </span>
             {overdueCount > 0 && (
