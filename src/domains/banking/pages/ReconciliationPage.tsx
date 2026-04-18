@@ -1043,7 +1043,7 @@ export function ReconciliationPage() {
                 setSelectedIds(new Set())
               }}
               placeholder="Select a bank account..."
-              className="w-56"
+              className="w-60"
             />
           </StatCell>
 
@@ -1255,7 +1255,7 @@ export function ReconciliationPage() {
                   />
                   <th className="px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide text-center w-14">Rule</th>
                   <th className="px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide text-center w-24">Linked</th>
-                  <th className="px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide text-center w-28">Allocated</th>
+                  <th className="px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide text-center w-56">Allocated</th>
                   <SortHeader
                     label="Status"
                     column="status"
@@ -1279,7 +1279,7 @@ export function ReconciliationPage() {
                     </td>
                   </tr>
                 ) : (
-                  sortedQueue.map((item) => {
+                  sortedQueue.map((item, idx) => {
                     const amount = parseAmount(item.amount)
                     const isWithdrawal = amount < 0
                     const isExpanded = expandedLineId === item.id
@@ -1293,6 +1293,7 @@ export function ReconciliationPage() {
                         isWithdrawal={isWithdrawal}
                         isExpanded={isExpanded}
                         isSelected={isSelected}
+                        isOddRow={idx % 2 === 1}
                         initialTab={isExpanded ? expandedTab : null}
                         rulePreviewPattern={rulePreviewPattern}
                         rulePreviewMatchType={rulePreviewMatchType}
@@ -1340,6 +1341,7 @@ function TransactionRow({
   isWithdrawal,
   isExpanded,
   isSelected,
+  isOddRow,
   initialTab,
   rulePreviewPattern,
   rulePreviewMatchType,
@@ -1362,6 +1364,7 @@ function TransactionRow({
   isWithdrawal: boolean
   isExpanded: boolean
   isSelected: boolean
+  isOddRow: boolean
   initialTab: ActionTab | null
   rulePreviewPattern: string
   rulePreviewMatchType: "contains" | "exact" | "regex"
@@ -1437,9 +1440,12 @@ function TransactionRow({
       <tr
         className={cn(
           "border-b border-gray-100 cursor-pointer transition-colors",
-          isExpanded ? "bg-primary-50" : "hover:bg-gray-50",
-          isSelected && !isExpanded && "bg-primary-25",
-          isRulePreviewMatch && !isExpanded && "bg-amber-50 border-l-2 border-l-amber-400"
+          isExpanded ? "bg-primary-50"
+            : isRulePreviewMatch ? "bg-amber-50 border-l-2 border-l-amber-400"
+            : isSelected ? "bg-primary-25"
+            : isOddRow ? "bg-gray-50/50"
+            : "bg-white",
+          !isExpanded && !isRulePreviewMatch && !isSelected && "hover:bg-gray-100/60"
         )}
         onClick={() => onRowClick(item.id)}
       >

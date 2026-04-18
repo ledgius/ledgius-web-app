@@ -30,7 +30,7 @@ export function StatCell({ label, children, className, align = "left", separator
         {label}
       </p>
       <div className={cn(
-        "mt-1 text-sm text-gray-800 leading-snug whitespace-nowrap",
+        "mt-1 text-sm text-gray-800 leading-snug",
         align === "right" && "text-right"
       )}>
         {children}
