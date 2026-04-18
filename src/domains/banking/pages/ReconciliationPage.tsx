@@ -229,8 +229,9 @@ function ExpansionPanel({
   // Rule editor state
   const [rulePattern, setRulePattern] = useState(item.normalized_description || item.description || "")
   const [ruleMatchType, setRuleMatchType] = useState<"contains" | "exact" | "regex">("contains")
-  const [ruleAmountMatch, setRuleAmountMatch] = useState<"any" | "exact" | "range">("any")
+  const [ruleAmountMatch, setRuleAmountMatch] = useState<"any" | "exact" | "range" | "set">("any")
   const [ruleAmountExact, setRuleAmountExact] = useState(Math.abs(amount).toFixed(2))
+  const [ruleAmountSet, setRuleAmountSet] = useState("")
   const [ruleAmountMin, setRuleAmountMin] = useState("")
   const [ruleAmountMax, setRuleAmountMax] = useState("")
 
@@ -460,11 +461,12 @@ function ExpansionPanel({
                       <label className="block text-xs font-medium text-gray-600 mb-1">Amount</label>
                       <select
                         value={ruleAmountMatch}
-                        onChange={(e) => setRuleAmountMatch(e.target.value as "any" | "exact" | "range")}
+                        onChange={(e) => setRuleAmountMatch(e.target.value as "any" | "exact" | "range" | "set")}
                         className="border border-gray-300 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                       >
                         <option value="any">Any</option>
                         <option value="exact">Exact</option>
+                        <option value="set">Set</option>
                         <option value="range">Range</option>
                       </select>
                     </div>
@@ -476,6 +478,16 @@ function ExpansionPanel({
                         onChange={(e) => setRuleAmountExact(e.target.value)}
                         className="w-24 bg-white border border-gray-300 rounded px-2 py-1.5 text-sm text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-primary-500"
                         placeholder="0.00"
+                      />
+                    )}
+                    {ruleAmountMatch === "set" && (
+                      <input
+                        type="text"
+                        value={ruleAmountSet}
+                        onChange={(e) => setRuleAmountSet(e.target.value)}
+                        className="w-48 bg-white border border-gray-300 rounded px-2 py-1.5 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        placeholder="38, 43, 68, 103, 138"
+                        title="Comma-separated list of exact amounts"
                       />
                     )}
                     {ruleAmountMatch === "range" && (
