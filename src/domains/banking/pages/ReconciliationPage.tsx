@@ -1033,8 +1033,8 @@ export function ReconciliationPage() {
       {/* Bank Account Header (REC-008 to REC-010) */}
       <div className="border border-gray-300 rounded-lg bg-white px-5 py-3">
         <div className="flex items-end gap-6 flex-wrap">
-          <div className="w-72">
-            <label className="block text-xs font-medium text-gray-600 mb-1">Bank Account</label>
+          <div className="w-64 shrink-0">
+            <p className="text-xs text-gray-500 mb-1">Bank Account</p>
             <Combobox
               options={accountOptions}
               value={selectedAccountId || null}
@@ -1048,43 +1048,58 @@ export function ReconciliationPage() {
           </div>
 
           {selectedAccountId > 0 && selectedAccount && (
-            <div className="flex items-center gap-2 text-sm pb-0.5">
-              <Landmark className="h-4 w-4 text-gray-400" />
-              <span className="font-medium text-gray-800">{selectedAccount.description}</span>
+            <div className="max-w-[200px] shrink-0">
+              <p className="text-xs text-gray-500 mb-1">Account Name</p>
+              <div className="flex items-center gap-1.5 h-[34px]">
+                <Landmark className="h-4 w-4 text-gray-400 shrink-0" />
+                <span className="text-sm font-medium text-gray-800 truncate" title={selectedAccount.description ?? undefined}>
+                  {selectedAccount.description}
+                </span>
+              </div>
             </div>
           )}
 
           {selectedAccountId > 0 && (
             <>
-              <div className="border-l border-gray-200 pl-6 pb-0.5">
-                <p className="text-xs text-gray-500">Bank balance</p>
-                <MoneyValue amount={bankBalance} size="sm" colorNegative className="font-normal tabular-nums" />
+              <div className="border-l border-gray-200 pl-6">
+                <p className="text-xs text-gray-500 mb-1">Bank balance</p>
+                <div className="h-[34px] flex items-center">
+                  <MoneyValue amount={bankBalance} size="sm" colorNegative className="font-normal tabular-nums" />
+                </div>
               </div>
-              <div className="pb-0.5">
-                <p className="text-xs text-gray-500">Book balance</p>
-                <MoneyValue amount={bookBalance} size="sm" colorNegative className="font-normal tabular-nums" />
+              <div>
+                <p className="text-xs text-gray-500 mb-1">Book balance</p>
+                <div className="h-[34px] flex items-center">
+                  <MoneyValue amount={bookBalance} size="sm" colorNegative className="font-normal tabular-nums" />
+                </div>
               </div>
-              <div className="pb-0.5">
-                <p className="text-xs text-gray-500">Variance</p>
-                <MoneyValue
-                  amount={variance}
-                  size="sm"
-                  colorNegative
-                  className={cn("font-normal tabular-nums", Math.abs(variance) < 0.01 ? "text-green-600" : "text-red-600")}
-                />
+              <div>
+                <p className="text-xs text-gray-500 mb-1">Variance</p>
+                <div className="h-[34px] flex items-center">
+                  <MoneyValue
+                    amount={variance}
+                    size="sm"
+                    colorNegative
+                    className={cn("font-normal tabular-nums", Math.abs(variance) < 0.01 ? "text-green-600" : "text-red-600")}
+                  />
+                </div>
               </div>
               {totalTransactions > 0 && (
-                <div className="pb-0.5">
-                  <p className="text-xs text-gray-500">Reconciled</p>
-                  <p className="text-sm font-normal tabular-nums text-gray-700">
-                    {reconciledCount} of {totalTransactions}
-                  </p>
+                <div>
+                  <p className="text-xs text-gray-500 mb-1">Reconciled</p>
+                  <div className="h-[34px] flex items-center">
+                    <p className="text-sm font-normal tabular-nums text-gray-700">
+                      {reconciledCount} of {totalTransactions}
+                    </p>
+                  </div>
                 </div>
               )}
               {lastUpdated && (
-                <div className="ml-auto text-right pb-0.5">
-                  <p className="text-xs text-gray-500">Last updated</p>
-                  <DateValue value={lastUpdated} format="relative" className="text-sm text-gray-600" />
+                <div className="ml-auto text-right">
+                  <p className="text-xs text-gray-500 mb-1">Last updated</p>
+                  <div className="h-[34px] flex items-center justify-end">
+                    <DateValue value={lastUpdated} format="relative" className="text-sm text-gray-600" />
+                  </div>
                 </div>
               )}
             </>
