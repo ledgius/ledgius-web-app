@@ -95,20 +95,6 @@ const financeSections: NavSection[] = [
     ],
   },
   {
-    title: "Settings",
-    icon: Settings2,
-    items: [
-      { to: "/products", label: "Products & Services", icon: Package },
-      { to: "/tax-codes", label: "Tax Codes", icon: Settings2 },
-      { to: "/currencies", label: "Currency", icon: DollarSign },
-      { to: "/recurring", label: "Recurring", icon: Repeat },
-      { to: "/templates", label: "Templates", icon: ClipboardList },
-      { to: "/users", label: "Users & Roles", icon: UsersRound },
-      { to: "/import", label: "Data Import", icon: Import },
-      { to: "/export", label: "Data Export", icon: Upload },
-    ],
-  },
-  {
     title: "Audit",
     icon: Shield,
     items: [
@@ -194,6 +180,16 @@ const settingsSections: NavSection[] = [
     title: "",
     items: [
       { to: "/", label: "Books Overview", icon: HeartPulse },
+    ],
+  },
+  {
+    title: "Configuration",
+    items: [
+      { to: "/products", label: "Products & Services", icon: Package },
+      { to: "/tax-codes", label: "Tax Codes", icon: Settings2 },
+      { to: "/currencies", label: "Currency", icon: DollarSign },
+      { to: "/recurring", label: "Recurring", icon: Repeat },
+      { to: "/templates", label: "Templates", icon: ClipboardList },
     ],
   },
   {
