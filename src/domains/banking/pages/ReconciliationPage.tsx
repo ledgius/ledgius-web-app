@@ -751,24 +751,27 @@ function SortHeader({
   align?: "left" | "right"
 }) {
   const isActive = currentColumn === column
+  const nextDirection = isActive && currentDirection === "asc" ? "descending" : "ascending"
   return (
     <th
       className={cn(
-        "px-3 py-2.5 text-xs font-medium text-gray-500 uppercase tracking-wide cursor-pointer select-none hover:text-gray-700 transition-colors",
+        "px-3 py-2.5 text-xs font-medium uppercase tracking-wide cursor-pointer select-none transition-colors group",
+        isActive ? "text-primary-700" : "text-gray-500 hover:text-gray-700",
         align === "right" && "text-right"
       )}
       onClick={() => onSort(column)}
+      title={`Sort ${nextDirection} by ${label.toLowerCase()}`}
     >
       <span className="inline-flex items-center gap-1">
         {label}
         {isActive ? (
           currentDirection === "asc" ? (
-            <ChevronUp className="h-3 w-3" />
+            <ChevronUp className="h-3 w-3 text-primary-500" />
           ) : (
-            <ChevronDown className="h-3 w-3" />
+            <ChevronDown className="h-3 w-3 text-primary-500" />
           )
         ) : (
-          <ArrowUpDown className="h-3 w-3 opacity-30" />
+          <ArrowUpDown className="h-3 w-3 opacity-30 group-hover:opacity-60 group-hover:text-primary-400 transition-all" />
         )}
       </span>
     </th>
