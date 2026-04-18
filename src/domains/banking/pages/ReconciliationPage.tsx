@@ -225,7 +225,6 @@ function ExpansionPanel({
   ])
   const [createRule, setCreateRule] = useState(false)
   const [auditExpanded, setAuditExpanded] = useState(false)
-  const [selectedRuleId, setSelectedRuleId] = useState<number | null>(null)
 
   // Rule editor state
   const [rulePattern, setRulePattern] = useState(item.normalized_description || item.description || "")
@@ -294,7 +293,6 @@ function ExpansionPanel({
   // Apply matched rule defaults to first allocation line on mount
   useEffect(() => {
     if (!matchedRule) return
-    setSelectedRuleId(matchedRule.id)
     setLines((prev) => {
       const first = prev[0]
       if (!first || first.accountId) return prev // already set
@@ -310,23 +308,6 @@ function ExpansionPanel({
     })
   }, [matchedRule])
 
-  // Apply a manually-selected rule
-  const applyRule = useCallback((rule: ReconRule) => {
-    setSelectedRuleId(rule.id)
-    setLines((prev) => {
-      const first = prev[0]
-      if (!first) return prev
-      return [
-        {
-          ...first,
-          accountId: rule.default_account_id ?? first.accountId,
-          taxCodeId: rule.default_tax_code_id ?? first.taxCodeId,
-          contactId: rule.default_contact_id ?? first.contactId,
-        },
-        ...prev.slice(1),
-      ]
-    })
-  }, [])
 
   // Account options for the Combobox (exclude bank accounts from categories)
   const categoryAccountOptions = useMemo(() => {
@@ -393,17 +374,13 @@ function ExpansionPanel({
   const isBalanced = Math.abs(outOfBalance) < 0.01
   const canSave = lines.every((l) => l.accountId && l.taxCodeId && parseFloat(l.amount) > 0) && isBalanced
 
-  const activeRule = selectedRuleId
-    ? reconRules.find((r) => r.id === selectedRuleId) ?? null
-    : matchedRule
-
   return (
     <tr>
       <td colSpan={10} className="p-0">
         <div className="border-t border-b-2 border-gray-200 bg-gray-50 px-6 py-3 space-y-3">
 
-          {/* Tab buttons */}
-          <div className="flex gap-1">
+          {/* Tab buttons + Cancel/Save */}
+          <div className="flex items-center gap-1">
             {([
               { key: "manual" as ActionTab, label: "Manual Allocation" },
               { key: "rule" as ActionTab, label: "Allocation Rule", badge: matchedRule ? "1" : undefined },
@@ -429,55 +406,22 @@ function ExpansionPanel({
                 )}
               </button>
             ))}
+            <div className="flex-1" />
+            <Button variant="secondary" size="sm" onClick={onCancel}>Cancel</Button>
+            <Button
+              variant="primary"
+              size="sm"
+              disabled={!canSave || saving}
+              loading={saving}
+              onClick={() => onSave(lines, actionTab === "rule")}
+            >
+              Save
+            </Button>
           </div>
 
           {/* ── Tab: Allocation Rule ─────────────────────────────────────── */}
           {actionTab === "rule" && (
             <div className="space-y-2">
-              {/* Existing rule selector */}
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Apply existing rule</label>
-                <div className="flex items-start gap-4">
-                  <div className="max-w-sm flex-shrink-0">
-                    <Combobox
-                      options={reconRules
-                        .filter((r) => !r.disabled)
-                        .map((r) => ({
-                          value: r.id,
-                          label: r.name,
-                          detail: r.match_pattern ?? undefined,
-                        }))}
-                      value={selectedRuleId}
-                      onChange={(v) => {
-                        if (!v) { setSelectedRuleId(null); return }
-                        const rule = reconRules.find((r) => r.id === Number(v))
-                        if (rule) {
-                          applyRule(rule)
-                          setRulePattern(rule.match_pattern)
-                          setRuleMatchType(rule.match_type as "contains" | "exact" | "regex")
-                        }
-                      }}
-                      placeholder="Search rules..."
-                    />
-                  </div>
-                  {activeRule && (
-                    <div className="text-sm text-gray-600 pt-0.5">
-                      <span className="font-medium">{activeRule.name}</span>
-                      <span className="text-xs text-gray-400 ml-2">
-                        {activeRule.source === "smart" ? "Smart" : "Manual"} · {(activeRule.confidence * 100).toFixed(0)}% · used {activeRule.use_count}×
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Divider */}
-              <div className="flex items-center gap-3">
-                <div className="flex-1 border-t border-gray-200" />
-                <span className="text-xs text-gray-400">or define new rule</span>
-                <div className="flex-1 border-t border-gray-200" />
-              </div>
-
               {/* Rule pattern editor */}
               <div className="border border-gray-200 rounded-lg bg-white px-4 py-3 space-y-2">
                 {/* Row 1: Pattern + type + amount — all on one line */}
@@ -596,20 +540,6 @@ function ExpansionPanel({
                 </div>
               </div>
 
-              {/* Save / apply */}
-              <div className="flex items-center gap-3 pt-2 border-t border-gray-200">
-                <div className="flex-1" />
-                <Button variant="secondary" size="sm" onClick={onCancel}>Cancel</Button>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  disabled={!canSave || saving}
-                  loading={saving}
-                  onClick={() => onSave(lines, true)}
-                >
-                  Save &amp; Create Rule
-                </Button>
-              </div>
             </div>
           )}
 
@@ -701,29 +631,16 @@ function ExpansionPanel({
                 </div>
               </div>
 
-              {/* Bottom actions */}
-              <div className="flex items-center gap-3 pt-3 border-t border-gray-200">
-                <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={createRule}
-                    onChange={(e) => setCreateRule(e.target.checked)}
-                    className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                  />
-                  Create rule for future allocations
-                </label>
-                <div className="flex-1" />
-                <Button variant="secondary" size="sm" onClick={onCancel}>Cancel</Button>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  disabled={!canSave || saving}
-                  loading={saving}
-                  onClick={() => onSave(lines, createRule)}
-                >
-                  Save
-                </Button>
-              </div>
+              {/* Create rule checkbox */}
+              <label className="flex items-center gap-2 text-xs text-gray-600 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={createRule}
+                  onChange={(e) => setCreateRule(e.target.checked)}
+                  className="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                />
+                Create rule for future allocations
+              </label>
             </div>
           )}
 
@@ -1114,9 +1031,9 @@ export function ReconciliationPage() {
       </InfoPanel>
 
       {/* Bank Account Header (REC-008 to REC-010) */}
-      <div className="border border-gray-300 rounded-lg bg-white px-5 py-4 space-y-4">
-        <div className="flex items-end gap-4 flex-wrap">
-          <div className="w-80">
+      <div className="border border-gray-300 rounded-lg bg-white px-5 py-3">
+        <div className="flex items-end gap-6 flex-wrap">
+          <div className="w-72">
             <label className="block text-xs font-medium text-gray-600 mb-1">Bank Account</label>
             <Combobox
               options={accountOptions}
@@ -1131,51 +1048,48 @@ export function ReconciliationPage() {
           </div>
 
           {selectedAccountId > 0 && selectedAccount && (
-            <div className="flex items-center gap-6 text-sm">
-              <div className="flex items-center gap-2">
-                <Landmark className="h-4 w-4 text-gray-400" />
-                <span className="text-gray-600">{selectedAccount.accno}</span>
-                <span className="font-medium text-gray-800">{selectedAccount.description}</span>
-              </div>
+            <div className="flex items-center gap-2 text-sm pb-0.5">
+              <Landmark className="h-4 w-4 text-gray-400" />
+              <span className="font-medium text-gray-800">{selectedAccount.description}</span>
             </div>
           )}
-        </div>
 
-        {selectedAccountId > 0 && (
-          <div className="flex items-center gap-8 flex-wrap border-t border-gray-200 pt-3">
-            <div>
-              <p className="text-xs text-gray-500 mb-0.5">Bank balance</p>
-              <MoneyValue amount={bankBalance} size="lg" colorNegative className="font-normal tabular-nums" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-0.5">Book balance</p>
-              <MoneyValue amount={bookBalance} size="lg" colorNegative className="font-normal tabular-nums" />
-            </div>
-            <div>
-              <p className="text-xs text-gray-500 mb-0.5">Variance</p>
-              <MoneyValue
-                amount={variance}
-                size="lg"
-                colorNegative
-                className={cn("font-normal tabular-nums", Math.abs(variance) < 0.01 ? "text-green-600" : "text-red-600")}
-              />
-            </div>
-            {totalTransactions > 0 && (
-              <div>
-                <p className="text-xs text-gray-500 mb-0.5">Reconciled</p>
-                <p className="text-sm font-normal tabular-nums text-gray-700">
-                  {reconciledCount} of {totalTransactions}
-                </p>
+          {selectedAccountId > 0 && (
+            <>
+              <div className="border-l border-gray-200 pl-6 pb-0.5">
+                <p className="text-xs text-gray-500">Bank balance</p>
+                <MoneyValue amount={bankBalance} size="sm" colorNegative className="font-normal tabular-nums" />
               </div>
-            )}
-            {lastUpdated && (
-              <div className="ml-auto text-right">
-                <p className="text-xs text-gray-500 mb-0.5">Last updated</p>
-                <DateValue value={lastUpdated} format="relative" className="text-sm text-gray-600" />
+              <div className="pb-0.5">
+                <p className="text-xs text-gray-500">Book balance</p>
+                <MoneyValue amount={bookBalance} size="sm" colorNegative className="font-normal tabular-nums" />
               </div>
-            )}
-          </div>
-        )}
+              <div className="pb-0.5">
+                <p className="text-xs text-gray-500">Variance</p>
+                <MoneyValue
+                  amount={variance}
+                  size="sm"
+                  colorNegative
+                  className={cn("font-normal tabular-nums", Math.abs(variance) < 0.01 ? "text-green-600" : "text-red-600")}
+                />
+              </div>
+              {totalTransactions > 0 && (
+                <div className="pb-0.5">
+                  <p className="text-xs text-gray-500">Reconciled</p>
+                  <p className="text-sm font-normal tabular-nums text-gray-700">
+                    {reconciledCount} of {totalTransactions}
+                  </p>
+                </div>
+              )}
+              {lastUpdated && (
+                <div className="ml-auto text-right pb-0.5">
+                  <p className="text-xs text-gray-500">Last updated</p>
+                  <DateValue value={lastUpdated} format="relative" className="text-sm text-gray-600" />
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
 
       {/* No account selected */}
