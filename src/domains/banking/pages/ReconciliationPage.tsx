@@ -1507,7 +1507,7 @@ function TransactionRow({
 
         {/* Description */}
         <td className="px-3 py-2.5">
-          <p className="text-sm text-gray-800 truncate max-w-[500px]">
+          <p className="text-sm text-gray-800 truncate max-w-[800px]">
             {isRulePreviewMatch && rulePreviewMatchType !== "regex" && rulePreviewPattern
               ? highlightMatch(item.normalized_description || item.description || "", rulePreviewPattern)
               : (item.normalized_description || item.description || "\u2014")}
