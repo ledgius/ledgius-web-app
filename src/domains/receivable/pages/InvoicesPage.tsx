@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { useState, useMemo, useEffect } from "react"
+import { Link, useNavigate, useSearchParams } from "react-router-dom"
 import { BackLink } from "@/components/primitives"
 import { PageShell } from "@/components/layout"
 import { Button, InfoPanel } from "@/components/primitives"
@@ -40,23 +40,42 @@ const columns: Column<InvoiceSummary>[] = [
   },
 ]
 
-type DocFilter = "all" | "invoice" | "credit_note"
+type DocFilter = "all" | "invoice" | "credit_note" | "overdue"
 
 export function InvoicesPage() {
   usePageHelp(pageHelpContent.invoices)
   usePagePolicies(["receivable", "tax"])
-  const { data: invoices, isLoading, error } = useInvoices()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [search, setSearch] = useState("")
-  const [docFilter, setDocFilter] = useState<DocFilter>("all")
+
+  // Derive initial filter from URL query param
+  const urlFilter = searchParams.get("filter")
+  const [docFilter, setDocFilter] = useState<DocFilter>(
+    urlFilter === "overdue" ? "overdue" : "all"
+  )
+
+  // Sync docFilter changes back to URL
+  useEffect(() => {
+    if (docFilter === "overdue" && searchParams.get("filter") !== "overdue") {
+      setSearchParams({ filter: "overdue" }, { replace: true })
+    } else if (docFilter !== "overdue" && searchParams.has("filter")) {
+      searchParams.delete("filter")
+      setSearchParams(searchParams, { replace: true })
+    }
+  }, [docFilter, searchParams, setSearchParams])
+
+  // When overdue is active, pass filter to API; otherwise fetch all
+  const apiFilter = docFilter === "overdue" ? "overdue" : undefined
+  const { data: invoices, isLoading, error } = useInvoices(apiFilter)
 
   const filtered = useMemo(() => {
     let list = invoices ?? []
-    if (docFilter !== "all") {
-      list = list.filter(i => {
-        if (docFilter === "credit_note") return i.is_return === true
-        return i.is_return !== true
-      })
+    // "overdue" filtering is server-side; "invoice"/"credit_note" is client-side
+    if (docFilter === "invoice") {
+      list = list.filter(i => i.is_return !== true)
+    } else if (docFilter === "credit_note") {
+      list = list.filter(i => i.is_return === true)
     }
     if (!search) return list
     const q = search.toLowerCase()
@@ -80,7 +99,7 @@ export function InvoicesPage() {
           New Invoice
         </Button>
         <div className="flex items-center gap-1 ml-4 bg-gray-100 rounded-lg p-0.5">
-          {([["all", "All"], ["invoice", "Invoices"], ["credit_note", "Credit Notes"]] as const).map(([key, label]) => (
+          {([["all", "All"], ["invoice", "Invoices"], ["credit_note", "Credit Notes"], ["overdue", "Overdue"]] as const).map(([key, label]) => (
             <button
               key={key}
               onClick={() => setDocFilter(key)}
@@ -101,6 +120,18 @@ export function InvoicesPage() {
   return (
     <PageShell header={header} loading={isLoading}>
       <BackLink />
+      {docFilter === "overdue" && (
+        <div className="mb-4 rounded-lg border border-l-[3px] border-l-amber-400 border-gray-200 bg-gray-50 px-4 py-2.5 text-sm text-gray-700">
+          Showing overdue invoices only —{" "}
+          <Link
+            to="/invoices"
+            onClick={(e) => { e.preventDefault(); setDocFilter("all") }}
+            className="underline font-medium hover:text-gray-900"
+          >
+            View all
+          </Link>
+        </div>
+      )}
       <InfoPanel title="About Invoices" storageKey="invoices-info">
         <p>
           <strong>Invoices</strong> are bills you issue to customers — money they owe you. Each invoice records the
