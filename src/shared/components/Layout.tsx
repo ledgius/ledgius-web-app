@@ -37,7 +37,7 @@ interface NavSection {
   items: NavItem[]
 }
 
-type SidebarMode = "finance" | "tasks" | "reports" | "ai" | "assets" | "liabilities" | "payroll" | "data"
+type SidebarMode = "finance" | "tasks" | "reports" | "ai" | "assets" | "liabilities" | "payroll" | "settings"
 
 // ── Mode definitions ──
 
@@ -104,6 +104,8 @@ const financeSections: NavSection[] = [
       { to: "/recurring", label: "Recurring", icon: Repeat },
       { to: "/templates", label: "Templates", icon: ClipboardList },
       { to: "/users", label: "Users & Roles", icon: UsersRound },
+      { to: "/import", label: "Data Import", icon: Import },
+      { to: "/export", label: "Data Export", icon: Upload },
     ],
   },
   {
@@ -187,7 +189,7 @@ const payrollSections: NavSection[] = [
   },
 ]
 
-const dataSections: NavSection[] = [
+const settingsSections: NavSection[] = [
   {
     title: "",
     items: [
@@ -195,10 +197,9 @@ const dataSections: NavSection[] = [
     ],
   },
   {
-    title: "Bank Feeds",
+    title: "Connections",
     items: [
       { to: "/settings/bank-feeds", label: "Live Bank Feeds", icon: Radio },
-      { to: "/bank-import-transactions", label: "Import Transactions", icon: Upload },
     ],
   },
   {
@@ -206,6 +207,14 @@ const dataSections: NavSection[] = [
     items: [
       { to: "/import", label: "Data Import", icon: Import },
       { to: "/export", label: "Data Export", icon: Upload },
+    ],
+  },
+  {
+    title: "Administration",
+    items: [
+      { to: "/users", label: "Users & Roles", icon: UsersRound },
+      { to: "/admin", label: "Platform Admin", icon: Shield },
+      { to: "/admin/feedback", label: "Feedback Inbox", icon: MessageSquareIcon },
     ],
   },
 ]
@@ -251,6 +260,13 @@ const tasksSections: NavSection[] = [
     items: [
       { to: "/reports", label: "Month-end Review", icon: ClipboardCheck },
       { to: "/audit-log", label: "Audit Log", icon: Shield },
+    ],
+  },
+  {
+    title: "Data",
+    items: [
+      { to: "/import", label: "Data Import", icon: Import },
+      { to: "/export", label: "Data Export", icon: Upload },
     ],
   },
 ]
@@ -316,10 +332,10 @@ const modeNavMap: Record<SidebarMode, NavSection[]> = {
   assets: assetsSections,
   liabilities: liabilitiesSections,
   payroll: payrollSections,
-  data: dataSections,
   tasks: tasksSections,
   reports: reportsSections,
   ai: aiSections,
+  settings: settingsSections,
 }
 
 const modeLabels: { key: SidebarMode; label: string; icon: LucideIcon }[] = [
@@ -327,10 +343,10 @@ const modeLabels: { key: SidebarMode; label: string; icon: LucideIcon }[] = [
   { key: "assets", label: "Assets", icon: Package },
   { key: "liabilities", label: "Liabilities", icon: CreditCard },
   { key: "payroll", label: "Payroll", icon: Wallet },
-  { key: "data", label: "Data", icon: Import },
   { key: "tasks", label: "Tasks", icon: CheckCircle },
   { key: "reports", label: "Reports", icon: BarChart3 },
   { key: "ai", label: "AI", icon: Sparkles },
+  { key: "settings", label: "Settings", icon: Settings2 },
 ]
 
 // ── Component ──
@@ -378,24 +394,21 @@ export function Layout() {
     }, 120)
   }
 
-  // Compose the visible sidebar sections for the current mode, then
-  // append a Platform Admin section iff the current user is a platform
-  // administrator (PLATFORM_ADMIN_EMAILS-flagged account; future R-0052
-  // platform_owner population). Backend endpoints under /api/v1/admin/*
-  // already enforce this — the conditional render here just hides the
-  // entry from non-admins so they don't see a link they can't follow.
-  const activeSections: NavSection[] = user?.is_platform_admin
-    ? [
-        ...modeNavMap[mode],
-        {
-          title: "Platform",
-          items: [
-            { to: "/admin", label: "Platform Admin", icon: Shield },
-            { to: "/admin/feedback", label: "Feedback Inbox", icon: MessageSquareIcon },
-          ],
-        },
-      ]
-    : modeNavMap[mode]
+  // Filter Settings mode: hide Platform Admin + Feedback Inbox for
+  // non-admin users (backend enforces this — the filter just hides
+  // links non-admins can't follow).
+  const activeSections: NavSection[] = (() => {
+    const sections = modeNavMap[mode]
+    if (mode === "settings" && !user?.is_platform_admin) {
+      return sections.map(s => {
+        if (s.title === "Administration") {
+          return { ...s, items: s.items.filter(i => i.to !== "/admin" && i.to !== "/admin/feedback") }
+        }
+        return s
+      }).filter(s => s.items.length > 0)
+    }
+    return sections
+  })()
 
   const handleGlobalKeyDown = useCallback((e: KeyboardEvent) => {
     if ((e.metaKey || e.ctrlKey) && e.key === "k") {

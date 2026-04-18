@@ -3,6 +3,7 @@ import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 // MoneyValue + DecisionQueue removed — health panels below provide richer detail
 import { useDashboard } from "../hooks/useDashboard"
+import { PerformanceTab } from "./PerformanceTab"
 import {
   Landmark, FileText, Receipt, DollarSign,
   ScrollText, CalculatorIcon, CalendarCheck,
@@ -180,6 +181,10 @@ function formatDayLabel(date: Date): string {
 function formatTime(date: Date): string {
   return date.toLocaleTimeString("en-AU", { hour: "numeric", minute: "2-digit", hour12: true })
 }
+
+// ── Tab type for Books Overview ──
+
+type BooksTab = "current" | "performance"
 
 type ViewRange = "7d" | "30d" | "quarter"
 const viewRangeOptions: { key: ViewRange; label: string; days: number }[] = [
@@ -437,6 +442,7 @@ export function BooksHealthPage() {
   // inline help keeps F1 useful even if the YAML loader misses.
   usePageHelp(pageHelpContent.dashboard)
   usePagePolicies(["reporting", "tax"])
+  const [activeTab, setActiveTab] = useState<BooksTab>("current")
   const { data, isLoading, refetch, isFetching } = useBooksHealth()
   const { data: dashMetrics, isLoading: _dashLoading } = useDashboard()
   const { data: dashTimelineData } = useCalendarTimeline(7)
@@ -494,6 +500,34 @@ export function BooksHealthPage() {
 
   return (
     <PageShell header={header} loading={isLoading}>
+      {/* ── Tab selector ── */}
+      <div className="mb-6">
+        <div className="inline-flex rounded-lg bg-gray-100 p-1">
+          {([
+            { key: "current" as const, label: "Current" },
+            { key: "performance" as const, label: "Performance" },
+          ]).map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setActiveTab(tab.key)}
+              className={cn(
+                "px-4 py-1.5 rounded-md text-sm font-medium transition-all",
+                activeTab === tab.key
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-700"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {activeTab === "performance" ? (
+        <PerformanceTab />
+      ) : (
+      <>
       {(() => {
         // Merge health-derived actions + calendar timeline into one list.
         // Calendar items that duplicate health actions (overdue invoices/bills)
@@ -853,6 +887,8 @@ export function BooksHealthPage() {
       <div className="border-t border-gray-200 pt-6">
         <FullCalendarTimeline />
       </div>
+      </>
+      )}
     </PageShell>
   )
 }
