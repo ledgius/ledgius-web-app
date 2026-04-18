@@ -1030,63 +1030,92 @@ export function ReconciliationPage() {
         </p>
       </InfoPanel>
 
-      {/* Bank Account Header (REC-008 to REC-010) */}
+      {/* Bank Account Header (REC-008 to REC-010) — CSS Grid: row 1 = labels, row 2 = values */}
       <div className="border border-gray-300 rounded-lg bg-white px-5 py-3">
-        <StatBar>
-          <StatCell label="Bank Account">
-            <Combobox
-              options={accountOptions}
-              value={selectedAccountId || null}
-              onChange={(v) => {
-                setSelectedAccountId(v ? Number(v) : 0)
-                setExpandedLineId(null)
-                setSelectedIds(new Set())
-              }}
-              placeholder="Select a bank account..."
-              className="w-80"
-            />
-          </StatCell>
+        {(() => {
+          const cols = ["auto"]
+          if (selectedAccountId > 0 && selectedAccount) cols.push("auto")
+          if (selectedAccountId > 0) cols.push("auto", "auto", "auto")
+          if (selectedAccountId > 0 && totalTransactions > 0) cols.push("auto")
+          if (selectedAccountId > 0 && lastUpdated) cols.push("1fr")
 
-          {selectedAccountId > 0 && selectedAccount && (
-            <StatCell label="Account Name">
-              <span className="flex items-center gap-1.5">
-                <Landmark className="h-4 w-4 text-gray-400 shrink-0" />
-                <span className="font-medium truncate max-w-[180px]" title={selectedAccount.description ?? undefined}>
-                  {selectedAccount.description}
-                </span>
-              </span>
-            </StatCell>
-          )}
+          return (
+            <div
+              className="grid gap-x-6 gap-y-1 items-end"
+              style={{ gridTemplateColumns: cols.join(" "), gridTemplateRows: "auto auto" }}
+            >
+              {/* Row 1: Labels */}
+              <p className="text-xs text-gray-500">Bank Account</p>
+              {selectedAccountId > 0 && selectedAccount && (
+                <p className="text-xs text-gray-500">Account Name</p>
+              )}
+              {selectedAccountId > 0 && (
+                <>
+                  <p className="text-xs text-gray-500 border-l border-gray-200 pl-5">Bank balance</p>
+                  <p className="text-xs text-gray-500">Book balance</p>
+                  <p className="text-xs text-gray-500">Variance</p>
+                </>
+              )}
+              {selectedAccountId > 0 && totalTransactions > 0 && (
+                <p className="text-xs text-gray-500">Reconciled</p>
+              )}
+              {selectedAccountId > 0 && lastUpdated && (
+                <p className="text-xs text-gray-500 text-right">Last updated</p>
+              )}
 
-          {selectedAccountId > 0 && (
-            <>
-              <StatCell label="Bank balance" separator>
-                <MoneyValue amount={bankBalance} size="sm" colorNegative className="font-normal tabular-nums" />
-              </StatCell>
-              <StatCell label="Book balance">
-                <MoneyValue amount={bookBalance} size="sm" colorNegative className="font-normal tabular-nums" />
-              </StatCell>
-              <StatCell label="Variance">
-                <MoneyValue
-                  amount={variance}
-                  size="sm"
-                  colorNegative
-                  className={cn("font-normal tabular-nums", Math.abs(variance) < 0.01 ? "text-green-600" : "text-red-600")}
+              {/* Row 2: Values */}
+              <div>
+                <Combobox
+                  options={accountOptions}
+                  value={selectedAccountId || null}
+                  onChange={(v) => {
+                    setSelectedAccountId(v ? Number(v) : 0)
+                    setExpandedLineId(null)
+                    setSelectedIds(new Set())
+                  }}
+                  placeholder="Select a bank account..."
+                  className="w-72"
                 />
-              </StatCell>
-              {totalTransactions > 0 && (
-                <StatCell label="Reconciled">
-                  <span className="font-normal tabular-nums">{reconciledCount} of {totalTransactions}</span>
-                </StatCell>
+              </div>
+              {selectedAccountId > 0 && selectedAccount && (
+                <div className="flex items-center gap-1.5 text-sm">
+                  <Landmark className="h-4 w-4 text-gray-400 shrink-0" />
+                  <span className="font-medium truncate max-w-[200px]" title={selectedAccount.description ?? undefined}>
+                    {selectedAccount.description}
+                  </span>
+                </div>
               )}
-              {lastUpdated && (
-                <StatCell label="Last updated" align="right" className="ml-auto">
+              {selectedAccountId > 0 && (
+                <>
+                  <div className="text-sm border-l border-gray-200 pl-5">
+                    <MoneyValue amount={bankBalance} size="sm" colorNegative className="font-normal tabular-nums" />
+                  </div>
+                  <div className="text-sm">
+                    <MoneyValue amount={bookBalance} size="sm" colorNegative className="font-normal tabular-nums" />
+                  </div>
+                  <div className="text-sm">
+                    <MoneyValue
+                      amount={variance}
+                      size="sm"
+                      colorNegative
+                      className={cn("font-normal tabular-nums", Math.abs(variance) < 0.01 ? "text-green-600" : "text-red-600")}
+                    />
+                  </div>
+                </>
+              )}
+              {selectedAccountId > 0 && totalTransactions > 0 && (
+                <div className="text-sm font-normal tabular-nums text-gray-700">
+                  {reconciledCount} of {totalTransactions}
+                </div>
+              )}
+              {selectedAccountId > 0 && lastUpdated && (
+                <div className="text-sm text-right">
                   <DateValue value={lastUpdated} format="relative" className="text-gray-600" />
-                </StatCell>
+                </div>
               )}
-            </>
-          )}
-        </StatBar>
+            </div>
+          )
+        })()}
       </div>
 
       {/* No account selected */}
