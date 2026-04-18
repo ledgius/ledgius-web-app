@@ -155,6 +155,30 @@ function nextId(): string {
   return Math.random().toString(36).slice(2, 10)
 }
 
+function highlightMatch(text: string, pattern: string): React.ReactNode {
+  if (!pattern) return text
+  const idx = text.toLowerCase().indexOf(pattern.toLowerCase())
+  if (idx === -1) return text
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark className="bg-amber-200 text-amber-900 rounded-sm px-0.5">{text.slice(idx, idx + pattern.length)}</mark>
+      {text.slice(idx + pattern.length)}
+    </>
+  )
+}
+
+function testRulePattern(description: string, pattern: string, matchType: "contains" | "exact" | "regex"): boolean {
+  if (!pattern || !description) return false
+  const desc = description.toLowerCase()
+  const pat = pattern.toLowerCase()
+  if (matchType === "exact") return desc === pat
+  if (matchType === "regex") {
+    try { return new RegExp(pat, "i").test(description) } catch { return false }
+  }
+  return desc.includes(pat)
+}
+
 // ── Expansion Panel ──────────────────────────────────────────────────────────
 
 function ExpansionPanel({
@@ -166,6 +190,9 @@ function ExpansionPanel({
   selectedAccountId,
   reconRules,
   initialTab,
+  queueItems,
+  onPatternChange,
+  onMatchTypeChange,
   onSave,
   onCancel,
   saving,
@@ -178,6 +205,9 @@ function ExpansionPanel({
   selectedAccountId: number
   reconRules: ReconRule[]
   initialTab?: ActionTab | null
+  queueItems: QueueItem[]
+  onPatternChange: (pattern: string) => void
+  onMatchTypeChange: (matchType: "contains" | "exact" | "regex") => void
   onSave: (lines: AllocationLine[], createRule: boolean) => void
   onCancel: () => void
   saving: boolean
@@ -205,6 +235,22 @@ function ExpansionPanel({
   const [ruleAmountMin, setRuleAmountMin] = useState("")
   const [ruleAmountMax, setRuleAmountMax] = useState("")
 
+  // Match count for the rule preview
+  const unallocatedItems = useMemo(() =>
+    queueItems.filter((q) => {
+      const s = reconStatusSemantic(q.reconciliation_status)
+      return s === "unmatched" || s === "suggested" || s === "needs_review"
+    }),
+  [queueItems])
+  const unallocatedCount = unallocatedItems.length
+  const ruleMatchCount = useMemo(() => {
+    if (!rulePattern) return 0
+    return unallocatedItems.filter((q) => {
+      const desc = q.normalized_description || q.description || ""
+      return testRulePattern(desc, rulePattern, ruleMatchType)
+    }).length
+  }, [rulePattern, ruleMatchType, unallocatedItems])
+
   // Find auto-matched recon rule
   const matchedRule = useMemo(() => {
     if (!item.description) return null
@@ -222,9 +268,28 @@ function ExpansionPanel({
   }, [item.description, reconRules])
 
   // Default tab: use initialTab if provided, otherwise manual allocation
-  const [actionTab, setActionTab] = useState<ActionTab>(() =>
-    initialTab ?? "manual"
-  )
+  const startTab = initialTab ?? "manual"
+  const [actionTab, setActionTab] = useState<ActionTab>(startTab)
+
+  // Fire initial pattern preview if starting on rule tab
+  useEffect(() => {
+    if (startTab === "rule") {
+      onPatternChange(rulePattern)
+      onMatchTypeChange(ruleMatchType)
+    }
+    return () => { onPatternChange("") }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const switchTab = useCallback((tab: ActionTab) => {
+    setActionTab(tab)
+    if (tab === "rule") {
+      onPatternChange(rulePattern)
+      onMatchTypeChange(ruleMatchType)
+    } else {
+      onPatternChange("")
+    }
+  }, [rulePattern, ruleMatchType, onPatternChange, onMatchTypeChange])
 
   // Apply matched rule defaults to first allocation line on mount
   useEffect(() => {
@@ -335,7 +400,7 @@ function ExpansionPanel({
   return (
     <tr>
       <td colSpan={10} className="p-0">
-        <div className="border-t border-b-2 border-gray-200 bg-gray-50 px-6 py-4 space-y-4">
+        <div className="border-t border-b-2 border-gray-200 bg-gray-50 px-6 py-3 space-y-3">
 
           {/* Tab buttons */}
           <div className="flex gap-1">
@@ -348,7 +413,7 @@ function ExpansionPanel({
               <button
                 key={tab.key}
                 type="button"
-                onClick={() => setActionTab(tab.key)}
+                onClick={() => switchTab(tab.key)}
                 className={cn(
                   "px-3 py-1.5 rounded-md text-xs font-medium border transition-colors",
                   actionTab === tab.key
@@ -368,7 +433,7 @@ function ExpansionPanel({
 
           {/* ── Tab: Allocation Rule ─────────────────────────────────────── */}
           {actionTab === "rule" && (
-            <div className="space-y-4">
+            <div className="space-y-2">
               {/* Existing rule selector */}
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Apply existing rule</label>
@@ -414,53 +479,58 @@ function ExpansionPanel({
               </div>
 
               {/* Rule pattern editor */}
-              <div className="border border-gray-200 rounded-lg bg-white px-4 py-4 space-y-4">
-                {/* Pattern + match type */}
-                <div className="grid grid-cols-[1fr_160px] gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Match pattern</label>
+              <div className="border border-gray-200 rounded-lg bg-white px-4 py-3 space-y-2">
+                {/* Row 1: Pattern + type + amount — all on one line */}
+                <div className="flex items-end gap-3">
+                  <div className="flex-1">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Match pattern
+                      {rulePattern && (
+                        <span className="ml-2 font-normal normal-case tracking-normal text-amber-600">
+                          — matches {ruleMatchCount} of {unallocatedCount} unallocated
+                        </span>
+                      )}
+                    </label>
                     <input
                       type="text"
                       value={rulePattern}
-                      onChange={(e) => setRulePattern(e.target.value)}
-                      className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      onChange={(e) => { setRulePattern(e.target.value); onPatternChange(e.target.value) }}
+                      className="w-full bg-white border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
                       placeholder="Transaction description pattern..."
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Match type</label>
+                  <div className="w-32">
+                    <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
                     <select
                       value={ruleMatchType}
-                      onChange={(e) => setRuleMatchType(e.target.value as "contains" | "exact" | "regex")}
-                      className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      onChange={(e) => { const v = e.target.value as "contains" | "exact" | "regex"; setRuleMatchType(v); onMatchTypeChange(v) }}
+                      className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                     >
                       <option value="contains">Contains</option>
-                      <option value="exact">Exact match</option>
+                      <option value="exact">Exact</option>
                       <option value="regex">Regex</option>
                     </select>
                   </div>
-                </div>
-
-                {/* Amount matching */}
-                <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Amount match</label>
-                  <div className="flex items-center gap-3">
-                    <select
-                      value={ruleAmountMatch}
-                      onChange={(e) => setRuleAmountMatch(e.target.value as "any" | "exact" | "range")}
-                      className="border border-gray-300 rounded px-2.5 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
-                    >
-                      <option value="any">Any amount</option>
-                      <option value="exact">Exact amount</option>
-                      <option value="range">Amount range</option>
-                    </select>
+                  <div className="flex items-end gap-2">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">Amount</label>
+                      <select
+                        value={ruleAmountMatch}
+                        onChange={(e) => setRuleAmountMatch(e.target.value as "any" | "exact" | "range")}
+                        className="border border-gray-300 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      >
+                        <option value="any">Any</option>
+                        <option value="exact">Exact</option>
+                        <option value="range">Range</option>
+                      </select>
+                    </div>
                     {ruleAmountMatch === "exact" && (
                       <input
                         type="text"
                         inputMode="decimal"
                         value={ruleAmountExact}
                         onChange={(e) => setRuleAmountExact(e.target.value)}
-                        className="w-28 border border-gray-300 rounded px-2.5 py-1.5 text-sm text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        className="w-24 bg-white border border-gray-300 rounded px-2 py-1.5 text-sm text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-primary-500"
                         placeholder="0.00"
                       />
                     )}
@@ -471,7 +541,7 @@ function ExpansionPanel({
                           inputMode="decimal"
                           value={ruleAmountMin}
                           onChange={(e) => setRuleAmountMin(e.target.value)}
-                          className="w-28 border border-gray-300 rounded px-2.5 py-1.5 text-sm text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          className="w-20 bg-white border border-gray-300 rounded px-2 py-1.5 text-sm text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-primary-500"
                           placeholder="Min"
                         />
                         <span className="text-xs text-gray-400">to</span>
@@ -480,7 +550,7 @@ function ExpansionPanel({
                           inputMode="decimal"
                           value={ruleAmountMax}
                           onChange={(e) => setRuleAmountMax(e.target.value)}
-                          className="w-28 border border-gray-300 rounded px-2.5 py-1.5 text-sm text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          className="w-20 bg-white border border-gray-300 rounded px-2 py-1.5 text-sm text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-primary-500"
                           placeholder="Max"
                         />
                       </>
@@ -488,7 +558,7 @@ function ExpansionPanel({
                   </div>
                 </div>
 
-                {/* Rule allocation defaults */}
+                {/* Row 2: Defaults — account, tax, contact */}
                 <div className="grid grid-cols-3 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">Default account</label>
@@ -689,7 +759,7 @@ function ExpansionPanel({
               onClick={() => setAuditExpanded(!auditExpanded)}
               className="flex items-center gap-2 text-xs font-medium text-gray-500 uppercase tracking-wide hover:text-gray-700 transition-colors"
             >
-              {auditExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronUp className="h-3.5 w-3.5 rotate-180" />}
+              <ChevronRight className={cn("h-3.5 w-3.5 transition-transform duration-150", auditExpanded && "rotate-90")} />
               Audit
             </button>
             {auditExpanded && (
@@ -803,6 +873,8 @@ export function ReconciliationPage() {
   const [searchText, setSearchText] = useState("")
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
+  const [rulePreviewPattern, setRulePreviewPattern] = useState("")
+  const [rulePreviewMatchType, setRulePreviewMatchType] = useState<"contains" | "exact" | "regex">("contains")
 
   // Data queries
   const { data: queue, isLoading: queueLoading, error: queueError } = useReconQueue(selectedAccountId, "risk_first" as QueueSort, "all" as QueueFilter)
@@ -1311,6 +1383,8 @@ export function ReconciliationPage() {
                         isExpanded={isExpanded}
                         isSelected={isSelected}
                         initialTab={isExpanded ? expandedTab : null}
+                        rulePreviewPattern={rulePreviewPattern}
+                        rulePreviewMatchType={rulePreviewMatchType}
                         onRowClick={handleRowClick}
                         onCheckbox={handleCheckbox}
                         accounts={allAccounts}
@@ -1319,6 +1393,9 @@ export function ReconciliationPage() {
                         bankAccounts={bankAccounts}
                         selectedAccountId={selectedAccountId}
                         reconRules={reconRules}
+                        queueItems={queueRaw}
+                        onPatternChange={setRulePreviewPattern}
+                        onMatchTypeChange={setRulePreviewMatchType}
                         onSave={handleSaveAllocation}
                         saving={createFromLine.isPending}
                       />
@@ -1353,6 +1430,8 @@ function TransactionRow({
   isExpanded,
   isSelected,
   initialTab,
+  rulePreviewPattern,
+  rulePreviewMatchType,
   onRowClick,
   onCheckbox,
   accounts,
@@ -1361,6 +1440,9 @@ function TransactionRow({
   bankAccounts,
   selectedAccountId,
   reconRules,
+  queueItems,
+  onPatternChange,
+  onMatchTypeChange,
   onSave,
   saving,
 }: {
@@ -1370,6 +1452,8 @@ function TransactionRow({
   isExpanded: boolean
   isSelected: boolean
   initialTab: ActionTab | null
+  rulePreviewPattern: string
+  rulePreviewMatchType: "contains" | "exact" | "regex"
   onRowClick: (id: number, tab?: ActionTab) => void
   onCheckbox: (id: number, checked: boolean) => void
   accounts: { id: number; accno: string; description: string | null; category: string }[]
@@ -1378,6 +1462,9 @@ function TransactionRow({
   bankAccounts: { id: number; accno: string; description: string | null }[]
   selectedAccountId: number
   reconRules: ReconRule[]
+  queueItems: QueueItem[]
+  onPatternChange: (pattern: string) => void
+  onMatchTypeChange: (matchType: "contains" | "exact" | "regex") => void
   onSave: (lineId: number, lines: AllocationLine[], createRule: boolean) => void
   saving: boolean
 }) {
@@ -1415,6 +1502,13 @@ function TransactionRow({
   const sem = reconStatusSemantic(item.reconciliation_status)
   const isAllocated = sem === "allocated" || sem === "approved"
 
+  // Rule preview — does this row match the pattern being edited?
+  const isRulePreviewMatch = useMemo(() => {
+    if (!rulePreviewPattern || isExpanded) return false
+    const desc = item.normalized_description || item.description || ""
+    return testRulePattern(desc, rulePreviewPattern, rulePreviewMatchType)
+  }, [rulePreviewPattern, rulePreviewMatchType, item.description, item.normalized_description, isExpanded])
+
   // Parse allocation info from match_explanation if available
   const allocInfo = useMemo(() => {
     const ex = item.match_explanation as Record<string, unknown> | null
@@ -1433,7 +1527,8 @@ function TransactionRow({
         className={cn(
           "border-b border-gray-100 cursor-pointer transition-colors",
           isExpanded ? "bg-primary-50" : "hover:bg-gray-50",
-          isSelected && !isExpanded && "bg-primary-25"
+          isSelected && !isExpanded && "bg-primary-25",
+          isRulePreviewMatch && !isExpanded && "bg-amber-50 border-l-2 border-l-amber-400"
         )}
         onClick={() => onRowClick(item.id)}
       >
@@ -1455,7 +1550,9 @@ function TransactionRow({
         {/* Description */}
         <td className="px-3 py-2.5">
           <p className="text-sm text-gray-800 truncate max-w-[500px]">
-            {item.normalized_description || item.description || "\u2014"}
+            {isRulePreviewMatch && rulePreviewMatchType !== "regex" && rulePreviewPattern
+              ? highlightMatch(item.normalized_description || item.description || "", rulePreviewPattern)
+              : (item.normalized_description || item.description || "\u2014")}
           </p>
           {item.counterparty_name && (
             <p className="text-xs text-gray-400 truncate">{item.counterparty_name}</p>
@@ -1543,8 +1640,11 @@ function TransactionRow({
           selectedAccountId={selectedAccountId}
           reconRules={reconRules}
           initialTab={initialTab}
-          onSave={(lines, createRule) => onSave(item.id, lines, createRule)}
-          onCancel={() => onRowClick(item.id)}
+          queueItems={queueItems}
+          onPatternChange={onPatternChange}
+          onMatchTypeChange={onMatchTypeChange}
+          onSave={(lines, createRule) => { onPatternChange(""); onSave(item.id, lines, createRule) }}
+          onCancel={() => { onPatternChange(""); onRowClick(item.id) }}
           saving={saving}
         />
       )}
