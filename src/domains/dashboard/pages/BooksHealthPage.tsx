@@ -1,5 +1,5 @@
 // Spec references: A-0023.
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import { Link, useNavigate } from "react-router-dom"
 // MoneyValue + DecisionQueue removed — health panels below provide richer detail
 import { useDashboard } from "../hooks/useDashboard"
@@ -455,7 +455,34 @@ export function BooksHealthPage() {
   const snoozeMutation = useSnoozeAction()
 
   const dashPendingItems = (dashTimelineData?.items ?? []).filter((i) => !i.done)
-  // overdue count computed inside the merged InfoPanel
+
+  // Category chips for the InfoPanel — group pending items by category
+  const categoryChips = useMemo(() => {
+    const CHIP_META: Record<string, { label: string; icon: LucideIcon; link: string; hard: boolean }> = {
+      payroll:     { label: "Run Payroll",         icon: Wallet,       link: "/pay-runs",          hard: true },
+      compliance:  { label: "BAS / GST",           icon: Calculator,   link: "/bas",               hard: true },
+      bas:         { label: "BAS / GST",           icon: Calculator,   link: "/bas",               hard: true },
+      receivables: { label: "Send & Chase",        icon: ClipboardList, link: "/invoices",          hard: false },
+      invoices:    { label: "Send & Chase",        icon: ClipboardList, link: "/invoices",          hard: false },
+      payables:    { label: "Review & Pay Bills",  icon: Wallet,       link: "/bills",             hard: false },
+      bills:       { label: "Review & Pay Bills",  icon: Wallet,       link: "/bills",             hard: false },
+    }
+    const map = new Map<string, { count: number; hasOverdue: boolean; meta: typeof CHIP_META[string] }>()
+    for (const item of dashPendingItems) {
+      const key = item.category?.toLowerCase() ?? ""
+      const meta = CHIP_META[key]
+      if (!meta) continue
+      const existing = map.get(meta.label)
+      if (existing) {
+        existing.count++
+        if (item.overdue) existing.hasOverdue = true
+      } else {
+        map.set(meta.label, { count: 1, hasOverdue: item.overdue, meta })
+      }
+    }
+    return Array.from(map.entries()).map(([label, g]) => ({ label, ...g }))
+      .sort((a, b) => (a.meta.hard === b.meta.hard ? 0 : a.meta.hard ? -1 : 1))
+  }, [dashPendingItems])
 
   // Financial position + work queues removed — the health panels
   // (Receivables, Payables, Cash Position) show the same data with
@@ -655,6 +682,35 @@ export function BooksHealthPage() {
                 <p className="mt-2 text-blue-500 text-[11px]">
                   Manual tasks (circles) can be checked off. Auto-generated items clear when the underlying work is done.
                 </p>
+                {categoryChips.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mt-2 pt-2 border-t border-blue-100">
+                    {categoryChips.map((chip) => {
+                      const Icon = chip.meta.icon
+                      return (
+                        <button
+                          key={chip.label}
+                          type="button"
+                          onClick={() => navigate(chip.meta.link)}
+                          className={cn(
+                            "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border transition-colors",
+                            chip.hasOverdue
+                              ? "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100"
+                              : "bg-white border-blue-200 text-blue-700 hover:bg-blue-100"
+                          )}
+                        >
+                          <Icon className="w-3 h-3" />
+                          {chip.label}
+                          <span className={cn(
+                            "ml-0.5 inline-flex items-center justify-center rounded-full w-4 h-4 text-[10px] font-semibold",
+                            chip.hasOverdue ? "bg-amber-200 text-amber-800" : "bg-blue-100 text-blue-800"
+                          )}>
+                            {chip.count}
+                          </span>
+                        </button>
+                      )
+                    })}
+                  </div>
+                )}
               </>
             )}
           </InfoPanel>

@@ -1,7 +1,7 @@
 // Spec references: A-0023.
 import { useState, type ReactNode } from "react"
 import { useNavigate } from "react-router-dom"
-import { ChevronDown, ChevronUp, ExternalLink } from "lucide-react"
+import { ChevronRight, ExternalLink } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import type { LucideIcon } from "lucide-react"
 
@@ -59,7 +59,7 @@ export function HealthPanel({
       )}
     >
       {/* Top section */}
-      <div className="px-4 pt-4 pb-3">
+      <div className="px-4 pt-4 pb-3 flex-1">
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <div className={cn("p-1.5 rounded-md shrink-0", statusBgClass[status])}>
@@ -100,11 +100,7 @@ export function HealthPanel({
               className="w-full flex items-center justify-between px-4 py-2 text-xs text-gray-500 hover:text-gray-700 hover:bg-gray-50 transition-colors"
             >
               <span className="font-medium">{expanded ? "Hide details" : "View details"}</span>
-              {expanded ? (
-                <ChevronUp className="h-3.5 w-3.5" />
-              ) : (
-                <ChevronDown className="h-3.5 w-3.5" />
-              )}
+              <ChevronRight className={cn("h-3.5 w-3.5 transition-transform duration-150", expanded && "rotate-90")} />
             </button>
           </div>
 
