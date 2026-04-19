@@ -1717,7 +1717,7 @@ export function ReconciliationPage() {
         </>
       )}
     </PageShell>
-    <RulesDrawer open={rulesDrawerOpen} onClose={() => setRulesDrawerOpen(false)} />
+    <RulesDrawer open={rulesDrawerOpen} onClose={() => setRulesDrawerOpen(false)} queueItems={queueRaw} />
     </div>
   )
 }

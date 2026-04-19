@@ -13,9 +13,32 @@ import { useQueryClient } from "@tanstack/react-query"
 interface RulesDrawerProps {
   open: boolean
   onClose: () => void
+  queueItems: Array<{ amount: number; description: string; normalized_description: string }>
 }
 
-export function RulesDrawer({ open, onClose }: RulesDrawerProps) {
+function testPattern(description: string, pattern: string, matchType: string): boolean {
+  if (!pattern || !description) return false
+  const desc = description.toLowerCase()
+  const pat = pattern.toLowerCase()
+  if (matchType === "exact") return desc === pat
+  if (matchType === "wildcard" || matchType === "regex") {
+    try { return new RegExp(pat, "i").test(description) } catch { return false }
+  }
+  if (pat.includes("*")) {
+    const escaped = pat.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*")
+    try { return new RegExp(escaped, "i").test(description) } catch { return false }
+  }
+  return desc.includes(pat)
+}
+
+function countMatches(items: RulesDrawerProps["queueItems"], pattern: string, matchType: string): number {
+  return items.filter((q) => {
+    const desc = q.normalized_description || q.description || ""
+    return testPattern(desc, pattern, matchType)
+  }).length
+}
+
+export function RulesDrawer({ open, onClose, queueItems }: RulesDrawerProps) {
   const { data: rulesData, isLoading } = useReconRules()
   const rules = (rulesData ?? []) as ReconRule[]
   const sortedRules = [...rules].sort((a, b) => (a.priority ?? 0) - (b.priority ?? 0))
@@ -173,6 +196,7 @@ export function RulesDrawer({ open, onClose }: RulesDrawerProps) {
                 key={rule.id}
                 rule={rule}
                 index={idx}
+                queueItems={queueItems}
                 isEditing={editingId === rule.id}
                 isDragOver={dragOverId === rule.id}
                 categoryAccountOptions={categoryAccountOptions}
@@ -216,6 +240,7 @@ function RuleCard({
   index,
   isEditing,
   isDragOver,
+  queueItems,
   categoryAccountOptions,
   taxCodeOptions,
   contactOptions,
@@ -232,6 +257,7 @@ function RuleCard({
   index: number
   isEditing: boolean
   isDragOver: boolean
+  queueItems: RulesDrawerProps["queueItems"]
   categoryAccountOptions: Array<{ value: number; label: string; detail?: string }>
   taxCodeOptions: Array<{ value: number; label: string; detail?: string }>
   contactOptions: Array<{ value: number; label: string }>
@@ -260,6 +286,9 @@ function RuleCard({
     return ""
   })
 
+  const currentMatches = countMatches(queueItems, rule.match_pattern, rule.match_type)
+  const editedMatches = isEditing ? countMatches(queueItems, editPattern, editMatchType) : currentMatches
+
   return (
     <div
       draggable
@@ -285,7 +314,7 @@ function RuleCard({
           <p className="text-xs text-gray-500 truncate font-mono">{rule.match_pattern}</p>
         </div>
         <div className="flex items-center gap-1 shrink-0">
-          <span className="text-xs tabular-nums text-gray-400" title="Times used">{rule.use_count}×</span>
+          <span className="text-xs tabular-nums text-gray-400" title={`Matches ${currentMatches} transactions · Used ${rule.use_count}×`}>{currentMatches}m</span>
           <button
             type="button"
             onClick={onToggleEnabled}
@@ -354,6 +383,14 @@ function RuleCard({
               </select>
             </div>
           </div>
+          {isEditing && (
+            <p className="text-xs text-gray-500">
+              Matches <strong className="text-gray-700">{editedMatches}</strong> transaction{editedMatches !== 1 ? "s" : ""}
+              {editedMatches !== currentMatches && (
+                <span className={editedMatches > currentMatches ? "text-green-600" : "text-amber-600"}> (was {currentMatches})</span>
+              )}
+            </p>
+          )}
           <div className="flex items-end gap-2">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Amount</label>
