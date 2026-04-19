@@ -17,6 +17,7 @@ import {
   useReconRules,
   useBulkAccept,
   useCreateFromLine,
+  useApproveAllocations,
   type QueueItem,
   type QueueFilter,
   type QueueSort,
@@ -51,6 +52,8 @@ interface AllocationLine {
   accountId: number | null
   taxCodeId: number | null
   amount: string
+  mode: "amount" | "percent" | "remainder"
+  percentage: string
 }
 
 // ── Status mapping (two-field model: workflow_status + allocation_method) ─────
@@ -203,6 +206,8 @@ function ExpansionPanel({
       accountId: null,
       taxCodeId: null,
       amount: Math.abs(amount).toFixed(2),
+      mode: "amount",
+      percentage: "100",
     },
   ])
   const [createRule, setCreateRule] = useState(false)
@@ -343,6 +348,8 @@ function ExpansionPanel({
         accountId: null,
         taxCodeId: null,
         amount: "",
+        mode: "amount",
+        percentage: "",
       },
     ])
   }
@@ -373,6 +380,7 @@ function ExpansionPanel({
               <button
                 key={tab.key}
                 type="button"
+                data-guide-target={`tab-${tab.key}`}
                 onClick={() => switchTab(tab.key)}
                 className={cn(
                   "px-3 py-1.5 rounded-md text-xs font-medium border transition-colors",
@@ -496,41 +504,123 @@ function ExpansionPanel({
                   </div>
                 </div>
 
-                {/* Row 2: Defaults — account, tax, contact */}
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Default account</label>
-                    <Combobox
-                      options={categoryAccountOptions}
-                      value={lines[0]?.accountId ?? null}
-                      onChange={(v) => {
-                        if (lines[0]) updateLine(lines[0].id, "accountId", v ? Number(v) : null)
-                        onAccountChange(!!v)
-                      }}
-                      placeholder="Select account..."
-                    />
+                {/* Allocation lines (same editor as Manual Allocation) */}
+                <div className="border-t border-gray-200 pt-2 mt-2">
+                  <div className="grid grid-cols-[1fr_1fr_1.5fr_1fr_70px_80px_32px] gap-2 px-1 py-1 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    <span>Contact</span>
+                    <span>Description</span>
+                    <span>Account / Category</span>
+                    <span>Tax code</span>
+                    <span className="text-right">Mode</span>
+                    <span className="text-right">Value</span>
+                    <span />
                   </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Default tax code</label>
-                    <Combobox
-                      options={taxCodeOptions}
-                      value={lines[0]?.taxCodeId ?? null}
-                      onChange={(v) => {
-                        if (lines[0]) updateLine(lines[0].id, "taxCodeId", v ? Number(v) : null)
-                      }}
-                      placeholder="Tax..."
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Default contact</label>
-                    <Combobox
-                      options={contactOptions}
-                      value={lines[0]?.contactId ?? null}
-                      onChange={(v) => {
-                        if (lines[0]) updateLine(lines[0].id, "contactId", v ? Number(v) : null)
-                      }}
-                      placeholder="Contact..."
-                    />
+                  {lines.map((line) => {
+                    const otherTotal = lines.filter((l) => l.id !== line.id).reduce((s, l) => s + (parseFloat(l.amount) || 0), 0)
+                    const remainderAmt = Math.max(0, Math.abs(amount) - otherTotal)
+                    return (
+                    <div key={line.id} className="grid grid-cols-[1fr_1fr_1.5fr_1fr_70px_80px_32px] gap-2 px-1 py-1 items-start">
+                      <Combobox
+                        options={contactOptions}
+                        value={line.contactId}
+                        onChange={(v) => updateLine(line.id, "contactId", v ? Number(v) : null)}
+                        placeholder="Contact..."
+                      />
+                      <input
+                        type="text"
+                        value={line.description}
+                        onChange={(e) => updateLine(line.id, "description", e.target.value)}
+                        className="w-full bg-white border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        placeholder="Description"
+                      />
+                      <Combobox
+                        options={categoryAccountOptions}
+                        value={line.accountId}
+                        onChange={(v) => {
+                          updateLine(line.id, "accountId", v ? Number(v) : null)
+                          onAccountChange(lines.some((l) => l.id === line.id ? !!v : !!l.accountId))
+                        }}
+                        placeholder="Select account..."
+                      />
+                      <Combobox
+                        options={taxCodeOptions}
+                        value={line.taxCodeId}
+                        onChange={(v) => updateLine(line.id, "taxCodeId", v ? Number(v) : null)}
+                        placeholder="Tax..."
+                      />
+                      <select
+                        value={line.mode}
+                        onChange={(e) => {
+                          const m = e.target.value as "amount" | "percent" | "remainder"
+                          updateLine(line.id, "mode", m)
+                          if (m === "percent" && line.percentage) {
+                            updateLine(line.id, "amount", (Math.abs(amount) * parseFloat(line.percentage) / 100).toFixed(2))
+                          } else if (m === "remainder") {
+                            updateLine(line.id, "amount", remainderAmt.toFixed(2))
+                            updateLine(line.id, "percentage", "")
+                          }
+                        }}
+                        className="bg-white border border-gray-300 rounded px-1 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      >
+                        <option value="amount">$</option>
+                        <option value="percent">%</option>
+                        <option value="remainder">Rest</option>
+                      </select>
+                      {line.mode === "percent" ? (
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={line.percentage}
+                          onChange={(e) => {
+                            const pct = e.target.value
+                            updateLine(line.id, "percentage", pct)
+                            const pctNum = parseFloat(pct) || 0
+                            updateLine(line.id, "amount", (Math.abs(amount) * pctNum / 100).toFixed(2))
+                          }}
+                          className="w-full bg-white border border-gray-300 rounded px-2 py-1.5 text-sm text-right font-normal tabular-nums focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          placeholder="%"
+                        />
+                      ) : line.mode === "remainder" ? (
+                        <div className="w-full bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-sm text-right font-normal tabular-nums text-gray-500">
+                          {remainderAmt.toFixed(2)}
+                        </div>
+                      ) : (
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={line.amount}
+                          onChange={(e) => updateLine(line.id, "amount", e.target.value)}
+                          className="w-full bg-white border border-gray-300 rounded px-2 py-1.5 text-sm text-right font-normal tabular-nums focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          placeholder="0.00"
+                        />
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => removeLine(line.id)}
+                        disabled={lines.length <= 1}
+                        className="p-1 text-gray-400 hover:text-red-500 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+                        title="Remove line"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                    )
+                  })}
+                  <div className="flex items-center justify-between px-1 pt-1">
+                    <Button variant="ghost" size="sm" onClick={addLine}>
+                      <Plus className="h-3.5 w-3.5" />
+                      Add line
+                    </Button>
+                    <StatBar>
+                      <StatCell label="Subtotal" align="right">
+                        <span className="font-normal tabular-nums">${subtotal.toFixed(2)}</span>
+                      </StatCell>
+                      <StatCell label="Out of Balance" align="right">
+                        <span className={cn("font-normal tabular-nums", isBalanced ? "text-green-600" : "text-red-600")}>
+                          ${Math.abs(outOfBalance).toFixed(2)}
+                        </span>
+                      </StatCell>
+                    </StatBar>
                   </div>
                 </div>
               </div>
@@ -776,17 +866,28 @@ export function ReconciliationPage() {
   const location = useLocation()
   const navigate = useNavigate()
 
-  // Hover-to-highlight: glow a target element for 3 seconds when user hovers an info panel step
-  const glowTarget = useCallback((targetId: string) => {
+  // Hover-to-highlight: glow target element orange, clear previous immediately
+  const activeGlowRef = useRef<{ el: HTMLElement; li: HTMLElement | null } | null>(null)
+  const clearGlow = useCallback(() => {
+    if (activeGlowRef.current) {
+      activeGlowRef.current.el.style.boxShadow = ""
+      if (activeGlowRef.current.li) activeGlowRef.current.li.style.backgroundColor = ""
+      activeGlowRef.current = null
+    }
+  }, [])
+  const glowTarget = useCallback((targetId: string, liElement?: HTMLElement | null) => {
+    clearGlow()
     const el = document.querySelector(`[data-guide-target="${targetId}"]`) as HTMLElement | null
     if (!el) return
-    el.style.boxShadow = "0 0 0 3px rgba(56, 189, 248, 0.4)"
+    el.style.boxShadow = "0 0 0 3px rgba(251, 146, 60, 0.5)"
     el.style.transition = "box-shadow 0.3s ease"
     el.style.borderRadius = el.style.borderRadius || "0.5rem"
-    setTimeout(() => {
-      el.style.boxShadow = ""
-    }, 3000)
-  }, [])
+    if (liElement) {
+      liElement.style.backgroundColor = "rgba(255, 237, 213, 0.6)"
+      liElement.style.transition = "background-color 0.2s ease"
+    }
+    activeGlowRef.current = { el, li: liElement ?? null }
+  }, [clearGlow])
   const navState = location.state as { accountId?: number } | null
 
   // State
@@ -813,6 +914,7 @@ export function ReconciliationPage() {
 
   // Mutations
   const bulkAccept = useBulkAccept()
+  const approveAllocations = useApproveAllocations()
   const createFromLine = useCreateFromLine()
 
   // Derived data
@@ -1047,43 +1149,46 @@ export function ReconciliationPage() {
             target?: string
           }> = [
             {
-              label: <><strong>Select a bank account</strong> — choose which account to reconcile from the dropdown above.</>,
+              label: <><strong>Select a bank account</strong> — use the dropdown above to choose which bank account you want to reconcile. If you have multiple accounts, you can switch between them at any time.</>,
               status: hasAccount ? "done" : "active",
               target: "bank-account-header",
             },
             {
               label: <>
-                <strong>Import transactions</strong> — load bank statements (OFX, QIF, CSV) via{" "}
+                <strong>Import transactions</strong> — upload a bank statement file (OFX, QIF, or CSV) via{" "}
                 <button type="button" onClick={() => navigate("/bank-statements", { state: { accountId: selectedAccountId || undefined } })} className="text-blue-700 underline hover:text-blue-900 font-medium">Bank Statements</button>
-                , or connect a <button type="button" onClick={() => navigate("/settings/bank-feeds")} className="text-blue-700 underline hover:text-blue-900 font-medium">live bank feed</button>.
+                {", "}or if you have automatic bank feeds configured, transactions arrive via your{" "}
+                <button type="button" onClick={() => navigate("/settings/bank-feeds")} className="text-blue-700 underline hover:text-blue-900 font-medium">live feed connection</button>.
               </>,
               status: hasTransactions ? "done" : hasAccount ? "active" : "pending",
             },
             {
-              label: <><strong>Review unallocated transactions</strong> — the <em>Unallocated</em> tab shows transactions that need action. Use search and date filters to narrow the list.</>,
+              label: <><strong>Work through unallocated transactions</strong> — click the <em>Unallocated</em> tab to see transactions that need your attention. Click any row to expand it and choose how to handle it:</>,
               status: hasTransactions && !hasUnallocated ? "done" : hasTransactions ? "active" : "pending",
               target: "filter-tabs",
             },
             {
               label: <>
-                <strong>Allocate each transaction</strong> — click a row to expand it, then:
+                <strong>Choose an allocation method</strong> for each transaction:
                 <ul className="list-disc list-inside ml-4 mt-0.5 space-y-0.5">
-                  <li><strong>Manual Allocation</strong> — pick a GL account, tax code, and optionally a contact.</li>
-                  <li><strong>Allocation Rule</strong> — define a pattern to auto-allocate this and all similar future transactions.</li>
-                  <li><strong>Link Existing</strong> — link to an existing invoice, bill, or journal entry.</li>
-                  <li><strong>Transfer Money</strong> — record a bank-to-bank transfer.</li>
+                  <li className="rounded px-1 -mx-1 transition-colors" onMouseEnter={(e) => glowTarget("tab-manual", e.currentTarget)} onMouseLeave={clearGlow}><strong>Manual Allocation</strong> — select a GL account, tax code, and contact. Use <em>Add line</em> to split across multiple accounts (e.g., 70% business expense, 30% owner drawings).</li>
+                  <li className="rounded px-1 -mx-1 transition-colors" onMouseEnter={(e) => glowTarget("tab-rule", e.currentTarget)} onMouseLeave={clearGlow}><strong>Allocation Rule</strong> — create a reusable pattern that automatically allocates this and all matching transactions. Rules save you time on recurring payments like rent, subscriptions, and EFTPOS deposits.</li>
+                  <li className="rounded px-1 -mx-1 transition-colors" onMouseEnter={(e) => glowTarget("tab-link", e.currentTarget)} onMouseLeave={clearGlow}><strong>Link Existing</strong> — connect to an invoice, bill, or journal entry already in your books. Use this when you've already recorded the transaction and just need to mark it as reconciled.</li>
+                  <li className="rounded px-1 -mx-1 transition-colors" onMouseEnter={(e) => glowTarget("tab-transfer", e.currentTarget)} onMouseLeave={clearGlow}><strong>Transfer Money</strong> — record a movement between your own bank accounts (e.g., cheque to savings, credit card payment).</li>
                 </ul>
+                <p className="mt-1">You can also <strong>defer</strong> a transaction to come back to it later, or <strong>exclude</strong> it from reconciliation entirely.</p>
               </>,
               status: allAllocated ? "done" : hasUnallocated ? "active" : "pending",
             },
             {
-              label: <><strong>Review proposed allocations</strong> — switch to the <em>Proposed</em> tab to review all allocations before they hit the ledger.</>,
+              label: <><strong>Review your work</strong> — click the <em>Proposed</em> tab to see all allocations you've made. Everything here is in a safe staging area — nothing has affected your books yet. You can change or undo any allocation before approving.</>,
               status: hasApproved && !hasProposed ? "done" : hasProposed ? "active" : "pending",
               target: "filter-tabs",
             },
             {
-              label: <><strong>Approve</strong> — confirm proposed allocations to create journal entries. Nothing affects your books until you approve.</>,
-              status: hasApproved && counts.unallocated === 0 && counts.proposed === 0 ? "done" : hasProposed ? "active" : "pending",
+              label: <><strong>Approve</strong> — becomes enabled once you have at least one proposed allocation or exception. You don't have to finish everything in one session — approve what's ready now and come back for the rest later. Only approved transactions create journal entries in your books.</>,
+              status: hasApproved && !hasProposed ? "done" : hasProposed ? "active" : "pending",
+              target: "approve-button",
             },
           ]
 
@@ -1092,8 +1197,9 @@ export function ReconciliationPage() {
               {steps.map((step, i) => (
                 <li
                   key={i}
-                  className="flex items-start gap-2 cursor-default"
-                  onMouseEnter={step.target ? () => glowTarget(step.target!) : undefined}
+                  className="flex items-start gap-2 cursor-default rounded px-1 -mx-1 transition-colors"
+                  onMouseEnter={step.target ? (e) => glowTarget(step.target!, e.currentTarget) : undefined}
+                  onMouseLeave={clearGlow}
                 >
                   <span className="shrink-0 mt-0.5">
                     {step.status === "done" ? (
@@ -1267,6 +1373,30 @@ export function ReconciliationPage() {
                 </button>
               ))}
             </div>
+
+            {/* Approve button */}
+            <Button
+              variant="primary"
+              size="sm"
+              disabled={counts.proposed === 0 || approveAllocations.isPending}
+              loading={approveAllocations.isPending}
+              data-guide-target="approve-button"
+              onClick={async () => {
+                const proposedIds = queueRaw
+                  .filter((q) => workflowStatus(q) === "proposed")
+                  .map((q) => q.id)
+                if (proposedIds.length === 0) return
+                try {
+                  const result = await approveAllocations.mutateAsync({ bank_feed_line_ids: proposedIds })
+                  const r = result as { succeeded?: number }
+                  feedback.success(`Approved ${r.succeeded ?? proposedIds.length} transaction${proposedIds.length !== 1 ? "s" : ""}`)
+                } catch (err: unknown) {
+                  feedback.error("Approve failed", err instanceof Error ? err.message : "Unknown error")
+                }
+              }}
+            >
+              Approve{counts.proposed > 0 ? ` (${counts.proposed})` : ""}
+            </Button>
 
             {/* Date range */}
             <div className="flex items-center gap-1.5 ml-auto">
