@@ -88,14 +88,15 @@ function InlineVendorForm({ onClose }: { onClose: () => void }) {
   return (
     <div>
       {error && <InlineAlert variant="error" className="mb-3">{error}</InlineAlert>}
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-3">
-        <div className="md:col-span-2">
+      {/* Row 1: Identity */}
+      <div className="grid grid-cols-1 md:grid-cols-[2fr_2fr_1fr] gap-3">
+        <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">Name</label>
           <input type="text" value={name} onChange={e => setName(e.target.value)}
             className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
             placeholder="Supplier Pty Ltd" />
         </div>
-        <div className="md:col-span-2">
+        <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">Legal Name</label>
           <input type="text" value={legalName} onChange={e => setLegalName(e.target.value)}
             className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
@@ -107,6 +108,49 @@ function InlineVendorForm({ onClose }: { onClose: () => void }) {
             className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm font-mono focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
             placeholder="XX XXX XXX XXX" />
         </div>
+      </div>
+      {/* Row 2: Contact */}
+      <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-3 mt-3">
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
+          <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+            placeholder="accounts@supplier.com" />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
+          <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+            placeholder="02 9000 0000" />
+        </div>
+      </div>
+      {/* Row 3: Address */}
+      <div className="mt-3">
+        <label className="block text-xs font-medium text-gray-600 mb-1">Street Address</label>
+        <input type="text" value={addrLine1} onChange={e => setAddrLine1(e.target.value)}
+          className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500" />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr_1fr] gap-3 mt-3">
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">City / Suburb</label>
+          <input type="text" value={addrCity} onChange={e => setAddrCity(e.target.value)}
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500" />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">State</label>
+          <input type="text" value={addrState} onChange={e => setAddrState(e.target.value)}
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+            placeholder="VIC" maxLength={3} />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Postcode</label>
+          <input type="text" value={addrPostcode} onChange={e => setAddrPostcode(e.target.value)}
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+            placeholder="3000" maxLength={4} />
+        </div>
+      </div>
+      {/* Row 4: Account settings */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-3">
         <div>
           <label className="block text-xs font-medium text-gray-600 mb-1">Currency</label>
           <input type="text" value={curr} onChange={e => setCurr(e.target.value)}
@@ -123,44 +167,6 @@ function InlineVendorForm({ onClose }: { onClose: () => void }) {
           <input type="number" step="0.01" value={creditLimit} onChange={e => setCreditLimit(e.target.value)}
             className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm font-mono focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
             placeholder="0.00" />
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-3 mt-3">
-        <div className="md:col-span-2">
-          <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
-          <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-            placeholder="accounts@supplier.com" />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
-          <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
-            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-            placeholder="02 9000 0000" />
-        </div>
-        <div className="md:col-span-3">
-          <label className="block text-xs font-medium text-gray-600 mb-1">Street Address</label>
-          <input type="text" value={addrLine1} onChange={e => setAddrLine1(e.target.value)}
-            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500" />
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-6 gap-3 mt-3">
-        <div className="md:col-span-2">
-          <label className="block text-xs font-medium text-gray-600 mb-1">City / Suburb</label>
-          <input type="text" value={addrCity} onChange={e => setAddrCity(e.target.value)}
-            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500" />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">State</label>
-          <input type="text" value={addrState} onChange={e => setAddrState(e.target.value)}
-            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-            placeholder="NSW" maxLength={3} />
-        </div>
-        <div>
-          <label className="block text-xs font-medium text-gray-600 mb-1">Postcode</label>
-          <input type="text" value={addrPostcode} onChange={e => setAddrPostcode(e.target.value)}
-            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-            placeholder="2000" maxLength={4} />
         </div>
       </div>
       <div className="flex items-center gap-2 mt-3">
