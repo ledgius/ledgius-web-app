@@ -84,6 +84,13 @@ const ReportsPage = lazy(() => import("@/domains/reporting/pages/ReportsPage").t
 const BASPage = lazy(() => import("@/domains/tax/pages/BASPage").then(m => ({ default: m.BASPage })))
 const TaxCodesPage = lazy(() => import("@/domains/taxcode/pages/TaxCodesPage").then(m => ({ default: m.TaxCodesPage })))
 
+const SignupQueuePage = lazy(() => import("@/domains/platform/pages/SignupQueuePage").then(m => ({ default: m.SignupQueuePage })))
+const TenantsPage = lazy(() => import("@/domains/platform/pages/TenantsPage").then(m => ({ default: m.TenantsPage })))
+const PricingPlansPage = lazy(() => import("@/domains/platform/pages/PricingPlansPage").then(m => ({ default: m.PricingPlansPage })))
+const PlatformUsersPage = lazy(() => import("@/domains/platform/pages/PlatformUsersPage").then(m => ({ default: m.PlatformUsersPage })))
+const OperationsPage = lazy(() => import("@/domains/platform/pages/OperationsPage").then(m => ({ default: m.OperationsPage })))
+const PlatformSettingsPage = lazy(() => import("@/domains/platform/pages/PlatformSettingsPage").then(m => ({ default: m.PlatformSettingsPage })))
+
 // Wrap each lazy page in Suspense with the branded loading spinner.
 function S({ children }: { children: React.ReactNode }) {
   return <Suspense fallback={<PageLoader />}>{children}</Suspense>
@@ -188,6 +195,14 @@ export const router = createBrowserRouter([
       { path: "admin", element: <RequirePlatformAdmin><S><PlatformAdminPage /></S></RequirePlatformAdmin> },
       { path: "admin/feedback", element: <RequirePlatformAdmin><S><FeedbackDashboardPage /></S></RequirePlatformAdmin> },
       { path: "feedback/:id", element: <S><FeedbackStatusPage /></S> },
+
+      // Platform Admin
+      { path: "platform/signups", element: <RequirePlatformAdmin><S><SignupQueuePage /></S></RequirePlatformAdmin> },
+      { path: "platform/tenants", element: <RequirePlatformAdmin><S><TenantsPage /></S></RequirePlatformAdmin> },
+      { path: "platform/plans", element: <RequirePlatformAdmin><S><PricingPlansPage /></S></RequirePlatformAdmin> },
+      { path: "platform/users", element: <RequirePlatformAdmin><S><PlatformUsersPage /></S></RequirePlatformAdmin> },
+      { path: "platform/operations", element: <RequirePlatformAdmin><S><OperationsPage /></S></RequirePlatformAdmin> },
+      { path: "platform/settings", element: <RequirePlatformAdmin><S><PlatformSettingsPage /></S></RequirePlatformAdmin> },
 
       // Reports & Tax
       { path: "reports", element: <S><ReportsPage /></S> },
