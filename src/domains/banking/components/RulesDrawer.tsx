@@ -347,13 +347,11 @@ function RuleCard({
         <GripVertical className="h-4 w-4 text-gray-300 cursor-grab shrink-0" />
         <span className="text-xs text-gray-400 font-mono w-5 shrink-0">{index + 1}.</span>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-800 truncate">{rule.name}</span>
-            <span className="text-xs text-gray-400 font-mono">({rule.match_type})</span>
-          </div>
+          <p className="text-sm font-medium text-gray-800 truncate">{rule.name}</p>
           <p className="text-xs text-gray-500 truncate font-mono">{rule.match_pattern}</p>
         </div>
         <div className="flex items-center gap-1 shrink-0">
+          <span className="text-xs text-gray-400 font-mono">({rule.match_type})</span>
           <span className="text-xs tabular-nums text-gray-400" title={`Matches ${currentMatches} transactions · Used ${rule.use_count}×`}>{currentMatches}m</span>
           <button
             type="button"
