@@ -1,5 +1,6 @@
 // Spec references: R-0065 (Phase 1), A-0036
 import { useState, useCallback, useMemo, useRef, useEffect } from "react"
+import { useLocation, useNavigate } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { Button, Combobox, Skeleton, InlineAlert, InfoPanel, StatBar, StatCell } from "@/components/primitives"
@@ -16,16 +17,21 @@ import {
   useReconRules,
   useBulkAccept,
   useCreateFromLine,
+  useApproveAllocations,
   type QueueItem,
   type QueueFilter,
   type QueueSort,
   type ReconRule,
 } from "../hooks/useReconciliation"
+import { api } from "@/shared/lib/api"
+import { RulesDrawer } from "../components/RulesDrawer"
 import { cn } from "@/shared/lib/utils"
 import {
+  CheckCircle2,
   ChevronDown,
   ChevronRight,
   ChevronUp,
+  Circle,
   Search,
   X,
   Plus,
@@ -38,7 +44,7 @@ import {
 
 type SortColumn = "date" | "description" | "withdrawal" | "deposit" | "status"
 type SortDirection = "asc" | "desc"
-type FilterTab = "all" | "not_matched" | "matched"
+type FilterTab = "all" | "unallocated" | "proposed" | "approved"
 type ActionTab = "rule" | "manual" | "link" | "transfer"
 
 interface AllocationLine {
@@ -48,63 +54,42 @@ interface AllocationLine {
   accountId: number | null
   taxCodeId: number | null
   amount: string
+  mode: "amount" | "percent" | "remainder"
+  percentage: string
 }
 
-// ── Status mapping ───────────────────────────────────────────────────────────
+// ── Status mapping (two-field model: workflow_status + allocation_method) ─────
 
-function reconStatusSemantic(status: string): string {
-  switch (status) {
-    case "unmatched":
-    case "imported":
-      return "unmatched"
-    case "suggested":
-      return "suggested"
-    case "auto_matched":
-    case "allocated":
-      return "allocated"
-    case "resolved":
-    case "approved":
-      return "approved"
-    case "needs_review":
-    case "exception":
-      return "needs_review"
-    default:
-      return status
-  }
-}
-
-function statusLabel(status: string): string {
-  switch (reconStatusSemantic(status)) {
-    case "unmatched":
-      return "Unallocated"
-    case "suggested":
-      return "Suggested"
-    case "allocated":
-      return "Allocated"
-    case "approved":
-      return "Approved"
-    case "needs_review":
-      return "Unallocated"
-    default:
-      return status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
-  }
-}
-
-function statusPillSemantic(status: string): "muted" | "info" | "active" | "warning" | "success" | "danger" | "locked" {
-  const s = reconStatusSemantic(status)
+function workflowStatus(item: { reconciliation_status?: string; workflow_status?: string }): string {
+  // Prefer new workflow_status field, fall back to legacy reconciliation_status
+  if (item.workflow_status) return item.workflow_status
+  const s = item.reconciliation_status ?? ""
   switch (s) {
-    case "unmatched":
-      return "muted"
-    case "suggested":
-      return "info"
-    case "allocated":
-      return "active"
-    case "approved":
-      return "success"
-    case "needs_review":
-      return "warning"
-    default:
-      return "muted"
+    case "imported": return "imported"
+    case "unmatched": case "needs_review": case "exception": return "unallocated"
+    case "suggested": case "auto_matched": case "manually_matched": return "proposed"
+    case "resolved": case "approved": return "approved"
+    default: return s || "imported"
+  }
+}
+
+function statusLabel(ws: string): string {
+  switch (ws) {
+    case "imported": return "Imported"
+    case "unallocated": return "Unallocated"
+    case "proposed": return "Proposed"
+    case "approved": return "Approved"
+    default: return ws.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+  }
+}
+
+function statusPillSemantic(ws: string): "muted" | "info" | "active" | "warning" | "success" | "danger" | "locked" {
+  switch (ws) {
+    case "imported": return "muted"
+    case "unallocated": return "warning"
+    case "proposed": return "info"
+    case "approved": return "success"
+    default: return "muted"
   }
 }
 
@@ -162,18 +147,56 @@ function highlightMatch(text: string, pattern: string): React.ReactNode {
   return (
     <>
       {text.slice(0, idx)}
-      <mark className="bg-amber-200 text-amber-900 rounded-sm px-0.5">{text.slice(idx, idx + pattern.length)}</mark>
+      <mark className="bg-green-200 text-green-900 rounded-sm px-0.5">{text.slice(idx, idx + pattern.length)}</mark>
       {text.slice(idx + pattern.length)}
     </>
   )
 }
 
-function testRulePattern(description: string, pattern: string, matchType: "contains" | "exact" | "regex"): boolean {
+/** Parse and validate a set/ranges input like "38-42, 50, 68-70".
+ *  Returns sorted, non-overlapping entries or null if invalid. */
+function parseAmountSetRanges(input: string): { entries: Array<{ min: number; max: number }>; error?: string } | null {
+  if (!input.trim()) return null
+  const parts = input.split(",").map((s) => s.trim()).filter(Boolean)
+  const entries: Array<{ min: number; max: number }> = []
+  for (const part of parts) {
+    if (part.includes("-")) {
+      const [minStr, maxStr] = part.split("-").map((s) => s.trim())
+      const min = parseFloat(minStr)
+      const max = parseFloat(maxStr)
+      if (isNaN(min) || isNaN(max)) return { entries: [], error: `Invalid range: ${part}` }
+      if (min >= max) return { entries: [], error: `Range start must be less than end: ${part}` }
+      entries.push({ min, max })
+    } else {
+      const val = parseFloat(part)
+      if (isNaN(val)) return { entries: [], error: `Invalid value: ${part}` }
+      entries.push({ min: val, max: val })
+    }
+  }
+  // Sort by min
+  entries.sort((a, b) => a.min - b.min)
+  // Check overlaps
+  for (let i = 1; i < entries.length; i++) {
+    if (entries[i].min <= entries[i - 1].max) {
+      return { entries, error: `Overlapping ranges: ${entries[i - 1].min}-${entries[i - 1].max} and ${entries[i].min}-${entries[i].max}` }
+    }
+  }
+  return { entries }
+}
+
+/** Format a set/ranges back to sorted string */
+function formatAmountSetRanges(input: string): string {
+  const result = parseAmountSetRanges(input)
+  if (!result || result.error) return input
+  return result.entries.map((e) => e.min === e.max ? String(e.min) : `${e.min}-${e.max}`).join(", ")
+}
+
+function testRulePattern(description: string, pattern: string, matchType: "contains" | "exact" | "wildcard"): boolean {
   if (!pattern || !description) return false
   const desc = description.toLowerCase()
   const pat = pattern.toLowerCase()
   if (matchType === "exact") return desc === pat
-  if (matchType === "regex") {
+  if (matchType === "wildcard") {
     try { return new RegExp(pat, "i").test(description) } catch { return false }
   }
   return desc.includes(pat)
@@ -192,6 +215,8 @@ function ExpansionPanel({
   initialTab,
   queueItems,
   onPatternChange,
+  onAccountChange,
+  onAmountFilterChange,
   onMatchTypeChange,
   onSave,
   onCancel,
@@ -207,8 +232,10 @@ function ExpansionPanel({
   initialTab?: ActionTab | null
   queueItems: QueueItem[]
   onPatternChange: (pattern: string) => void
-  onMatchTypeChange: (matchType: "contains" | "exact" | "regex") => void
-  onSave: (lines: AllocationLine[], createRule: boolean) => void
+  onAccountChange: (hasAccount: boolean) => void
+  onAmountFilterChange: (filter: ((amount: number) => boolean) | null) => void
+  onMatchTypeChange: (matchType: "contains" | "exact" | "wildcard") => void
+  onSave: (lines: AllocationLine[], createRule: boolean, ruleData?: { pattern: string; matchType: string; name: string }) => void
   onCancel: () => void
   saving: boolean
 }) {
@@ -221,6 +248,8 @@ function ExpansionPanel({
       accountId: null,
       taxCodeId: null,
       amount: Math.abs(amount).toFixed(2),
+      mode: "amount",
+      percentage: "100",
     },
   ])
   const [createRule, setCreateRule] = useState(false)
@@ -228,7 +257,7 @@ function ExpansionPanel({
 
   // Rule editor state
   const [rulePattern, setRulePattern] = useState(item.normalized_description || item.description || "")
-  const [ruleMatchType, setRuleMatchType] = useState<"contains" | "exact" | "regex">("contains")
+  const [ruleMatchType, setRuleMatchType] = useState<"contains" | "exact" | "wildcard">("contains")
   const [ruleAmountMatch, setRuleAmountMatch] = useState<"any" | "exact" | "range" | "set">("any")
   const [ruleAmountExact, setRuleAmountExact] = useState(Math.abs(amount).toFixed(2))
   const [ruleAmountSet, setRuleAmountSet] = useState("")
@@ -238,18 +267,40 @@ function ExpansionPanel({
   // Match count for the rule preview
   const unallocatedItems = useMemo(() =>
     queueItems.filter((q) => {
-      const s = reconStatusSemantic(q.reconciliation_status)
-      return s === "unmatched" || s === "suggested" || s === "needs_review"
+      const ws = workflowStatus(q)
+      return ws === "imported" || ws === "unallocated"
     }),
   [queueItems])
   const unallocatedCount = unallocatedItems.length
+  // Build the current amount filter function for match counting
+  const amountFilter = useMemo((): ((a: number) => boolean) | null => {
+    if (ruleAmountMatch === "any") return null
+    if (ruleAmountMatch === "exact") {
+      const v = parseFloat(ruleAmountExact)
+      return isNaN(v) ? null : (a) => Math.abs(a - v) < 0.01
+    }
+    if (ruleAmountMatch === "range") {
+      const min = parseFloat(ruleAmountMin), max = parseFloat(ruleAmountMax)
+      return (isNaN(min) || isNaN(max)) ? null : (a) => a >= min && a <= max
+    }
+    if (ruleAmountMatch === "set") {
+      const parsed = parseAmountSetRanges(ruleAmountSet)
+      if (!parsed || parsed.error || parsed.entries.length === 0) return null
+      const entries = parsed.entries
+      return (a) => entries.some((e) => a >= e.min && a <= e.max)
+    }
+    return null
+  }, [ruleAmountMatch, ruleAmountExact, ruleAmountSet, ruleAmountMin, ruleAmountMax])
+
   const ruleMatchCount = useMemo(() => {
     if (!rulePattern) return 0
     return unallocatedItems.filter((q) => {
       const desc = q.normalized_description || q.description || ""
-      return testRulePattern(desc, rulePattern, ruleMatchType)
+      if (!testRulePattern(desc, rulePattern, ruleMatchType)) return false
+      if (amountFilter && !amountFilter(Math.abs(parseAmount(q.amount)))) return false
+      return true
     }).length
-  }, [rulePattern, ruleMatchType, unallocatedItems])
+  }, [rulePattern, ruleMatchType, amountFilter, unallocatedItems])
 
   // Find auto-matched recon rule
   const matchedRule = useMemo(() => {
@@ -260,7 +311,7 @@ function ExpansionPanel({
       const pat = r.match_pattern?.toLowerCase()
       if (!pat) return false
       if (r.match_type === "exact") return desc === pat
-      if (r.match_type === "regex") {
+      if (r.match_type === "wildcard") {
         try { return new RegExp(pat, "i").test(desc) } catch { return false }
       }
       return desc.includes(pat) // "contains" default
@@ -280,6 +331,32 @@ function ExpansionPanel({
     return () => { onPatternChange("") }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Propagate amount filter for rule preview
+  useEffect(() => {
+    if (actionTab !== "rule" || ruleAmountMatch === "any") {
+      onAmountFilterChange(null)
+      return
+    }
+    if (ruleAmountMatch === "exact") {
+      const v = parseFloat(ruleAmountExact)
+      if (!isNaN(v)) onAmountFilterChange((a) => Math.abs(a - v) < 0.01)
+      else onAmountFilterChange(null)
+    } else if (ruleAmountMatch === "range") {
+      const min = parseFloat(ruleAmountMin)
+      const max = parseFloat(ruleAmountMax)
+      if (!isNaN(min) && !isNaN(max)) onAmountFilterChange((a) => a >= min && a <= max)
+      else onAmountFilterChange(null)
+    } else if (ruleAmountMatch === "set") {
+      const parsed = parseAmountSetRanges(ruleAmountSet)
+      if (parsed && !parsed.error && parsed.entries.length > 0) {
+        const entries = parsed.entries
+        onAmountFilterChange((a) => entries.some((e) => a >= e.min && a <= e.max))
+      } else {
+        onAmountFilterChange(null)
+      }
+    }
+  }, [actionTab, ruleAmountMatch, ruleAmountExact, ruleAmountSet, ruleAmountMin, ruleAmountMax, onAmountFilterChange])
 
   const switchTab = useCallback((tab: ActionTab) => {
     setActionTab(tab)
@@ -361,6 +438,8 @@ function ExpansionPanel({
         accountId: null,
         taxCodeId: null,
         amount: "",
+        mode: "amount",
+        percentage: "",
       },
     ])
   }
@@ -391,6 +470,7 @@ function ExpansionPanel({
               <button
                 key={tab.key}
                 type="button"
+                data-guide-target={`tab-${tab.key}`}
                 onClick={() => switchTab(tab.key)}
                 className={cn(
                   "px-3 py-1.5 rounded-md text-xs font-medium border transition-colors",
@@ -414,7 +494,13 @@ function ExpansionPanel({
               size="sm"
               disabled={!canSave || saving}
               loading={saving}
-              onClick={() => onSave(lines, actionTab === "rule")}
+              onClick={() => {
+                if (actionTab === "rule" && rulePattern) {
+                  onSave(lines, true, { pattern: rulePattern, matchType: ruleMatchType, name: rulePattern })
+                } else {
+                  onSave(lines, false)
+                }
+              }}
             >
               Save
             </Button>
@@ -431,7 +517,7 @@ function ExpansionPanel({
                     <label className="block text-xs font-medium text-gray-600 mb-1">
                       Match pattern
                       {rulePattern && (
-                        <span className="ml-2 font-normal normal-case tracking-normal text-amber-600">
+                        <span className="ml-2 font-normal normal-case tracking-normal text-green-600">
                           — matches {ruleMatchCount} of {unallocatedCount} unallocated
                         </span>
                       )}
@@ -448,12 +534,12 @@ function ExpansionPanel({
                     <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
                     <select
                       value={ruleMatchType}
-                      onChange={(e) => { const v = e.target.value as "contains" | "exact" | "regex"; setRuleMatchType(v); onMatchTypeChange(v) }}
+                      onChange={(e) => { const v = e.target.value as "contains" | "exact" | "wildcard"; setRuleMatchType(v); onMatchTypeChange(v) }}
                       className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                     >
                       <option value="contains">Contains</option>
                       <option value="exact">Exact</option>
-                      <option value="regex">Regex</option>
+                      <option value="wildcard">Wildcard</option>
                     </select>
                   </div>
                   <div className="flex items-end gap-2">
@@ -466,7 +552,7 @@ function ExpansionPanel({
                       >
                         <option value="any">Any</option>
                         <option value="exact">Exact</option>
-                        <option value="set">Set</option>
+                        <option value="set">Set / Ranges</option>
                         <option value="range">Range</option>
                       </select>
                     </div>
@@ -480,16 +566,28 @@ function ExpansionPanel({
                         placeholder="0.00"
                       />
                     )}
-                    {ruleAmountMatch === "set" && (
-                      <input
-                        type="text"
-                        value={ruleAmountSet}
-                        onChange={(e) => setRuleAmountSet(e.target.value)}
-                        className="w-48 bg-white border border-gray-300 rounded px-2 py-1.5 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        placeholder="38, 43, 68, 103, 138"
-                        title="Comma-separated list of exact amounts"
-                      />
-                    )}
+                    {ruleAmountMatch === "set" && (() => {
+                      const parsed = ruleAmountSet ? parseAmountSetRanges(ruleAmountSet) : null
+                      return (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={ruleAmountSet}
+                            onChange={(e) => setRuleAmountSet(e.target.value)}
+                            onBlur={() => setRuleAmountSet(formatAmountSetRanges(ruleAmountSet))}
+                            className={cn(
+                              "w-56 bg-white border rounded px-2 py-1.5 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-primary-500",
+                              parsed?.error ? "border-red-400" : "border-gray-300"
+                            )}
+                            placeholder="38-42, 50, 68-70"
+                            title="Values and/or ranges, comma-separated. E.g. 38-42, 50, 68-70"
+                          />
+                          {parsed?.error && (
+                            <span className="text-xs text-red-500 whitespace-nowrap">{parsed.error}</span>
+                          )}
+                        </div>
+                      )
+                    })()}
                     {ruleAmountMatch === "range" && (
                       <>
                         <input
@@ -514,40 +612,123 @@ function ExpansionPanel({
                   </div>
                 </div>
 
-                {/* Row 2: Defaults — account, tax, contact */}
-                <div className="grid grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Default account</label>
-                    <Combobox
-                      options={categoryAccountOptions}
-                      value={lines[0]?.accountId ?? null}
-                      onChange={(v) => {
-                        if (lines[0]) updateLine(lines[0].id, "accountId", v ? Number(v) : null)
-                      }}
-                      placeholder="Select account..."
-                    />
+                {/* Allocation lines (same editor as Manual Allocation) */}
+                <div className="border-t border-gray-200 pt-2 mt-2">
+                  <div className="grid grid-cols-[1fr_1fr_1.5fr_1fr_70px_80px_32px] gap-2 px-1 py-1 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    <span>Contact</span>
+                    <span>Description</span>
+                    <span>Account / Category</span>
+                    <span>Tax code</span>
+                    <span className="text-right">Mode</span>
+                    <span className="text-right">Value</span>
+                    <span />
                   </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Default tax code</label>
-                    <Combobox
-                      options={taxCodeOptions}
-                      value={lines[0]?.taxCodeId ?? null}
-                      onChange={(v) => {
-                        if (lines[0]) updateLine(lines[0].id, "taxCodeId", v ? Number(v) : null)
-                      }}
-                      placeholder="Tax..."
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Default contact</label>
-                    <Combobox
-                      options={contactOptions}
-                      value={lines[0]?.contactId ?? null}
-                      onChange={(v) => {
-                        if (lines[0]) updateLine(lines[0].id, "contactId", v ? Number(v) : null)
-                      }}
-                      placeholder="Contact..."
-                    />
+                  {lines.map((line) => {
+                    const otherTotal = lines.filter((l) => l.id !== line.id).reduce((s, l) => s + (parseFloat(l.amount) || 0), 0)
+                    const remainderAmt = Math.max(0, Math.abs(amount) - otherTotal)
+                    return (
+                    <div key={line.id} className="grid grid-cols-[1fr_1fr_1.5fr_1fr_70px_80px_32px] gap-2 px-1 py-1 items-start">
+                      <Combobox
+                        options={contactOptions}
+                        value={line.contactId}
+                        onChange={(v) => updateLine(line.id, "contactId", v ? Number(v) : null)}
+                        placeholder="Contact..."
+                      />
+                      <input
+                        type="text"
+                        value={line.description}
+                        onChange={(e) => updateLine(line.id, "description", e.target.value)}
+                        className="w-full bg-white border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        placeholder="Description"
+                      />
+                      <Combobox
+                        options={categoryAccountOptions}
+                        value={line.accountId}
+                        onChange={(v) => {
+                          updateLine(line.id, "accountId", v ? Number(v) : null)
+                          onAccountChange(lines.some((l) => l.id === line.id ? !!v : !!l.accountId))
+                        }}
+                        placeholder="Select account..."
+                      />
+                      <Combobox
+                        options={taxCodeOptions}
+                        value={line.taxCodeId}
+                        onChange={(v) => updateLine(line.id, "taxCodeId", v ? Number(v) : null)}
+                        placeholder="Tax..."
+                      />
+                      <select
+                        value={line.mode}
+                        onChange={(e) => {
+                          const m = e.target.value as "amount" | "percent" | "remainder"
+                          updateLine(line.id, "mode", m)
+                          if (m === "percent" && line.percentage) {
+                            updateLine(line.id, "amount", (Math.abs(amount) * parseFloat(line.percentage) / 100).toFixed(2))
+                          } else if (m === "remainder") {
+                            updateLine(line.id, "amount", remainderAmt.toFixed(2))
+                            updateLine(line.id, "percentage", "")
+                          }
+                        }}
+                        className="bg-white border border-gray-300 rounded px-1 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      >
+                        <option value="amount">$</option>
+                        <option value="percent">%</option>
+                        <option value="remainder">Rest</option>
+                      </select>
+                      {line.mode === "percent" ? (
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={line.percentage}
+                          onChange={(e) => {
+                            const pct = e.target.value
+                            updateLine(line.id, "percentage", pct)
+                            const pctNum = parseFloat(pct) || 0
+                            updateLine(line.id, "amount", (Math.abs(amount) * pctNum / 100).toFixed(2))
+                          }}
+                          className="w-full bg-white border border-gray-300 rounded px-2 py-1.5 text-sm text-right font-normal tabular-nums focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          placeholder="%"
+                        />
+                      ) : line.mode === "remainder" ? (
+                        <div className="w-full bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-sm text-right font-normal tabular-nums text-gray-500">
+                          {remainderAmt.toFixed(2)}
+                        </div>
+                      ) : (
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={line.amount}
+                          onChange={(e) => updateLine(line.id, "amount", e.target.value)}
+                          className="w-full bg-white border border-gray-300 rounded px-2 py-1.5 text-sm text-right font-normal tabular-nums focus:outline-none focus:ring-2 focus:ring-primary-500"
+                          placeholder="0.00"
+                        />
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => removeLine(line.id)}
+                        disabled={lines.length <= 1}
+                        className="p-1 text-gray-400 hover:text-red-500 disabled:opacity-25 disabled:cursor-not-allowed transition-colors"
+                        title="Remove line"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                    )
+                  })}
+                  <div className="flex items-center justify-between px-1 pt-1">
+                    <Button variant="ghost" size="sm" onClick={addLine}>
+                      <Plus className="h-3.5 w-3.5" />
+                      Add line
+                    </Button>
+                    <StatBar>
+                      <StatCell label="Subtotal" align="right">
+                        <span className="font-normal tabular-nums">${subtotal.toFixed(2)}</span>
+                      </StatCell>
+                      <StatCell label="Out of Balance" align="right">
+                        <span className={cn("font-normal tabular-nums", isBalanced ? "text-green-600" : "text-red-600")}>
+                          ${Math.abs(outOfBalance).toFixed(2)}
+                        </span>
+                      </StatCell>
+                    </StatBar>
                   </div>
                 </div>
               </div>
@@ -790,9 +971,35 @@ export function ReconciliationPage() {
   const { data: customers } = useCustomers()
   const { data: vendors } = useVendors()
   const searchRef = useRef<HTMLInputElement>(null)
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  // Hover-to-highlight: glow target element orange, clear previous immediately
+  const activeGlowRef = useRef<{ el: HTMLElement; li: HTMLElement | null } | null>(null)
+  const clearGlow = useCallback(() => {
+    if (activeGlowRef.current) {
+      activeGlowRef.current.el.style.boxShadow = ""
+      if (activeGlowRef.current.li) activeGlowRef.current.li.style.backgroundColor = ""
+      activeGlowRef.current = null
+    }
+  }, [])
+  const glowTarget = useCallback((targetId: string, liElement?: HTMLElement | null) => {
+    clearGlow()
+    const el = document.querySelector(`[data-guide-target="${targetId}"]`) as HTMLElement | null
+    if (!el) return
+    el.style.boxShadow = "0 0 0 3px rgba(251, 146, 60, 0.5)"
+    el.style.transition = "box-shadow 0.3s ease"
+    el.style.borderRadius = el.style.borderRadius || "0.5rem"
+    if (liElement) {
+      liElement.style.backgroundColor = "rgba(255, 237, 213, 0.6)"
+      liElement.style.transition = "background-color 0.2s ease"
+    }
+    activeGlowRef.current = { el, li: liElement ?? null }
+  }, [clearGlow])
+  const navState = location.state as { accountId?: number } | null
 
   // State
-  const [selectedAccountId, setSelectedAccountId] = useState(0)
+  const [selectedAccountId, setSelectedAccountId] = useState(navState?.accountId ?? 0)
   const [expandedLineId, setExpandedLineId] = useState<number | null>(null)
   const [expandedTab, setExpandedTab] = useState<ActionTab | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
@@ -803,7 +1010,13 @@ export function ReconciliationPage() {
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
   const [rulePreviewPattern, setRulePreviewPattern] = useState("")
-  const [rulePreviewMatchType, setRulePreviewMatchType] = useState<"contains" | "exact" | "regex">("contains")
+  const [rulePreviewMatchType, setRulePreviewMatchType] = useState<"contains" | "exact" | "wildcard">("contains")
+  const [rulePreviewHasAccount, setRulePreviewHasAccount] = useState(false)
+  const [rulePreviewAmountFilter, setRulePreviewAmountFilterRaw] = useState<{ fn: ((amount: number) => boolean) | null }>({ fn: null })
+  const setRulePreviewAmountFilter = useCallback((fn: ((amount: number) => boolean) | null) => {
+    setRulePreviewAmountFilterRaw({ fn })
+  }, [])
+  const [rulesDrawerOpen, setRulesDrawerOpen] = useState(false)
 
   // Data queries
   const { data: queue, isLoading: queueLoading, error: queueError } = useReconQueue(selectedAccountId, "risk_first" as QueueSort, "all" as QueueFilter)
@@ -814,6 +1027,7 @@ export function ReconciliationPage() {
 
   // Mutations
   const bulkAccept = useBulkAccept()
+  const approveAllocations = useApproveAllocations()
   const createFromLine = useCreateFromLine()
 
   // Derived data
@@ -839,16 +1053,15 @@ export function ReconciliationPage() {
     let items = queueRaw
 
     // Tab filter
-    if (filterTab === "not_matched") {
+    if (filterTab === "unallocated") {
       items = items.filter((q) => {
-        const s = reconStatusSemantic(q.reconciliation_status)
-        return s === "unmatched" || s === "suggested" || s === "needs_review"
+        const ws = workflowStatus(q)
+        return ws === "imported" || ws === "unallocated"
       })
-    } else if (filterTab === "matched") {
-      items = items.filter((q) => {
-        const s = reconStatusSemantic(q.reconciliation_status)
-        return s === "allocated" || s === "approved"
-      })
+    } else if (filterTab === "proposed") {
+      items = items.filter((q) => workflowStatus(q) === "proposed")
+    } else if (filterTab === "approved") {
+      items = items.filter((q) => workflowStatus(q) === "approved")
     }
 
     // Date range filter
@@ -882,15 +1095,13 @@ export function ReconciliationPage() {
   // Counts for tabs
   const counts = useMemo(() => {
     const all = queueRaw.length
-    const notMatched = queueRaw.filter((q) => {
-      const s = reconStatusSemantic(q.reconciliation_status)
-      return s === "unmatched" || s === "suggested" || s === "needs_review"
+    const unallocated = queueRaw.filter((q) => {
+      const ws = workflowStatus(q)
+      return ws === "imported" || ws === "unallocated"
     }).length
-    const matched = queueRaw.filter((q) => {
-      const s = reconStatusSemantic(q.reconciliation_status)
-      return s === "allocated" || s === "approved"
-    }).length
-    return { all, notMatched, matched }
+    const proposed = queueRaw.filter((q) => workflowStatus(q) === "proposed").length
+    const approved = queueRaw.filter((q) => workflowStatus(q) === "approved").length
+    return { all, unallocated, proposed, approved }
   }, [queueRaw])
 
   // Balances — use summary counts when available for the progress display
@@ -903,7 +1114,7 @@ export function ReconciliationPage() {
 
   const bookBalance = useMemo(() => {
     const matched = queueRaw.filter((q) => {
-      const s = reconStatusSemantic(q.reconciliation_status)
+      const s = workflowStatus(q)
       return s === "allocated" || s === "approved"
     })
     return matched.reduce((sum, q) => sum + parseAmount(q.amount), 0)
@@ -975,12 +1186,26 @@ export function ReconciliationPage() {
   const handleSaveAllocation = useCallback(async (
     lineId: number,
     allocLines: AllocationLine[],
-    shouldCreateRule: boolean
+    shouldCreateRule: boolean,
+    ruleData?: { pattern: string; matchType: string; name: string }
   ) => {
     const item = queueRaw.find((q) => q.id === lineId)
     if (!item || allocLines.length === 0 || !allocLines[0].accountId) return
 
     try {
+      // Create the recon rule first if saving from rule tab
+      if (shouldCreateRule && ruleData?.pattern) {
+        await api.post("/bank-reconciliation/rules", {
+          name: ruleData.name || ruleData.pattern,
+          match_pattern: ruleData.pattern,
+          match_type: ruleData.matchType || "contains",
+          default_account_id: allocLines[0].accountId,
+          default_tax_code_id: allocLines[0].taxCodeId ?? undefined,
+          default_contact_id: allocLines[0].contactId ?? undefined,
+          auto_apply: true,
+        })
+      }
+
       await createFromLine.mutateAsync({
         lineId,
         lines: allocLines.map((l) => ({
@@ -990,9 +1215,13 @@ export function ReconciliationPage() {
           description: l.description || item.description || "",
           amount: parseFloat(l.amount) || 0,
         })),
-        remember_rule: shouldCreateRule,
+        remember_rule: false,
       })
-      feedback.success("Transaction categorised and matched")
+
+      const msg = shouldCreateRule
+        ? "Rule created and transaction allocated"
+        : "Transaction categorised and matched"
+      feedback.success(msg)
       setExpandedLineId(null)
     } catch (err: unknown) {
       feedback.error("Save failed", err instanceof Error ? err.message : "Unknown error")
@@ -1033,17 +1262,96 @@ export function ReconciliationPage() {
   )
 
   return (
-    <PageShell header={header} layout="stacked">
+    <div className="flex h-full">
+    <PageShell header={header} layout="stacked" className="flex-1 min-w-0">
       {/* Info Panel */}
-      <InfoPanel title="Getting started with bank reconciliation" storageKey="recon-v2-info" collapsible defaultCollapsed>
-        <p>
-          Select a bank account to see imported transactions. Expand a row to categorise it, match it to an existing
-          record, or transfer between accounts. Use the checkbox to batch-approve multiple transactions.
-        </p>
+      <InfoPanel title="Getting started with bank reconciliation" storageKey="recon-v2-info" collapsible>
+        {(() => {
+          // Compute step progress
+          const hasAccount = selectedAccountId > 0
+          const hasTransactions = queueRaw.length > 0
+          const hasUnallocated = counts.unallocated > 0
+          const hasProposed = counts.proposed > 0
+          const hasApproved = counts.approved > 0
+          const allAllocated = hasTransactions && counts.unallocated === 0
+
+          const steps: Array<{
+            label: React.ReactNode
+            status: "done" | "active" | "pending"
+            target?: string
+          }> = [
+            {
+              label: <><strong>Select a bank account</strong> — use the dropdown above to choose which bank account you want to reconcile. If you have multiple accounts, you can switch between them at any time.</>,
+              status: hasAccount ? "done" : "active",
+              target: "bank-account-header",
+            },
+            {
+              label: <>
+                <strong>Import transactions</strong> — upload a bank statement file (OFX, QIF, or CSV) via{" "}
+                <button type="button" onClick={() => navigate("/bank-statements", { state: { accountId: selectedAccountId || undefined } })} className="text-blue-700 underline hover:text-blue-900 font-medium">Bank Statements</button>
+                {", "}or if you have automatic bank feeds configured, transactions arrive via your{" "}
+                <button type="button" onClick={() => navigate("/settings/bank-feeds")} className="text-blue-700 underline hover:text-blue-900 font-medium">live feed connection</button>.
+              </>,
+              status: hasTransactions ? "done" : hasAccount ? "active" : "pending",
+            },
+            {
+              label: <><strong>Work through unallocated transactions</strong> — click the <em>Unallocated</em> tab to see transactions that need your attention. Click any row to expand it and choose how to handle it:</>,
+              status: hasTransactions && !hasUnallocated ? "done" : hasTransactions ? "active" : "pending",
+              target: "filter-tabs",
+            },
+            {
+              label: <>
+                <strong>Choose an allocation method</strong> for each transaction:
+                <ul className="list-disc list-inside ml-4 mt-0.5 space-y-0.5">
+                  <li className="rounded px-1 -mx-1 transition-colors" onMouseEnter={(e) => glowTarget("tab-manual", e.currentTarget)} onMouseLeave={clearGlow}><strong>Manual Allocation</strong> — select a GL account, tax code, and contact. Use <em>Add line</em> to split across multiple accounts (e.g., 70% business expense, 30% owner drawings).</li>
+                  <li className="rounded px-1 -mx-1 transition-colors" onMouseEnter={(e) => glowTarget("tab-rule", e.currentTarget)} onMouseLeave={clearGlow}><strong>Allocation Rule</strong> — create a reusable pattern that automatically allocates this and all matching transactions. Rules save you time on recurring payments like rent, subscriptions, and EFTPOS deposits.</li>
+                  <li className="rounded px-1 -mx-1 transition-colors" onMouseEnter={(e) => glowTarget("tab-link", e.currentTarget)} onMouseLeave={clearGlow}><strong>Link Existing</strong> — connect to an invoice, bill, or journal entry already in your books. Use this when you've already recorded the transaction and just need to mark it as reconciled.</li>
+                  <li className="rounded px-1 -mx-1 transition-colors" onMouseEnter={(e) => glowTarget("tab-transfer", e.currentTarget)} onMouseLeave={clearGlow}><strong>Transfer Money</strong> — record a movement between your own bank accounts (e.g., cheque to savings, credit card payment).</li>
+                </ul>
+                <p className="mt-1">You can also <strong>defer</strong> a transaction to come back to it later, or <strong>exclude</strong> it from reconciliation entirely.</p>
+              </>,
+              status: allAllocated ? "done" : hasUnallocated ? "active" : "pending",
+            },
+            {
+              label: <><strong>Review your work</strong> — click the <em>Proposed</em> tab to see all allocations you've made. Everything here is in a safe staging area — nothing has affected your books yet. You can change or undo any allocation before approving.</>,
+              status: hasApproved && !hasProposed ? "done" : hasProposed ? "active" : "pending",
+              target: "filter-tabs",
+            },
+            {
+              label: <><strong>Approve</strong> — becomes enabled once you have at least one proposed allocation or exception. You don't have to finish everything in one session — approve what's ready now and come back for the rest later. Only approved transactions create journal entries in your books.</>,
+              status: hasApproved && !hasProposed ? "done" : hasProposed ? "active" : "pending",
+              target: "approve-button",
+            },
+          ]
+
+          return (
+            <ol className="space-y-1.5">
+              {steps.map((step, i) => (
+                <li
+                  key={i}
+                  className="flex items-start gap-2 cursor-default rounded px-1 -mx-1 transition-colors"
+                  onMouseEnter={step.target ? (e) => glowTarget(step.target!, e.currentTarget) : undefined}
+                  onMouseLeave={clearGlow}
+                >
+                  <span className="shrink-0 mt-0.5">
+                    {step.status === "done" ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    ) : step.status === "active" ? (
+                      <Circle className="h-4 w-4 text-blue-400" />
+                    ) : (
+                      <Circle className="h-4 w-4 text-gray-300" />
+                    )}
+                  </span>
+                  <span>{step.label}</span>
+                </li>
+              ))}
+            </ol>
+          )
+        })()}
       </InfoPanel>
 
       {/* Bank Account Header (REC-008 to REC-010) — CSS Grid: row 1 = labels, row 2 = values */}
-      <div className="border border-gray-300 rounded-lg bg-white px-5 py-3">
+      <div className="border border-gray-300 rounded-lg bg-white px-5 py-3" data-guide-target="bank-account-header">
         {(() => {
           const cols = ["auto"]
           if (selectedAccountId > 0 && selectedAccount) cols.push("auto")
@@ -1165,13 +1473,14 @@ export function ReconciliationPage() {
       {selectedAccountId > 0 && !queueLoading && !queueError && (
         <>
           {/* Filter Tabs + Search (REC-011 to REC-013) */}
-          <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-4 flex-wrap" data-guide-target="filter-tabs">
             {/* Tabs */}
             <div className="flex gap-1">
               {([
-                { key: "all" as FilterTab, label: "All transactions", count: counts.all },
-                { key: "not_matched" as FilterTab, label: "Not matched", count: counts.notMatched },
-                { key: "matched" as FilterTab, label: "Matched", count: counts.matched },
+                { key: "all" as FilterTab, label: "All", count: counts.all },
+                { key: "unallocated" as FilterTab, label: "Unallocated", count: counts.unallocated },
+                { key: "proposed" as FilterTab, label: "Proposed", count: counts.proposed },
+                { key: "approved" as FilterTab, label: "Approved", count: counts.approved },
               ]).map((tab) => (
                 <button
                   key={tab.key}
@@ -1196,6 +1505,39 @@ export function ReconciliationPage() {
                 </button>
               ))}
             </div>
+
+            {/* Approve button */}
+            <Button
+              variant="primary"
+              size="sm"
+              disabled={counts.proposed === 0 || approveAllocations.isPending}
+              loading={approveAllocations.isPending}
+              data-guide-target="approve-button"
+              onClick={async () => {
+                const proposedIds = queueRaw
+                  .filter((q) => workflowStatus(q) === "proposed")
+                  .map((q) => q.id)
+                if (proposedIds.length === 0) return
+                try {
+                  const result = await approveAllocations.mutateAsync({ bank_feed_line_ids: proposedIds })
+                  const r = result as { succeeded?: number }
+                  feedback.success(`Approved ${r.succeeded ?? proposedIds.length} transaction${proposedIds.length !== 1 ? "s" : ""}`)
+                } catch (err: unknown) {
+                  feedback.error("Approve failed", err instanceof Error ? err.message : "Unknown error")
+                }
+              }}
+            >
+              Approve{counts.proposed > 0 ? ` (${counts.proposed})` : ""}
+            </Button>
+
+            {/* Manage Rules */}
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setRulesDrawerOpen((v) => !v)}
+            >
+              Rules ({reconRules.length})
+            </Button>
 
             {/* Date range */}
             <div className="flex items-center gap-1.5 ml-auto">
@@ -1337,6 +1679,8 @@ export function ReconciliationPage() {
                         isOddRow={idx % 2 === 1}
                         initialTab={isExpanded ? expandedTab : null}
                         rulePreviewPattern={rulePreviewPattern}
+                        rulePreviewHasAccount={rulePreviewHasAccount}
+                        rulePreviewAmountFilter={rulePreviewAmountFilter.fn}
                         rulePreviewMatchType={rulePreviewMatchType}
                         onRowClick={handleRowClick}
                         onCheckbox={handleCheckbox}
@@ -1348,6 +1692,8 @@ export function ReconciliationPage() {
                         reconRules={reconRules}
                         queueItems={queueRaw}
                         onPatternChange={setRulePreviewPattern}
+                        onAccountChange={setRulePreviewHasAccount}
+                        onAmountFilterChange={setRulePreviewAmountFilter}
                         onMatchTypeChange={setRulePreviewMatchType}
                         onSave={handleSaveAllocation}
                         saving={createFromLine.isPending}
@@ -1371,6 +1717,8 @@ export function ReconciliationPage() {
         </>
       )}
     </PageShell>
+    <RulesDrawer open={rulesDrawerOpen} onClose={() => setRulesDrawerOpen(false)} queueItems={queueRaw} />
+    </div>
   )
 }
 
@@ -1385,6 +1733,8 @@ function TransactionRow({
   isOddRow,
   initialTab,
   rulePreviewPattern,
+  rulePreviewHasAccount,
+  rulePreviewAmountFilter,
   rulePreviewMatchType,
   onRowClick,
   onCheckbox,
@@ -1396,6 +1746,8 @@ function TransactionRow({
   reconRules,
   queueItems,
   onPatternChange,
+  onAccountChange,
+  onAmountFilterChange,
   onMatchTypeChange,
   onSave,
   saving,
@@ -1408,7 +1760,9 @@ function TransactionRow({
   isOddRow: boolean
   initialTab: ActionTab | null
   rulePreviewPattern: string
-  rulePreviewMatchType: "contains" | "exact" | "regex"
+  rulePreviewHasAccount: boolean
+  rulePreviewAmountFilter: ((amount: number) => boolean) | null
+  rulePreviewMatchType: "contains" | "exact" | "wildcard"
   onRowClick: (id: number, tab?: ActionTab) => void
   onCheckbox: (id: number, checked: boolean) => void
   accounts: { id: number; accno: string; description: string | null; category: string }[]
@@ -1419,8 +1773,10 @@ function TransactionRow({
   reconRules: ReconRule[]
   queueItems: QueueItem[]
   onPatternChange: (pattern: string) => void
-  onMatchTypeChange: (matchType: "contains" | "exact" | "regex") => void
-  onSave: (lineId: number, lines: AllocationLine[], createRule: boolean) => void
+  onAccountChange: (hasAccount: boolean) => void
+  onAmountFilterChange: (filter: ((amount: number) => boolean) | null) => void
+  onMatchTypeChange: (matchType: "contains" | "exact" | "wildcard") => void
+  onSave: (lineId: number, lines: AllocationLine[], createRule: boolean, ruleData?: { pattern: string; matchType: string; name: string }) => void
   saving: boolean
 }) {
   // Derive column display values
@@ -1432,7 +1788,7 @@ function TransactionRow({
       const pat = r.match_pattern?.toLowerCase()
       if (!pat) return false
       if (r.match_type === "exact") return desc === pat
-      if (r.match_type === "regex") {
+      if (r.match_type === "wildcard") {
         try { return new RegExp(pat, "i").test(desc) } catch { return false }
       }
       return desc.includes(pat)
@@ -1447,22 +1803,28 @@ function TransactionRow({
       const pat = r.match_pattern?.toLowerCase()
       if (!pat) return false
       if (r.match_type === "exact") return desc === pat
-      if (r.match_type === "regex") {
+      if (r.match_type === "wildcard") {
         try { return new RegExp(pat, "i").test(desc) } catch { return false }
       }
       return desc.includes(pat)
     })?.name ?? null
   }, [item.description, reconRules])
 
-  const sem = reconStatusSemantic(item.reconciliation_status)
-  const isAllocated = sem === "allocated" || sem === "approved"
+  const ws = workflowStatus(item)
+  const isAllocated = ws === "proposed" || ws === "approved"
 
-  // Rule preview — does this row match the pattern being edited?
-  const isRulePreviewMatch = useMemo(() => {
+  // Rule preview — does this row match the pattern AND amount criteria?
+  const isRulePatternMatch = useMemo(() => {
     if (!rulePreviewPattern || isExpanded) return false
     const desc = item.normalized_description || item.description || ""
-    return testRulePattern(desc, rulePreviewPattern, rulePreviewMatchType)
-  }, [rulePreviewPattern, rulePreviewMatchType, item.description, item.normalized_description, isExpanded])
+    if (!testRulePattern(desc, rulePreviewPattern, rulePreviewMatchType)) return false
+    // Also check amount filter if set
+    if (rulePreviewAmountFilter && !rulePreviewAmountFilter(Math.abs(amount))) return false
+    return true
+  }, [rulePreviewPattern, rulePreviewMatchType, rulePreviewAmountFilter, item.description, item.normalized_description, isExpanded, amount])
+
+  // Full preview: pattern matches AND account is selected
+  const isRulePreviewMatch = isRulePatternMatch && rulePreviewHasAccount
 
   // Parse allocation info from match_explanation if available
   const allocInfo = useMemo(() => {
@@ -1482,7 +1844,8 @@ function TransactionRow({
         className={cn(
           "border-b border-gray-100 cursor-pointer transition-colors",
           isExpanded ? "bg-primary-50"
-            : isRulePreviewMatch ? "bg-amber-50 border-l-2 border-l-amber-400"
+            : isRulePreviewMatch ? "bg-green-50 border-l-2 border-l-green-400"
+            : isRulePatternMatch ? "bg-blue-50/30"
             : isSelected ? "bg-primary-25"
             : isOddRow ? "bg-gray-50/50"
             : "bg-white",
@@ -1508,7 +1871,7 @@ function TransactionRow({
         {/* Description */}
         <td className="px-3 py-2.5">
           <p className="text-sm text-gray-800 truncate max-w-[800px]">
-            {isRulePreviewMatch && rulePreviewMatchType !== "regex" && rulePreviewPattern
+            {isRulePatternMatch && rulePreviewMatchType !== "wildcard" && rulePreviewPattern
               ? highlightMatch(item.normalized_description || item.description || "", rulePreviewPattern)
               : (item.normalized_description || item.description || "\u2014")}
           </p>
@@ -1567,6 +1930,12 @@ function TransactionRow({
                 ? allocInfo[0]
                 : `${allocInfo[0]} \u2026`}
             </span>
+          ) : isRulePreviewMatch ? (
+            <span className="text-xs">
+              <span className="line-through text-gray-300">N</span>
+              {" "}
+              <span className="text-green-600 font-medium">Y</span>
+            </span>
           ) : (
             <span className="text-xs text-gray-400">N</span>
           )}
@@ -1574,11 +1943,19 @@ function TransactionRow({
 
         {/* Status */}
         <td className="px-3 py-2.5">
-          <StatusPill
-            status={statusLabel(item.reconciliation_status)}
-            semantic={statusPillSemantic(item.reconciliation_status)}
-            className="text-xs"
-          />
+          {isRulePreviewMatch ? (
+            <StatusPill
+              status="New Allocation"
+              semantic="success"
+              className="text-xs"
+            />
+          ) : (
+            <StatusPill
+              status={statusLabel(workflowStatus(item))}
+              semantic={statusPillSemantic(workflowStatus(item))}
+              className="text-xs"
+            />
+          )}
         </td>
 
         {/* Expand/collapse */}
@@ -1600,9 +1977,11 @@ function TransactionRow({
           initialTab={initialTab}
           queueItems={queueItems}
           onPatternChange={onPatternChange}
+          onAccountChange={onAccountChange}
+          onAmountFilterChange={onAmountFilterChange}
           onMatchTypeChange={onMatchTypeChange}
-          onSave={(lines, createRule) => { onPatternChange(""); onSave(item.id, lines, createRule) }}
-          onCancel={() => { onPatternChange(""); onRowClick(item.id) }}
+          onSave={(lines, createRule, ruleData) => { onPatternChange(""); onAccountChange(false); onAmountFilterChange(null); onSave(item.id, lines, createRule, ruleData) }}
+          onCancel={() => { onPatternChange(""); onAccountChange(false); onAmountFilterChange(null); onRowClick(item.id) }}
           saving={saving}
         />
       )}
