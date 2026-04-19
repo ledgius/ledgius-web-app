@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { Outlet, NavLink, useNavigate, useLocation } from "react-router-dom"
 import {
-  ShoppingCart, ShoppingBag, Landmark, BookOpen,
+  Building2, ShoppingCart, ShoppingBag, Landmark, BookOpen,
   BarChart3, Users, Settings2, Shield,
   FileText, Receipt, ArrowDownToLine, ArrowUpFromLine,
   CreditCard, ArrowLeftRight,
@@ -182,6 +182,12 @@ const settingsSections: NavSection[] = [
     title: "",
     items: [
       { to: "/", label: "Books Overview", icon: HeartPulse },
+    ],
+  },
+  {
+    title: "Business",
+    items: [
+      { to: "/settings/business", label: "Business Settings", icon: Building2 },
     ],
   },
   {
