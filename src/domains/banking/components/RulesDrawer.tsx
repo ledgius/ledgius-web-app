@@ -247,6 +247,18 @@ function RuleCard({
   const [editName, setEditName] = useState(rule.name)
   const [editPattern, setEditPattern] = useState(rule.match_pattern)
   const [editMatchType, setEditMatchType] = useState(rule.match_type)
+  const [editAccountId, setEditAccountId] = useState<number | null>(rule.default_account_id)
+  const [editTaxCodeId, setEditTaxCodeId] = useState<number | null>(rule.default_tax_code_id)
+  const [editContactId, setEditContactId] = useState<number | null>(rule.default_contact_id)
+  const amountVal = (rule as unknown as Record<string, unknown>).amount_match_value as Record<string, unknown> | null
+  const [editAmountType, setEditAmountType] = useState<string>((rule as unknown as Record<string, unknown>).amount_match_type as string ?? "any")
+  const [editAmountValue, setEditAmountValue] = useState(() => {
+    if (!amountVal) return ""
+    if (amountVal.value != null) return String(amountVal.value)
+    if (amountVal.entries) return (amountVal.entries as Array<{ min: number; max: number }>).map((e) => e.min === e.max ? String(e.min) : `${e.min}-${e.max}`).join(", ")
+    if (amountVal.min != null) return `${amountVal.min}-${amountVal.max}`
+    return ""
+  })
 
   return (
     <div
@@ -338,17 +350,41 @@ function RuleCard({
               >
                 <option value="contains">Contains</option>
                 <option value="exact">Exact</option>
-                <option value="regex">Regex</option>
+                <option value="wildcard">Wildcard</option>
               </select>
             </div>
+          </div>
+          <div className="flex items-end gap-2">
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">Amount</label>
+              <select
+                value={editAmountType}
+                onChange={(e) => setEditAmountType(e.target.value)}
+                className="bg-white border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+              >
+                <option value="any">Any</option>
+                <option value="exact">Exact</option>
+                <option value="set">Set / Ranges</option>
+                <option value="range">Range</option>
+              </select>
+            </div>
+            {editAmountType !== "any" && (
+              <input
+                type="text"
+                value={editAmountValue}
+                onChange={(e) => setEditAmountValue(e.target.value)}
+                className="flex-1 bg-white border border-gray-300 rounded px-2 py-1.5 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-primary-500"
+                placeholder={editAmountType === "exact" ? "100.00" : editAmountType === "set" ? "38-42, 50, 68-70" : "40-500"}
+              />
+            )}
           </div>
           <div className="grid grid-cols-3 gap-2">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Account</label>
               <Combobox
                 options={categoryAccountOptions}
-                value={rule.default_account_id}
-                onChange={() => {}}
+                value={editAccountId}
+                onChange={(v) => setEditAccountId(v ? Number(v) : null)}
                 placeholder="Account..."
               />
             </div>
@@ -356,8 +392,8 @@ function RuleCard({
               <label className="block text-xs font-medium text-gray-600 mb-1">Tax code</label>
               <Combobox
                 options={taxCodeOptions}
-                value={rule.default_tax_code_id}
-                onChange={() => {}}
+                value={editTaxCodeId}
+                onChange={(v) => setEditTaxCodeId(v ? Number(v) : null)}
                 placeholder="Tax..."
               />
             </div>
@@ -365,8 +401,8 @@ function RuleCard({
               <label className="block text-xs font-medium text-gray-600 mb-1">Contact</label>
               <Combobox
                 options={contactOptions}
-                value={rule.default_contact_id}
-                onChange={() => {}}
+                value={editContactId}
+                onChange={(v) => setEditContactId(v ? Number(v) : null)}
                 placeholder="Contact..."
               />
             </div>
@@ -376,7 +412,14 @@ function RuleCard({
             <Button
               variant="primary"
               size="sm"
-              onClick={() => onSave({ name: editName, match_pattern: editPattern, match_type: editMatchType })}
+              onClick={() => onSave({
+                name: editName,
+                match_pattern: editPattern,
+                match_type: editMatchType,
+                default_account_id: editAccountId,
+                default_tax_code_id: editTaxCodeId,
+                default_contact_id: editContactId,
+              })}
             >
               <Check className="h-3.5 w-3.5" />
               Save
