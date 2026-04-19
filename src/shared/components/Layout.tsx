@@ -37,7 +37,7 @@ interface NavSection {
   items: NavItem[]
 }
 
-type SidebarMode = "finance" | "tasks" | "reports" | "ai" | "assets" | "liabilities" | "payroll" | "settings"
+type SidebarMode = "finance" | "tasks" | "reports" | "ai" | "assets" | "liabilities" | "payroll" | "settings" | "platform"
 
 // ── Mode definitions ──
 
@@ -336,6 +336,19 @@ const modeNavMap: Record<SidebarMode, NavSection[]> = {
   reports: reportsSections,
   ai: aiSections,
   settings: settingsSections,
+  platform: [
+    {
+      title: "Platform",
+      items: [
+        { to: "/platform/signups", label: "Sign-ups", icon: ClipboardList },
+        { to: "/platform/tenants", label: "Tenants", icon: Landmark },
+        { to: "/platform/plans", label: "Plans", icon: CreditCard },
+        { to: "/platform/users", label: "Users", icon: UsersRound },
+        { to: "/platform/operations", label: "Operations", icon: Settings2 },
+        { to: "/platform/settings", label: "Settings", icon: Shield },
+      ],
+    },
+  ],
 }
 
 const modeLabels: { key: SidebarMode; label: string; icon: LucideIcon }[] = [
@@ -347,6 +360,7 @@ const modeLabels: { key: SidebarMode; label: string; icon: LucideIcon }[] = [
   { key: "reports", label: "Reports", icon: BarChart3 },
   { key: "ai", label: "AI", icon: Sparkles },
   { key: "settings", label: "Settings", icon: Settings2 },
+  { key: "platform", label: "Platform", icon: Shield },
 ]
 
 // ── Component ──
@@ -522,7 +536,7 @@ export function Layout() {
           <div className="border-t border-gray-200 p-2">
             {sidebarCollapsed ? (
               <div className="flex flex-col items-center gap-1">
-                {modeLabels.map(({ key, icon: Icon }) => (
+                {modeLabels.filter(m => m.key !== "platform" || user?.is_platform_admin).map(({ key, icon: Icon }) => (
                   <button
                     key={key}
                     type="button"
@@ -541,7 +555,7 @@ export function Layout() {
               </div>
             ) : (
               <div className="grid grid-cols-4 gap-1">
-                {modeLabels.map(({ key, label, icon: Icon }) => (
+                {modeLabels.filter(m => m.key !== "platform" || user?.is_platform_admin).map(({ key, label, icon: Icon }) => (
                   <button
                     key={key}
                     type="button"
