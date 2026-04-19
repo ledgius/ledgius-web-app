@@ -38,7 +38,7 @@ import {
 
 type SortColumn = "date" | "description" | "withdrawal" | "deposit" | "status"
 type SortDirection = "asc" | "desc"
-type FilterTab = "all" | "not_matched" | "matched"
+type FilterTab = "all" | "unallocated" | "proposed" | "approved"
 type ActionTab = "rule" | "manual" | "link" | "transfer"
 
 interface AllocationLine {
@@ -50,61 +50,38 @@ interface AllocationLine {
   amount: string
 }
 
-// ── Status mapping ───────────────────────────────────────────────────────────
+// ── Status mapping (two-field model: workflow_status + allocation_method) ─────
 
-function reconStatusSemantic(status: string): string {
-  switch (status) {
-    case "unmatched":
-    case "imported":
-      return "unmatched"
-    case "suggested":
-      return "suggested"
-    case "auto_matched":
-    case "allocated":
-      return "allocated"
-    case "resolved":
-    case "approved":
-      return "approved"
-    case "needs_review":
-    case "exception":
-      return "needs_review"
-    default:
-      return status
-  }
-}
-
-function statusLabel(status: string): string {
-  switch (reconStatusSemantic(status)) {
-    case "unmatched":
-      return "Unallocated"
-    case "suggested":
-      return "Suggested"
-    case "allocated":
-      return "Allocated"
-    case "approved":
-      return "Approved"
-    case "needs_review":
-      return "Unallocated"
-    default:
-      return status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
-  }
-}
-
-function statusPillSemantic(status: string): "muted" | "info" | "active" | "warning" | "success" | "danger" | "locked" {
-  const s = reconStatusSemantic(status)
+function workflowStatus(item: { reconciliation_status?: string; workflow_status?: string }): string {
+  // Prefer new workflow_status field, fall back to legacy reconciliation_status
+  if (item.workflow_status) return item.workflow_status
+  const s = item.reconciliation_status ?? ""
   switch (s) {
-    case "unmatched":
-      return "muted"
-    case "suggested":
-      return "info"
-    case "allocated":
-      return "active"
-    case "approved":
-      return "success"
-    case "needs_review":
-      return "warning"
-    default:
-      return "muted"
+    case "imported": return "imported"
+    case "unmatched": case "needs_review": case "exception": return "unallocated"
+    case "suggested": case "auto_matched": case "manually_matched": return "proposed"
+    case "resolved": case "approved": return "approved"
+    default: return s || "imported"
+  }
+}
+
+function statusLabel(ws: string): string {
+  switch (ws) {
+    case "imported": return "Imported"
+    case "unallocated": return "Unallocated"
+    case "proposed": return "Proposed"
+    case "approved": return "Approved"
+    default: return ws.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+  }
+}
+
+function statusPillSemantic(ws: string): "muted" | "info" | "active" | "warning" | "success" | "danger" | "locked" {
+  switch (ws) {
+    case "imported": return "muted"
+    case "unallocated": return "warning"
+    case "proposed": return "info"
+    case "approved": return "success"
+    default: return "muted"
   }
 }
 
@@ -162,7 +139,7 @@ function highlightMatch(text: string, pattern: string): React.ReactNode {
   return (
     <>
       {text.slice(0, idx)}
-      <mark className="bg-amber-200 text-amber-900 rounded-sm px-0.5">{text.slice(idx, idx + pattern.length)}</mark>
+      <mark className="bg-green-200 text-green-900 rounded-sm px-0.5">{text.slice(idx, idx + pattern.length)}</mark>
       {text.slice(idx + pattern.length)}
     </>
   )
@@ -238,7 +215,7 @@ function ExpansionPanel({
   // Match count for the rule preview
   const unallocatedItems = useMemo(() =>
     queueItems.filter((q) => {
-      const s = reconStatusSemantic(q.reconciliation_status)
+      const s = workflowStatus(q)
       return s === "unmatched" || s === "suggested" || s === "needs_review"
     }),
   [queueItems])
@@ -431,7 +408,7 @@ function ExpansionPanel({
                     <label className="block text-xs font-medium text-gray-600 mb-1">
                       Match pattern
                       {rulePattern && (
-                        <span className="ml-2 font-normal normal-case tracking-normal text-amber-600">
+                        <span className="ml-2 font-normal normal-case tracking-normal text-green-600">
                           — matches {ruleMatchCount} of {unallocatedCount} unallocated
                         </span>
                       )}
@@ -839,16 +816,15 @@ export function ReconciliationPage() {
     let items = queueRaw
 
     // Tab filter
-    if (filterTab === "not_matched") {
+    if (filterTab === "unallocated") {
       items = items.filter((q) => {
-        const s = reconStatusSemantic(q.reconciliation_status)
-        return s === "unmatched" || s === "suggested" || s === "needs_review"
+        const ws = workflowStatus(q)
+        return ws === "imported" || ws === "unallocated"
       })
-    } else if (filterTab === "matched") {
-      items = items.filter((q) => {
-        const s = reconStatusSemantic(q.reconciliation_status)
-        return s === "allocated" || s === "approved"
-      })
+    } else if (filterTab === "proposed") {
+      items = items.filter((q) => workflowStatus(q) === "proposed")
+    } else if (filterTab === "approved") {
+      items = items.filter((q) => workflowStatus(q) === "approved")
     }
 
     // Date range filter
@@ -882,15 +858,13 @@ export function ReconciliationPage() {
   // Counts for tabs
   const counts = useMemo(() => {
     const all = queueRaw.length
-    const notMatched = queueRaw.filter((q) => {
-      const s = reconStatusSemantic(q.reconciliation_status)
-      return s === "unmatched" || s === "suggested" || s === "needs_review"
+    const unallocated = queueRaw.filter((q) => {
+      const ws = workflowStatus(q)
+      return ws === "imported" || ws === "unallocated"
     }).length
-    const matched = queueRaw.filter((q) => {
-      const s = reconStatusSemantic(q.reconciliation_status)
-      return s === "allocated" || s === "approved"
-    }).length
-    return { all, notMatched, matched }
+    const proposed = queueRaw.filter((q) => workflowStatus(q) === "proposed").length
+    const approved = queueRaw.filter((q) => workflowStatus(q) === "approved").length
+    return { all, unallocated, proposed, approved }
   }, [queueRaw])
 
   // Balances — use summary counts when available for the progress display
@@ -903,7 +877,7 @@ export function ReconciliationPage() {
 
   const bookBalance = useMemo(() => {
     const matched = queueRaw.filter((q) => {
-      const s = reconStatusSemantic(q.reconciliation_status)
+      const s = workflowStatus(q)
       return s === "allocated" || s === "approved"
     })
     return matched.reduce((sum, q) => sum + parseAmount(q.amount), 0)
@@ -1169,9 +1143,10 @@ export function ReconciliationPage() {
             {/* Tabs */}
             <div className="flex gap-1">
               {([
-                { key: "all" as FilterTab, label: "All transactions", count: counts.all },
-                { key: "not_matched" as FilterTab, label: "Not matched", count: counts.notMatched },
-                { key: "matched" as FilterTab, label: "Matched", count: counts.matched },
+                { key: "all" as FilterTab, label: "All", count: counts.all },
+                { key: "unallocated" as FilterTab, label: "Unallocated", count: counts.unallocated },
+                { key: "proposed" as FilterTab, label: "Proposed", count: counts.proposed },
+                { key: "approved" as FilterTab, label: "Approved", count: counts.approved },
               ]).map((tab) => (
                 <button
                   key={tab.key}
@@ -1454,7 +1429,7 @@ function TransactionRow({
     })?.name ?? null
   }, [item.description, reconRules])
 
-  const sem = reconStatusSemantic(item.reconciliation_status)
+  const sem = workflowStatus(item)
   const isAllocated = sem === "allocated" || sem === "approved"
 
   // Rule preview — does this row match the pattern being edited?
@@ -1482,7 +1457,7 @@ function TransactionRow({
         className={cn(
           "border-b border-gray-100 cursor-pointer transition-colors",
           isExpanded ? "bg-primary-50"
-            : isRulePreviewMatch ? "bg-amber-50 border-l-2 border-l-amber-400"
+            : isRulePreviewMatch ? "bg-green-50 border-l-2 border-l-green-400"
             : isSelected ? "bg-primary-25"
             : isOddRow ? "bg-gray-50/50"
             : "bg-white",
@@ -1575,8 +1550,8 @@ function TransactionRow({
         {/* Status */}
         <td className="px-3 py-2.5">
           <StatusPill
-            status={statusLabel(item.reconciliation_status)}
-            semantic={statusPillSemantic(item.reconciliation_status)}
+            status={statusLabel(workflowStatus(item))}
+            semantic={statusPillSemantic(workflowStatus(item))}
             className="text-xs"
           />
         </td>

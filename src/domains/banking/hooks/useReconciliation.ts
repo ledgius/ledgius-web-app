@@ -30,6 +30,8 @@ export interface QueueItem {
   counterparty_name: string
   normalized_description: string
   reconciliation_status: string
+  workflow_status?: string
+  allocation_method?: string
   confidence_score: number | null
   match_pass: number | null
   match_explanation: Record<string, unknown>
@@ -277,6 +279,64 @@ export function useCreateFromLine() {
       remember_rule: boolean
       rule_pattern?: string
     }) => api.post(`/reconciliation/lines/${lineId}/create`, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: RECON_KEY }),
+  })
+}
+
+// ── Sandbox: Propose + Approve ───────────────────────────────────────────────
+
+export interface ProposeAllocationRequest {
+  lineId: number
+  lines: AllocationLinePayload[]
+  allocation_method: string
+  rule_id?: number
+  description?: string
+  remember_rule?: boolean
+  rule_pattern?: string
+  rule_match_type?: string
+  rule_name?: string
+}
+
+export function useProposeAllocation() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ lineId, ...body }: ProposeAllocationRequest) =>
+      api.post(`/reconciliation/lines/${lineId}/propose`, body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: RECON_KEY }),
+  })
+}
+
+export interface BulkProposeRequest {
+  bank_feed_line_ids: number[]
+  allocation_method?: string
+  account_id: number
+  tax_code_id?: number | null
+  contact_id?: number | null
+  description?: string
+  remember_rule?: boolean
+  rule_pattern?: string
+  rule_match_type?: string
+  rule_name?: string
+}
+
+export function useBulkPropose() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (body: BulkProposeRequest) =>
+      api.post("/reconciliation/bulk/propose", body),
+    onSuccess: () => qc.invalidateQueries({ queryKey: RECON_KEY }),
+  })
+}
+
+export interface ApproveRequest {
+  bank_feed_line_ids: number[]
+}
+
+export function useApproveAllocations() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (body: ApproveRequest) =>
+      api.post("/reconciliation/approve", body),
     onSuccess: () => qc.invalidateQueries({ queryKey: RECON_KEY }),
   })
 }
