@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
 import { X, GripVertical, ChevronRight, Check, Pencil, Trash2, ToggleLeft, ToggleRight } from "lucide-react"
 import { Button, Combobox } from "@/components/primitives"
 import { cn } from "@/shared/lib/utils"
@@ -104,20 +104,53 @@ export function RulesDrawer({ open, onClose }: RulesDrawerProps) {
     }
   }, [qc, feedback, editingId])
 
+  // Resizable width
+  const [width, setWidth] = useState(420)
+  const resizing = useRef(false)
+  const startX = useRef(0)
+  const startWidth = useRef(420)
+
+  useEffect(() => {
+    if (!open) return
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!resizing.current) return
+      const delta = startX.current - e.clientX
+      setWidth(Math.max(300, Math.min(600, startWidth.current + delta)))
+    }
+    const handleMouseUp = () => { resizing.current = false }
+    window.addEventListener("mousemove", handleMouseMove)
+    window.addEventListener("mouseup", handleMouseUp)
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove)
+      window.removeEventListener("mouseup", handleMouseUp)
+    }
+  }, [open])
+
   if (!open) return null
 
   return (
-    <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/20 z-40" onClick={onClose} />
+    <div className="flex shrink-0 h-full" style={{ width }}>
+      {/* Resize handle */}
+      <div
+        className="w-2 cursor-col-resize bg-gray-200 hover:bg-primary-300 active:bg-primary-400 transition-colors shrink-0 flex items-center justify-center"
+        onMouseDown={(e) => {
+          e.preventDefault()
+          resizing.current = true
+          startX.current = e.clientX
+          startWidth.current = width
+        }}
+        title="Drag to resize"
+      >
+        <div className="w-0.5 h-8 bg-gray-400 rounded-full" />
+      </div>
 
-      {/* Drawer */}
-      <div className="fixed top-0 right-0 bottom-0 w-[480px] bg-white shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-200">
+      {/* Drawer content */}
+      <div className="flex-1 flex flex-col overflow-hidden border-l border-gray-200 bg-white">
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-200">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 shrink-0">
           <div>
-            <h2 className="text-base font-semibold text-gray-900">Allocation Rules</h2>
-            <p className="text-xs text-gray-500 mt-0.5">Drag to reorder priority — higher rules are evaluated first</p>
+            <h2 className="text-sm font-semibold text-gray-900">Allocation Rules</h2>
+            <p className="text-xs text-gray-400 mt-0.5">Drag to reorder priority</p>
           </div>
           <button
             type="button"
@@ -129,11 +162,11 @@ export function RulesDrawer({ open, onClose }: RulesDrawerProps) {
         </div>
 
         {/* Rules list */}
-        <div className="flex-1 overflow-y-auto px-3 py-3 space-y-1">
+        <div className="flex-1 overflow-y-auto px-3 py-2 space-y-1">
           {isLoading ? (
             <p className="text-sm text-gray-400 text-center py-8">Loading rules...</p>
           ) : sortedRules.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-8">No rules defined yet. Create one from the Allocation Rule tab.</p>
+            <p className="text-sm text-gray-400 text-center py-8">No rules yet — create one from the Allocation Rule tab.</p>
           ) : (
             sortedRules.map((rule, idx) => (
               <RuleCard
@@ -168,11 +201,11 @@ export function RulesDrawer({ open, onClose }: RulesDrawerProps) {
         </div>
 
         {/* Footer */}
-        <div className="border-t border-gray-200 px-5 py-3">
+        <div className="border-t border-gray-200 px-4 py-2 shrink-0">
           <p className="text-xs text-gray-400">{sortedRules.length} rule{sortedRules.length !== 1 ? "s" : ""} · {sortedRules.filter((r) => !r.disabled).length} enabled</p>
         </div>
       </div>
-    </>
+    </div>
   )
 }
 

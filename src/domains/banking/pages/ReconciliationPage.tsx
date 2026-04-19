@@ -152,6 +152,44 @@ function highlightMatch(text: string, pattern: string): React.ReactNode {
   )
 }
 
+/** Parse and validate a set/ranges input like "38-42, 50, 68-70".
+ *  Returns sorted, non-overlapping entries or null if invalid. */
+function parseAmountSetRanges(input: string): { entries: Array<{ min: number; max: number }>; error?: string } | null {
+  if (!input.trim()) return null
+  const parts = input.split(",").map((s) => s.trim()).filter(Boolean)
+  const entries: Array<{ min: number; max: number }> = []
+  for (const part of parts) {
+    if (part.includes("-")) {
+      const [minStr, maxStr] = part.split("-").map((s) => s.trim())
+      const min = parseFloat(minStr)
+      const max = parseFloat(maxStr)
+      if (isNaN(min) || isNaN(max)) return { entries: [], error: `Invalid range: ${part}` }
+      if (min >= max) return { entries: [], error: `Range start must be less than end: ${part}` }
+      entries.push({ min, max })
+    } else {
+      const val = parseFloat(part)
+      if (isNaN(val)) return { entries: [], error: `Invalid value: ${part}` }
+      entries.push({ min: val, max: val })
+    }
+  }
+  // Sort by min
+  entries.sort((a, b) => a.min - b.min)
+  // Check overlaps
+  for (let i = 1; i < entries.length; i++) {
+    if (entries[i].min <= entries[i - 1].max) {
+      return { entries, error: `Overlapping ranges: ${entries[i - 1].min}-${entries[i - 1].max} and ${entries[i].min}-${entries[i].max}` }
+    }
+  }
+  return { entries }
+}
+
+/** Format a set/ranges back to sorted string */
+function formatAmountSetRanges(input: string): string {
+  const result = parseAmountSetRanges(input)
+  if (!result || result.error) return input
+  return result.entries.map((e) => e.min === e.max ? String(e.min) : `${e.min}-${e.max}`).join(", ")
+}
+
 function testRulePattern(description: string, pattern: string, matchType: "contains" | "exact" | "regex"): boolean {
   if (!pattern || !description) return false
   const desc = description.toLowerCase()
@@ -457,7 +495,7 @@ function ExpansionPanel({
                       >
                         <option value="any">Any</option>
                         <option value="exact">Exact</option>
-                        <option value="set">Set</option>
+                        <option value="set">Set / Ranges</option>
                         <option value="range">Range</option>
                       </select>
                     </div>
@@ -471,16 +509,28 @@ function ExpansionPanel({
                         placeholder="0.00"
                       />
                     )}
-                    {ruleAmountMatch === "set" && (
-                      <input
-                        type="text"
-                        value={ruleAmountSet}
-                        onChange={(e) => setRuleAmountSet(e.target.value)}
-                        className="w-48 bg-white border border-gray-300 rounded px-2 py-1.5 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-primary-500"
-                        placeholder="38, 43, 68, 103, 138"
-                        title="Comma-separated list of exact amounts"
-                      />
-                    )}
+                    {ruleAmountMatch === "set" && (() => {
+                      const parsed = ruleAmountSet ? parseAmountSetRanges(ruleAmountSet) : null
+                      return (
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={ruleAmountSet}
+                            onChange={(e) => setRuleAmountSet(e.target.value)}
+                            onBlur={() => setRuleAmountSet(formatAmountSetRanges(ruleAmountSet))}
+                            className={cn(
+                              "w-56 bg-white border rounded px-2 py-1.5 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-primary-500",
+                              parsed?.error ? "border-red-400" : "border-gray-300"
+                            )}
+                            placeholder="38-42, 50, 68-70"
+                            title="Values and/or ranges, comma-separated. E.g. 38-42, 50, 68-70"
+                          />
+                          {parsed?.error && (
+                            <span className="text-xs text-red-500 whitespace-nowrap">{parsed.error}</span>
+                          )}
+                        </div>
+                      )
+                    })()}
                     {ruleAmountMatch === "range" && (
                       <>
                         <input
@@ -1133,7 +1183,8 @@ export function ReconciliationPage() {
   )
 
   return (
-    <PageShell header={header} layout="stacked">
+    <div className="flex h-full">
+    <PageShell header={header} layout="stacked" className="flex-1 min-w-0">
       {/* Info Panel */}
       <InfoPanel title="Getting started with bank reconciliation" storageKey="recon-v2-info" collapsible>
         {(() => {
@@ -1404,7 +1455,7 @@ export function ReconciliationPage() {
             <Button
               variant="secondary"
               size="sm"
-              onClick={() => setRulesDrawerOpen(true)}
+              onClick={() => setRulesDrawerOpen((v) => !v)}
             >
               Rules ({reconRules.length})
             </Button>
@@ -1584,8 +1635,9 @@ export function ReconciliationPage() {
           </div>
         </>
       )}
-      <RulesDrawer open={rulesDrawerOpen} onClose={() => setRulesDrawerOpen(false)} />
     </PageShell>
+    <RulesDrawer open={rulesDrawerOpen} onClose={() => setRulesDrawerOpen(false)} />
+    </div>
   )
 }
 
