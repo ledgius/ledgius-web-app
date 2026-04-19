@@ -68,12 +68,13 @@ interface StagingContact {
 }
 
 const sourceOptions = [
-  { id: "xero", name: "Xero", description: "Import from Xero CSV exports" },
-  { id: "myob", name: "MYOB", description: "Import from MYOB AccountRight exports" },
-  { id: "csv", name: "Generic CSV", description: "Import from any CSV with manual column mapping" },
+  { id: "xero", name: "Xero", description: "Import from Xero CSV exports", colour: "#13B5EA" },
+  { id: "myob", name: "MYOB", description: "Import from MYOB AccountRight exports", colour: "#6D2D91" },
+  { id: "quickbooks", name: "QuickBooks Online", description: "Import from QuickBooks CSV/Excel exports", colour: "#2CA01C" },
+  { id: "csv", name: "Generic CSV", description: "Import from any CSV with manual column mapping", colour: "#6B7280" },
 ]
 
-type ImportSource = "xero" | "myob" | "csv"
+type ImportSource = "xero" | "myob" | "quickbooks" | "csv"
 
 export function DataImportPage() {
   const feedback = useFeedback()
@@ -228,9 +229,10 @@ export function DataImportPage() {
   // ── Format selector — always visible at top (even after batch created) ──
 
   const brandStyles: Record<string, { border: string; bg: string; text: string; icon: string }> = {
-    xero:  { border: "border-[#13B5EA]", bg: "bg-[#13B5EA]/10", text: "text-[#0B7FA5]", icon: "text-[#13B5EA]" },
-    myob:  { border: "border-[#6D28D9]", bg: "bg-[#6D28D9]/10", text: "text-[#6D28D9]", icon: "text-[#6D28D9]" },
-    csv:   { border: "border-gray-400",   bg: "bg-gray-100",     text: "text-gray-700",  icon: "text-gray-400"  },
+    xero:       { border: "border-[#13B5EA]", bg: "bg-[#13B5EA]/10", text: "text-[#0B7FA5]", icon: "text-[#13B5EA]" },
+    myob:       { border: "border-[#6D28D9]", bg: "bg-[#6D28D9]/10", text: "text-[#6D28D9]", icon: "text-[#6D28D9]" },
+    quickbooks: { border: "border-[#2CA01C]", bg: "bg-[#2CA01C]/10", text: "text-[#228B15]", icon: "text-[#2CA01C]" },
+    csv:        { border: "border-gray-400",   bg: "bg-gray-100",     text: "text-gray-700",  icon: "text-gray-400"  },
   }
 
   const formatSelector = (

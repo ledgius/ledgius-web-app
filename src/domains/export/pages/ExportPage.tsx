@@ -26,10 +26,11 @@ interface ExportRun {
   bundle_storage_key?: string
 }
 
-type ExportFormat = "xero" | "myob" | "csv"
+type ExportFormat = "xero" | "myob" | "quickbooks" | "csv"
 const FORMAT_OPTIONS: { key: ExportFormat; label: string; description: string }[] = [
   { key: "xero", label: "Xero", description: "Xero-compatible CSV bundle for import into Xero" },
   { key: "myob", label: "MYOB", description: "MYOB AccountRight-compatible tab-delimited export" },
+  { key: "quickbooks", label: "QuickBooks Online", description: "QuickBooks-compatible CSV bundle — accounts, contacts, bank transactions" },
   { key: "csv", label: "Generic CSV", description: "Standard CSV files for any system or spreadsheet" },
 ]
 
@@ -177,7 +178,7 @@ export function ExportPage() {
   return (
     <PageShell header={header}>
       <InfoPanel title="How data export works" storageKey="export-info">
-        <p><strong>1. Choose format</strong> — select Xero, MYOB AccountRight, or Generic CSV. Each produces a different file format for the target system.</p>
+        <p><strong>1. Choose format</strong> — select Xero, MYOB AccountRight, QuickBooks Online, or Generic CSV. Each produces a different file format for the target system.</p>
         <p><strong>2. Select entities</strong> — choose which data to include (accounts, contacts, invoices, etc.). Leave empty to export all.</p>
         <p><strong>3. Run Export</strong> — the export runs in the background. A progress bar shows each phase: fetching → validating → mapping → writing → storing.</p>
         <p><strong>4. Download</strong> — completed exports produce a ZIP bundle. Recent exports are listed at the bottom for re-download.</p>
@@ -189,9 +190,10 @@ export function ExportPage() {
           {FORMAT_OPTIONS.map(opt => {
             const selected = format === opt.key
             const brandStyles: Record<string, { border: string; bg: string; text: string }> = {
-              xero:  { border: "border-[#13B5EA]", bg: "bg-[#13B5EA]/10", text: "text-[#0B7FA5]" },
-              myob:  { border: "border-[#6D28D9]", bg: "bg-[#6D28D9]/10", text: "text-[#6D28D9]" },
-              csv:   { border: "border-gray-400",   bg: "bg-gray-100",     text: "text-gray-700"  },
+              xero:       { border: "border-[#13B5EA]", bg: "bg-[#13B5EA]/10", text: "text-[#0B7FA5]" },
+              myob:       { border: "border-[#6D28D9]", bg: "bg-[#6D28D9]/10", text: "text-[#6D28D9]" },
+              quickbooks: { border: "border-[#2CA01C]", bg: "bg-[#2CA01C]/10", text: "text-[#228B15]" },
+              csv:        { border: "border-gray-400",   bg: "bg-gray-100",     text: "text-gray-700"  },
             }
             const brand = brandStyles[opt.key]
             return (
