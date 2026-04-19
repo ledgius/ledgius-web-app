@@ -1005,7 +1005,10 @@ export function ReconciliationPage() {
   const [rulePreviewPattern, setRulePreviewPattern] = useState("")
   const [rulePreviewMatchType, setRulePreviewMatchType] = useState<"contains" | "exact" | "wildcard">("contains")
   const [rulePreviewHasAccount, setRulePreviewHasAccount] = useState(false)
-  const [rulePreviewAmountFilter, setRulePreviewAmountFilter] = useState<((amount: number) => boolean) | null>(null)
+  const [rulePreviewAmountFilter, setRulePreviewAmountFilterRaw] = useState<{ fn: ((amount: number) => boolean) | null }>({ fn: null })
+  const setRulePreviewAmountFilter = useCallback((fn: ((amount: number) => boolean) | null) => {
+    setRulePreviewAmountFilterRaw({ fn })
+  }, [])
   const [rulesDrawerOpen, setRulesDrawerOpen] = useState(false)
 
   // Data queries
@@ -1652,7 +1655,7 @@ export function ReconciliationPage() {
                         initialTab={isExpanded ? expandedTab : null}
                         rulePreviewPattern={rulePreviewPattern}
                         rulePreviewHasAccount={rulePreviewHasAccount}
-                        rulePreviewAmountFilter={rulePreviewAmountFilter}
+                        rulePreviewAmountFilter={rulePreviewAmountFilter.fn}
                         rulePreviewMatchType={rulePreviewMatchType}
                         onRowClick={handleRowClick}
                         onCheckbox={handleCheckbox}
