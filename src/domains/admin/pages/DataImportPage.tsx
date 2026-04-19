@@ -70,7 +70,7 @@ interface StagingContact {
 const sourceOptions = [
   { id: "xero", name: "Xero", description: "Import from Xero CSV exports", colour: "#13B5EA" },
   { id: "myob", name: "MYOB", description: "Import from MYOB AccountRight exports", colour: "#6D2D91" },
-  { id: "quickbooks", name: "QuickBooks Online", description: "Import from QuickBooks CSV/Excel exports", colour: "#2CA01C" },
+  { id: "quickbooks", name: "QuickBooks Online", description: "Import from CSV/Excel files or pull via API connection", colour: "#2CA01C" },
   { id: "csv", name: "Generic CSV", description: "Import from any CSV with manual column mapping", colour: "#6B7280" },
 ]
 

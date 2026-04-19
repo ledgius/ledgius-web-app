@@ -30,7 +30,7 @@ type ExportFormat = "xero" | "myob" | "quickbooks" | "csv"
 const FORMAT_OPTIONS: { key: ExportFormat; label: string; description: string }[] = [
   { key: "xero", label: "Xero", description: "Xero-compatible CSV bundle for import into Xero" },
   { key: "myob", label: "MYOB", description: "MYOB AccountRight-compatible tab-delimited export" },
-  { key: "quickbooks", label: "QuickBooks Online", description: "QuickBooks-compatible CSV bundle — accounts, contacts, bank transactions" },
+  { key: "quickbooks", label: "QuickBooks Online", description: "CSV bundle or push via API — accounts, contacts, invoices, bills, bank transactions" },
   { key: "csv", label: "Generic CSV", description: "Standard CSV files for any system or spreadsheet" },
 ]
 
