@@ -86,6 +86,7 @@ const TaxCodesPage = lazy(() => import("@/domains/taxcode/pages/TaxCodesPage").t
 
 const SignupQueuePage = lazy(() => import("@/domains/platform/pages/SignupQueuePage").then(m => ({ default: m.SignupQueuePage })))
 const TenantsPage = lazy(() => import("@/domains/platform/pages/TenantsPage").then(m => ({ default: m.TenantsPage })))
+const TenantDetailPage = lazy(() => import("@/domains/platform/pages/TenantDetailPage").then(m => ({ default: m.TenantDetailPage })))
 const PricingPlansPage = lazy(() => import("@/domains/platform/pages/PricingPlansPage").then(m => ({ default: m.PricingPlansPage })))
 const PlatformUsersPage = lazy(() => import("@/domains/platform/pages/PlatformUsersPage").then(m => ({ default: m.PlatformUsersPage })))
 const OperationsPage = lazy(() => import("@/domains/platform/pages/OperationsPage").then(m => ({ default: m.OperationsPage })))
@@ -199,6 +200,7 @@ export const router = createBrowserRouter([
       // Platform Admin
       { path: "platform/signups", element: <RequirePlatformAdmin><S><SignupQueuePage /></S></RequirePlatformAdmin> },
       { path: "platform/tenants", element: <RequirePlatformAdmin><S><TenantsPage /></S></RequirePlatformAdmin> },
+      { path: "platform/tenants/:id", element: <RequirePlatformAdmin><S><TenantDetailPage /></S></RequirePlatformAdmin> },
       { path: "platform/plans", element: <RequirePlatformAdmin><S><PricingPlansPage /></S></RequirePlatformAdmin> },
       { path: "platform/users", element: <RequirePlatformAdmin><S><PlatformUsersPage /></S></RequirePlatformAdmin> },
       { path: "platform/operations", element: <RequirePlatformAdmin><S><OperationsPage /></S></RequirePlatformAdmin> },
