@@ -23,6 +23,7 @@ import {
   type QueueSort,
   type ReconRule,
 } from "../hooks/useReconciliation"
+import { api } from "@/shared/lib/api"
 import { RulesDrawer } from "../components/RulesDrawer"
 import { cn } from "@/shared/lib/utils"
 import {
@@ -234,7 +235,7 @@ function ExpansionPanel({
   onAccountChange: (hasAccount: boolean) => void
   onAmountFilterChange: (filter: ((amount: number) => boolean) | null) => void
   onMatchTypeChange: (matchType: "contains" | "exact" | "wildcard") => void
-  onSave: (lines: AllocationLine[], createRule: boolean) => void
+  onSave: (lines: AllocationLine[], createRule: boolean, ruleData?: { pattern: string; matchType: string; name: string }) => void
   onCancel: () => void
   saving: boolean
 }) {
@@ -493,7 +494,13 @@ function ExpansionPanel({
               size="sm"
               disabled={!canSave || saving}
               loading={saving}
-              onClick={() => onSave(lines, actionTab === "rule")}
+              onClick={() => {
+                if (actionTab === "rule" && rulePattern) {
+                  onSave(lines, true, { pattern: rulePattern, matchType: ruleMatchType, name: rulePattern })
+                } else {
+                  onSave(lines, false)
+                }
+              }}
             >
               Save
             </Button>
@@ -1179,12 +1186,26 @@ export function ReconciliationPage() {
   const handleSaveAllocation = useCallback(async (
     lineId: number,
     allocLines: AllocationLine[],
-    shouldCreateRule: boolean
+    shouldCreateRule: boolean,
+    ruleData?: { pattern: string; matchType: string; name: string }
   ) => {
     const item = queueRaw.find((q) => q.id === lineId)
     if (!item || allocLines.length === 0 || !allocLines[0].accountId) return
 
     try {
+      // Create the recon rule first if saving from rule tab
+      if (shouldCreateRule && ruleData?.pattern) {
+        await api.post("/bank-reconciliation/rules", {
+          name: ruleData.name || ruleData.pattern,
+          match_pattern: ruleData.pattern,
+          match_type: ruleData.matchType || "contains",
+          default_account_id: allocLines[0].accountId,
+          default_tax_code_id: allocLines[0].taxCodeId ?? undefined,
+          default_contact_id: allocLines[0].contactId ?? undefined,
+          auto_apply: true,
+        })
+      }
+
       await createFromLine.mutateAsync({
         lineId,
         lines: allocLines.map((l) => ({
@@ -1194,9 +1215,13 @@ export function ReconciliationPage() {
           description: l.description || item.description || "",
           amount: parseFloat(l.amount) || 0,
         })),
-        remember_rule: shouldCreateRule,
+        remember_rule: false,
       })
-      feedback.success("Transaction categorised and matched")
+
+      const msg = shouldCreateRule
+        ? "Rule created and transaction allocated"
+        : "Transaction categorised and matched"
+      feedback.success(msg)
       setExpandedLineId(null)
     } catch (err: unknown) {
       feedback.error("Save failed", err instanceof Error ? err.message : "Unknown error")
@@ -1751,7 +1776,7 @@ function TransactionRow({
   onAccountChange: (hasAccount: boolean) => void
   onAmountFilterChange: (filter: ((amount: number) => boolean) | null) => void
   onMatchTypeChange: (matchType: "contains" | "exact" | "wildcard") => void
-  onSave: (lineId: number, lines: AllocationLine[], createRule: boolean) => void
+  onSave: (lineId: number, lines: AllocationLine[], createRule: boolean, ruleData?: { pattern: string; matchType: string; name: string }) => void
   saving: boolean
 }) {
   // Derive column display values
@@ -1955,7 +1980,7 @@ function TransactionRow({
           onAccountChange={onAccountChange}
           onAmountFilterChange={onAmountFilterChange}
           onMatchTypeChange={onMatchTypeChange}
-          onSave={(lines, createRule) => { onPatternChange(""); onAccountChange(false); onAmountFilterChange(null); onSave(item.id, lines, createRule) }}
+          onSave={(lines, createRule, ruleData) => { onPatternChange(""); onAccountChange(false); onAmountFilterChange(null); onSave(item.id, lines, createRule, ruleData) }}
           onCancel={() => { onPatternChange(""); onAccountChange(false); onAmountFilterChange(null); onRowClick(item.id) }}
           saving={saving}
         />
