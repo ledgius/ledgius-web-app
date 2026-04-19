@@ -455,7 +455,7 @@ function RuleCard({
               />
             )}
           </div>
-          <div className="grid grid-cols-[1fr_1fr_1fr_60px_70px] gap-2">
+          <div className="grid grid-cols-3 gap-2">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Account</label>
               <Combobox
@@ -483,29 +483,31 @@ function RuleCard({
                 placeholder="Contact..."
               />
             </div>
+          </div>
+          <div className="flex items-end gap-2">
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">Mode</label>
               <select
                 value={editAllocMode}
                 onChange={(e) => setEditAllocMode(e.target.value as "amount" | "percent" | "remainder")}
-                className="w-full bg-white border border-gray-300 rounded px-1 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-primary-500"
+                className="bg-white border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
               >
                 <option value="amount">$</option>
                 <option value="percent">%</option>
                 <option value="remainder">Rest</option>
               </select>
             </div>
-            <div>
+            <div className="flex-1">
               <label className="block text-xs font-medium text-gray-600 mb-1">Value</label>
               {editAllocMode === "remainder" ? (
-                <div className="w-full bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-xs text-gray-400 text-right">auto</div>
+                <div className="w-full bg-gray-50 border border-gray-200 rounded px-2 py-1.5 text-sm text-gray-400 text-right">auto</div>
               ) : (
                 <input
                   type="text"
                   inputMode="decimal"
                   value={editAllocValue}
                   onChange={(e) => setEditAllocValue(e.target.value)}
-                  className="w-full bg-white border border-gray-300 rounded px-2 py-1.5 text-xs text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  className="w-full bg-white border border-gray-300 rounded px-2 py-1.5 text-sm text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-primary-500"
                   placeholder={editAllocMode === "percent" ? "%" : "0.00"}
                 />
               )}
