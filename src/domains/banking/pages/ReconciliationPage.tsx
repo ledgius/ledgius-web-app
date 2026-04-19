@@ -190,12 +190,12 @@ function formatAmountSetRanges(input: string): string {
   return result.entries.map((e) => e.min === e.max ? String(e.min) : `${e.min}-${e.max}`).join(", ")
 }
 
-function testRulePattern(description: string, pattern: string, matchType: "contains" | "exact" | "regex"): boolean {
+function testRulePattern(description: string, pattern: string, matchType: "contains" | "exact" | "wildcard"): boolean {
   if (!pattern || !description) return false
   const desc = description.toLowerCase()
   const pat = pattern.toLowerCase()
   if (matchType === "exact") return desc === pat
-  if (matchType === "regex") {
+  if (matchType === "wildcard") {
     try { return new RegExp(pat, "i").test(description) } catch { return false }
   }
   return desc.includes(pat)
@@ -215,6 +215,7 @@ function ExpansionPanel({
   queueItems,
   onPatternChange,
   onAccountChange,
+  onAmountFilterChange,
   onMatchTypeChange,
   onSave,
   onCancel,
@@ -231,7 +232,8 @@ function ExpansionPanel({
   queueItems: QueueItem[]
   onPatternChange: (pattern: string) => void
   onAccountChange: (hasAccount: boolean) => void
-  onMatchTypeChange: (matchType: "contains" | "exact" | "regex") => void
+  onAmountFilterChange: (filter: ((amount: number) => boolean) | null) => void
+  onMatchTypeChange: (matchType: "contains" | "exact" | "wildcard") => void
   onSave: (lines: AllocationLine[], createRule: boolean) => void
   onCancel: () => void
   saving: boolean
@@ -254,7 +256,7 @@ function ExpansionPanel({
 
   // Rule editor state
   const [rulePattern, setRulePattern] = useState(item.normalized_description || item.description || "")
-  const [ruleMatchType, setRuleMatchType] = useState<"contains" | "exact" | "regex">("contains")
+  const [ruleMatchType, setRuleMatchType] = useState<"contains" | "exact" | "wildcard">("contains")
   const [ruleAmountMatch, setRuleAmountMatch] = useState<"any" | "exact" | "range" | "set">("any")
   const [ruleAmountExact, setRuleAmountExact] = useState(Math.abs(amount).toFixed(2))
   const [ruleAmountSet, setRuleAmountSet] = useState("")
@@ -269,13 +271,35 @@ function ExpansionPanel({
     }),
   [queueItems])
   const unallocatedCount = unallocatedItems.length
+  // Build the current amount filter function for match counting
+  const amountFilter = useMemo((): ((a: number) => boolean) | null => {
+    if (ruleAmountMatch === "any") return null
+    if (ruleAmountMatch === "exact") {
+      const v = parseFloat(ruleAmountExact)
+      return isNaN(v) ? null : (a) => Math.abs(a - v) < 0.01
+    }
+    if (ruleAmountMatch === "range") {
+      const min = parseFloat(ruleAmountMin), max = parseFloat(ruleAmountMax)
+      return (isNaN(min) || isNaN(max)) ? null : (a) => a >= min && a <= max
+    }
+    if (ruleAmountMatch === "set") {
+      const parsed = parseAmountSetRanges(ruleAmountSet)
+      if (!parsed || parsed.error || parsed.entries.length === 0) return null
+      const entries = parsed.entries
+      return (a) => entries.some((e) => a >= e.min && a <= e.max)
+    }
+    return null
+  }, [ruleAmountMatch, ruleAmountExact, ruleAmountSet, ruleAmountMin, ruleAmountMax])
+
   const ruleMatchCount = useMemo(() => {
     if (!rulePattern) return 0
     return unallocatedItems.filter((q) => {
       const desc = q.normalized_description || q.description || ""
-      return testRulePattern(desc, rulePattern, ruleMatchType)
+      if (!testRulePattern(desc, rulePattern, ruleMatchType)) return false
+      if (amountFilter && !amountFilter(Math.abs(parseAmount(q.amount)))) return false
+      return true
     }).length
-  }, [rulePattern, ruleMatchType, unallocatedItems])
+  }, [rulePattern, ruleMatchType, amountFilter, unallocatedItems])
 
   // Find auto-matched recon rule
   const matchedRule = useMemo(() => {
@@ -286,7 +310,7 @@ function ExpansionPanel({
       const pat = r.match_pattern?.toLowerCase()
       if (!pat) return false
       if (r.match_type === "exact") return desc === pat
-      if (r.match_type === "regex") {
+      if (r.match_type === "wildcard") {
         try { return new RegExp(pat, "i").test(desc) } catch { return false }
       }
       return desc.includes(pat) // "contains" default
@@ -306,6 +330,32 @@ function ExpansionPanel({
     return () => { onPatternChange("") }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Propagate amount filter for rule preview
+  useEffect(() => {
+    if (actionTab !== "rule" || ruleAmountMatch === "any") {
+      onAmountFilterChange(null)
+      return
+    }
+    if (ruleAmountMatch === "exact") {
+      const v = parseFloat(ruleAmountExact)
+      if (!isNaN(v)) onAmountFilterChange((a) => Math.abs(a - v) < 0.01)
+      else onAmountFilterChange(null)
+    } else if (ruleAmountMatch === "range") {
+      const min = parseFloat(ruleAmountMin)
+      const max = parseFloat(ruleAmountMax)
+      if (!isNaN(min) && !isNaN(max)) onAmountFilterChange((a) => a >= min && a <= max)
+      else onAmountFilterChange(null)
+    } else if (ruleAmountMatch === "set") {
+      const parsed = parseAmountSetRanges(ruleAmountSet)
+      if (parsed && !parsed.error && parsed.entries.length > 0) {
+        const entries = parsed.entries
+        onAmountFilterChange((a) => entries.some((e) => a >= e.min && a <= e.max))
+      } else {
+        onAmountFilterChange(null)
+      }
+    }
+  }, [actionTab, ruleAmountMatch, ruleAmountExact, ruleAmountSet, ruleAmountMin, ruleAmountMax, onAmountFilterChange])
 
   const switchTab = useCallback((tab: ActionTab) => {
     setActionTab(tab)
@@ -477,12 +527,12 @@ function ExpansionPanel({
                     <label className="block text-xs font-medium text-gray-600 mb-1">Type</label>
                     <select
                       value={ruleMatchType}
-                      onChange={(e) => { const v = e.target.value as "contains" | "exact" | "regex"; setRuleMatchType(v); onMatchTypeChange(v) }}
+                      onChange={(e) => { const v = e.target.value as "contains" | "exact" | "wildcard"; setRuleMatchType(v); onMatchTypeChange(v) }}
                       className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-primary-500"
                     >
                       <option value="contains">Contains</option>
                       <option value="exact">Exact</option>
-                      <option value="regex">Regex</option>
+                      <option value="wildcard">Wildcard</option>
                     </select>
                   </div>
                   <div className="flex items-end gap-2">
@@ -953,8 +1003,9 @@ export function ReconciliationPage() {
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
   const [rulePreviewPattern, setRulePreviewPattern] = useState("")
-  const [rulePreviewMatchType, setRulePreviewMatchType] = useState<"contains" | "exact" | "regex">("contains")
+  const [rulePreviewMatchType, setRulePreviewMatchType] = useState<"contains" | "exact" | "wildcard">("contains")
   const [rulePreviewHasAccount, setRulePreviewHasAccount] = useState(false)
+  const [rulePreviewAmountFilter, setRulePreviewAmountFilter] = useState<((amount: number) => boolean) | null>(null)
   const [rulesDrawerOpen, setRulesDrawerOpen] = useState(false)
 
   // Data queries
@@ -1601,6 +1652,7 @@ export function ReconciliationPage() {
                         initialTab={isExpanded ? expandedTab : null}
                         rulePreviewPattern={rulePreviewPattern}
                         rulePreviewHasAccount={rulePreviewHasAccount}
+                        rulePreviewAmountFilter={rulePreviewAmountFilter}
                         rulePreviewMatchType={rulePreviewMatchType}
                         onRowClick={handleRowClick}
                         onCheckbox={handleCheckbox}
@@ -1613,6 +1665,7 @@ export function ReconciliationPage() {
                         queueItems={queueRaw}
                         onPatternChange={setRulePreviewPattern}
                         onAccountChange={setRulePreviewHasAccount}
+                        onAmountFilterChange={setRulePreviewAmountFilter}
                         onMatchTypeChange={setRulePreviewMatchType}
                         onSave={handleSaveAllocation}
                         saving={createFromLine.isPending}
@@ -1653,6 +1706,7 @@ function TransactionRow({
   initialTab,
   rulePreviewPattern,
   rulePreviewHasAccount,
+  rulePreviewAmountFilter,
   rulePreviewMatchType,
   onRowClick,
   onCheckbox,
@@ -1665,6 +1719,7 @@ function TransactionRow({
   queueItems,
   onPatternChange,
   onAccountChange,
+  onAmountFilterChange,
   onMatchTypeChange,
   onSave,
   saving,
@@ -1678,7 +1733,8 @@ function TransactionRow({
   initialTab: ActionTab | null
   rulePreviewPattern: string
   rulePreviewHasAccount: boolean
-  rulePreviewMatchType: "contains" | "exact" | "regex"
+  rulePreviewAmountFilter: ((amount: number) => boolean) | null
+  rulePreviewMatchType: "contains" | "exact" | "wildcard"
   onRowClick: (id: number, tab?: ActionTab) => void
   onCheckbox: (id: number, checked: boolean) => void
   accounts: { id: number; accno: string; description: string | null; category: string }[]
@@ -1690,7 +1746,8 @@ function TransactionRow({
   queueItems: QueueItem[]
   onPatternChange: (pattern: string) => void
   onAccountChange: (hasAccount: boolean) => void
-  onMatchTypeChange: (matchType: "contains" | "exact" | "regex") => void
+  onAmountFilterChange: (filter: ((amount: number) => boolean) | null) => void
+  onMatchTypeChange: (matchType: "contains" | "exact" | "wildcard") => void
   onSave: (lineId: number, lines: AllocationLine[], createRule: boolean) => void
   saving: boolean
 }) {
@@ -1703,7 +1760,7 @@ function TransactionRow({
       const pat = r.match_pattern?.toLowerCase()
       if (!pat) return false
       if (r.match_type === "exact") return desc === pat
-      if (r.match_type === "regex") {
+      if (r.match_type === "wildcard") {
         try { return new RegExp(pat, "i").test(desc) } catch { return false }
       }
       return desc.includes(pat)
@@ -1718,7 +1775,7 @@ function TransactionRow({
       const pat = r.match_pattern?.toLowerCase()
       if (!pat) return false
       if (r.match_type === "exact") return desc === pat
-      if (r.match_type === "regex") {
+      if (r.match_type === "wildcard") {
         try { return new RegExp(pat, "i").test(desc) } catch { return false }
       }
       return desc.includes(pat)
@@ -1728,12 +1785,15 @@ function TransactionRow({
   const ws = workflowStatus(item)
   const isAllocated = ws === "proposed" || ws === "approved"
 
-  // Rule preview — does this row match the pattern being edited?
+  // Rule preview — does this row match the pattern AND amount criteria?
   const isRulePatternMatch = useMemo(() => {
     if (!rulePreviewPattern || isExpanded) return false
     const desc = item.normalized_description || item.description || ""
-    return testRulePattern(desc, rulePreviewPattern, rulePreviewMatchType)
-  }, [rulePreviewPattern, rulePreviewMatchType, item.description, item.normalized_description, isExpanded])
+    if (!testRulePattern(desc, rulePreviewPattern, rulePreviewMatchType)) return false
+    // Also check amount filter if set
+    if (rulePreviewAmountFilter && !rulePreviewAmountFilter(Math.abs(amount))) return false
+    return true
+  }, [rulePreviewPattern, rulePreviewMatchType, rulePreviewAmountFilter, item.description, item.normalized_description, isExpanded, amount])
 
   // Full preview: pattern matches AND account is selected
   const isRulePreviewMatch = isRulePatternMatch && rulePreviewHasAccount
@@ -1783,7 +1843,7 @@ function TransactionRow({
         {/* Description */}
         <td className="px-3 py-2.5">
           <p className="text-sm text-gray-800 truncate max-w-[800px]">
-            {isRulePatternMatch && rulePreviewMatchType !== "regex" && rulePreviewPattern
+            {isRulePatternMatch && rulePreviewMatchType !== "wildcard" && rulePreviewPattern
               ? highlightMatch(item.normalized_description || item.description || "", rulePreviewPattern)
               : (item.normalized_description || item.description || "\u2014")}
           </p>
@@ -1890,9 +1950,10 @@ function TransactionRow({
           queueItems={queueItems}
           onPatternChange={onPatternChange}
           onAccountChange={onAccountChange}
+          onAmountFilterChange={onAmountFilterChange}
           onMatchTypeChange={onMatchTypeChange}
-          onSave={(lines, createRule) => { onPatternChange(""); onAccountChange(false); onSave(item.id, lines, createRule) }}
-          onCancel={() => { onPatternChange(""); onAccountChange(false); onRowClick(item.id) }}
+          onSave={(lines, createRule) => { onPatternChange(""); onAccountChange(false); onAmountFilterChange(null); onSave(item.id, lines, createRule) }}
+          onCancel={() => { onPatternChange(""); onAccountChange(false); onAmountFilterChange(null); onRowClick(item.id) }}
           saving={saving}
         />
       )}
