@@ -96,12 +96,14 @@ export function Combobox({
     }
   }
 
+  const openDropdown = () => { setOpen(true); setTimeout(() => inputRef.current?.focus(), 0) }
+
   return (
     <div className={cn("relative", className)} data-combobox>
       {/* Display / input */}
       <div
         className={cn(
-          "flex items-center border rounded px-2 py-1.5 text-sm transition-colors",
+          "flex items-center border rounded text-sm transition-colors bg-white",
           open ? "border-primary-400 ring-2 ring-primary-100" : "border-gray-300",
           disabled && "bg-gray-50 opacity-60 pointer-events-none"
         )}
@@ -113,15 +115,15 @@ export function Combobox({
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="flex-1 bg-transparent outline-none"
+            className="flex-1 bg-transparent outline-none px-2 py-1.5"
             placeholder={placeholder}
             autoFocus
           />
         ) : (
           <button
             type="button"
-            onClick={() => { setOpen(true); setTimeout(() => inputRef.current?.focus(), 0) }}
-            className="flex-1 text-left truncate"
+            onClick={openDropdown}
+            className="flex-1 text-left truncate px-2 py-1.5"
           >
             {selectedOption ? (
               <span className="text-gray-900">{selectedOption.label}</span>
@@ -134,12 +136,23 @@ export function Combobox({
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onChange(null) }}
-            className="shrink-0 p-0.5 text-gray-400 hover:text-gray-600"
+            className="shrink-0 p-1.5 text-gray-400 hover:text-gray-600"
           >
             <X className="h-3.5 w-3.5" />
           </button>
         ) : (
-          <ChevronDown className="h-3.5 w-3.5 shrink-0 text-gray-400" />
+          <button
+            type="button"
+            onClick={openDropdown}
+            className={cn(
+              "shrink-0 px-1.5 py-1.5 border-l transition-colors",
+              open
+                ? "bg-primary-50 border-primary-200 text-primary-500"
+                : "bg-gray-50 border-gray-200 text-gray-400 hover:bg-primary-50 hover:text-primary-500"
+            )}
+          >
+            <ChevronDown className="h-3.5 w-3.5" />
+          </button>
         )}
       </div>
 

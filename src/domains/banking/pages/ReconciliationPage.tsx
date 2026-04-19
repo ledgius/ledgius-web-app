@@ -1,5 +1,6 @@
 // Spec references: R-0065 (Phase 1), A-0036
 import { useState, useCallback, useMemo, useRef, useEffect } from "react"
+import { useLocation, useNavigate } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { Button, Combobox, Skeleton, InlineAlert, InfoPanel, StatBar, StatCell } from "@/components/primitives"
@@ -23,9 +24,11 @@ import {
 } from "../hooks/useReconciliation"
 import { cn } from "@/shared/lib/utils"
 import {
+  CheckCircle2,
   ChevronDown,
   ChevronRight,
   ChevronUp,
+  Circle,
   Search,
   X,
   Plus,
@@ -169,6 +172,7 @@ function ExpansionPanel({
   initialTab,
   queueItems,
   onPatternChange,
+  onAccountChange,
   onMatchTypeChange,
   onSave,
   onCancel,
@@ -184,6 +188,7 @@ function ExpansionPanel({
   initialTab?: ActionTab | null
   queueItems: QueueItem[]
   onPatternChange: (pattern: string) => void
+  onAccountChange: (hasAccount: boolean) => void
   onMatchTypeChange: (matchType: "contains" | "exact" | "regex") => void
   onSave: (lines: AllocationLine[], createRule: boolean) => void
   onCancel: () => void
@@ -215,8 +220,8 @@ function ExpansionPanel({
   // Match count for the rule preview
   const unallocatedItems = useMemo(() =>
     queueItems.filter((q) => {
-      const s = workflowStatus(q)
-      return s === "unmatched" || s === "suggested" || s === "needs_review"
+      const ws = workflowStatus(q)
+      return ws === "imported" || ws === "unallocated"
     }),
   [queueItems])
   const unallocatedCount = unallocatedItems.length
@@ -500,6 +505,7 @@ function ExpansionPanel({
                       value={lines[0]?.accountId ?? null}
                       onChange={(v) => {
                         if (lines[0]) updateLine(lines[0].id, "accountId", v ? Number(v) : null)
+                        onAccountChange(!!v)
                       }}
                       placeholder="Select account..."
                     />
@@ -767,9 +773,24 @@ export function ReconciliationPage() {
   const { data: customers } = useCustomers()
   const { data: vendors } = useVendors()
   const searchRef = useRef<HTMLInputElement>(null)
+  const location = useLocation()
+  const navigate = useNavigate()
+
+  // Hover-to-highlight: glow a target element for 3 seconds when user hovers an info panel step
+  const glowTarget = useCallback((targetId: string) => {
+    const el = document.querySelector(`[data-guide-target="${targetId}"]`) as HTMLElement | null
+    if (!el) return
+    el.style.boxShadow = "0 0 0 3px rgba(56, 189, 248, 0.4)"
+    el.style.transition = "box-shadow 0.3s ease"
+    el.style.borderRadius = el.style.borderRadius || "0.5rem"
+    setTimeout(() => {
+      el.style.boxShadow = ""
+    }, 3000)
+  }, [])
+  const navState = location.state as { accountId?: number } | null
 
   // State
-  const [selectedAccountId, setSelectedAccountId] = useState(0)
+  const [selectedAccountId, setSelectedAccountId] = useState(navState?.accountId ?? 0)
   const [expandedLineId, setExpandedLineId] = useState<number | null>(null)
   const [expandedTab, setExpandedTab] = useState<ActionTab | null>(null)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
@@ -781,6 +802,7 @@ export function ReconciliationPage() {
   const [dateTo, setDateTo] = useState("")
   const [rulePreviewPattern, setRulePreviewPattern] = useState("")
   const [rulePreviewMatchType, setRulePreviewMatchType] = useState<"contains" | "exact" | "regex">("contains")
+  const [rulePreviewHasAccount, setRulePreviewHasAccount] = useState(false)
 
   // Data queries
   const { data: queue, isLoading: queueLoading, error: queueError } = useReconQueue(selectedAccountId, "risk_first" as QueueSort, "all" as QueueFilter)
@@ -1009,15 +1031,89 @@ export function ReconciliationPage() {
   return (
     <PageShell header={header} layout="stacked">
       {/* Info Panel */}
-      <InfoPanel title="Getting started with bank reconciliation" storageKey="recon-v2-info" collapsible defaultCollapsed>
-        <p>
-          Select a bank account to see imported transactions. Expand a row to categorise it, match it to an existing
-          record, or transfer between accounts. Use the checkbox to batch-approve multiple transactions.
-        </p>
+      <InfoPanel title="Getting started with bank reconciliation" storageKey="recon-v2-info" collapsible>
+        {(() => {
+          // Compute step progress
+          const hasAccount = selectedAccountId > 0
+          const hasTransactions = queueRaw.length > 0
+          const hasUnallocated = counts.unallocated > 0
+          const hasProposed = counts.proposed > 0
+          const hasApproved = counts.approved > 0
+          const allAllocated = hasTransactions && counts.unallocated === 0
+
+          const steps: Array<{
+            label: React.ReactNode
+            status: "done" | "active" | "pending"
+            target?: string
+          }> = [
+            {
+              label: <><strong>Select a bank account</strong> — choose which account to reconcile from the dropdown above.</>,
+              status: hasAccount ? "done" : "active",
+              target: "bank-account-header",
+            },
+            {
+              label: <>
+                <strong>Import transactions</strong> — load bank statements (OFX, QIF, CSV) via{" "}
+                <button type="button" onClick={() => navigate("/bank-statements", { state: { accountId: selectedAccountId || undefined } })} className="text-blue-700 underline hover:text-blue-900 font-medium">Bank Statements</button>
+                , or connect a <button type="button" onClick={() => navigate("/settings/bank-feeds")} className="text-blue-700 underline hover:text-blue-900 font-medium">live bank feed</button>.
+              </>,
+              status: hasTransactions ? "done" : hasAccount ? "active" : "pending",
+            },
+            {
+              label: <><strong>Review unallocated transactions</strong> — the <em>Unallocated</em> tab shows transactions that need action. Use search and date filters to narrow the list.</>,
+              status: hasTransactions && !hasUnallocated ? "done" : hasTransactions ? "active" : "pending",
+              target: "filter-tabs",
+            },
+            {
+              label: <>
+                <strong>Allocate each transaction</strong> — click a row to expand it, then:
+                <ul className="list-disc list-inside ml-4 mt-0.5 space-y-0.5">
+                  <li><strong>Manual Allocation</strong> — pick a GL account, tax code, and optionally a contact.</li>
+                  <li><strong>Allocation Rule</strong> — define a pattern to auto-allocate this and all similar future transactions.</li>
+                  <li><strong>Link Existing</strong> — link to an existing invoice, bill, or journal entry.</li>
+                  <li><strong>Transfer Money</strong> — record a bank-to-bank transfer.</li>
+                </ul>
+              </>,
+              status: allAllocated ? "done" : hasUnallocated ? "active" : "pending",
+            },
+            {
+              label: <><strong>Review proposed allocations</strong> — switch to the <em>Proposed</em> tab to review all allocations before they hit the ledger.</>,
+              status: hasApproved && !hasProposed ? "done" : hasProposed ? "active" : "pending",
+              target: "filter-tabs",
+            },
+            {
+              label: <><strong>Approve</strong> — confirm proposed allocations to create journal entries. Nothing affects your books until you approve.</>,
+              status: hasApproved && counts.unallocated === 0 && counts.proposed === 0 ? "done" : hasProposed ? "active" : "pending",
+            },
+          ]
+
+          return (
+            <ol className="space-y-1.5">
+              {steps.map((step, i) => (
+                <li
+                  key={i}
+                  className="flex items-start gap-2 cursor-default"
+                  onMouseEnter={step.target ? () => glowTarget(step.target!) : undefined}
+                >
+                  <span className="shrink-0 mt-0.5">
+                    {step.status === "done" ? (
+                      <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    ) : step.status === "active" ? (
+                      <Circle className="h-4 w-4 text-blue-400" />
+                    ) : (
+                      <Circle className="h-4 w-4 text-gray-300" />
+                    )}
+                  </span>
+                  <span>{step.label}</span>
+                </li>
+              ))}
+            </ol>
+          )
+        })()}
       </InfoPanel>
 
       {/* Bank Account Header (REC-008 to REC-010) — CSS Grid: row 1 = labels, row 2 = values */}
-      <div className="border border-gray-300 rounded-lg bg-white px-5 py-3">
+      <div className="border border-gray-300 rounded-lg bg-white px-5 py-3" data-guide-target="bank-account-header">
         {(() => {
           const cols = ["auto"]
           if (selectedAccountId > 0 && selectedAccount) cols.push("auto")
@@ -1139,7 +1235,7 @@ export function ReconciliationPage() {
       {selectedAccountId > 0 && !queueLoading && !queueError && (
         <>
           {/* Filter Tabs + Search (REC-011 to REC-013) */}
-          <div className="flex items-center gap-4 flex-wrap">
+          <div className="flex items-center gap-4 flex-wrap" data-guide-target="filter-tabs">
             {/* Tabs */}
             <div className="flex gap-1">
               {([
@@ -1312,6 +1408,7 @@ export function ReconciliationPage() {
                         isOddRow={idx % 2 === 1}
                         initialTab={isExpanded ? expandedTab : null}
                         rulePreviewPattern={rulePreviewPattern}
+                        rulePreviewHasAccount={rulePreviewHasAccount}
                         rulePreviewMatchType={rulePreviewMatchType}
                         onRowClick={handleRowClick}
                         onCheckbox={handleCheckbox}
@@ -1323,6 +1420,7 @@ export function ReconciliationPage() {
                         reconRules={reconRules}
                         queueItems={queueRaw}
                         onPatternChange={setRulePreviewPattern}
+                        onAccountChange={setRulePreviewHasAccount}
                         onMatchTypeChange={setRulePreviewMatchType}
                         onSave={handleSaveAllocation}
                         saving={createFromLine.isPending}
@@ -1360,6 +1458,7 @@ function TransactionRow({
   isOddRow,
   initialTab,
   rulePreviewPattern,
+  rulePreviewHasAccount,
   rulePreviewMatchType,
   onRowClick,
   onCheckbox,
@@ -1371,6 +1470,7 @@ function TransactionRow({
   reconRules,
   queueItems,
   onPatternChange,
+  onAccountChange,
   onMatchTypeChange,
   onSave,
   saving,
@@ -1383,6 +1483,7 @@ function TransactionRow({
   isOddRow: boolean
   initialTab: ActionTab | null
   rulePreviewPattern: string
+  rulePreviewHasAccount: boolean
   rulePreviewMatchType: "contains" | "exact" | "regex"
   onRowClick: (id: number, tab?: ActionTab) => void
   onCheckbox: (id: number, checked: boolean) => void
@@ -1394,6 +1495,7 @@ function TransactionRow({
   reconRules: ReconRule[]
   queueItems: QueueItem[]
   onPatternChange: (pattern: string) => void
+  onAccountChange: (hasAccount: boolean) => void
   onMatchTypeChange: (matchType: "contains" | "exact" | "regex") => void
   onSave: (lineId: number, lines: AllocationLine[], createRule: boolean) => void
   saving: boolean
@@ -1429,15 +1531,18 @@ function TransactionRow({
     })?.name ?? null
   }, [item.description, reconRules])
 
-  const sem = workflowStatus(item)
-  const isAllocated = sem === "allocated" || sem === "approved"
+  const ws = workflowStatus(item)
+  const isAllocated = ws === "proposed" || ws === "approved"
 
   // Rule preview — does this row match the pattern being edited?
-  const isRulePreviewMatch = useMemo(() => {
+  const isRulePatternMatch = useMemo(() => {
     if (!rulePreviewPattern || isExpanded) return false
     const desc = item.normalized_description || item.description || ""
     return testRulePattern(desc, rulePreviewPattern, rulePreviewMatchType)
   }, [rulePreviewPattern, rulePreviewMatchType, item.description, item.normalized_description, isExpanded])
+
+  // Full preview: pattern matches AND account is selected
+  const isRulePreviewMatch = isRulePatternMatch && rulePreviewHasAccount
 
   // Parse allocation info from match_explanation if available
   const allocInfo = useMemo(() => {
@@ -1458,6 +1563,7 @@ function TransactionRow({
           "border-b border-gray-100 cursor-pointer transition-colors",
           isExpanded ? "bg-primary-50"
             : isRulePreviewMatch ? "bg-green-50 border-l-2 border-l-green-400"
+            : isRulePatternMatch ? "bg-blue-50/30"
             : isSelected ? "bg-primary-25"
             : isOddRow ? "bg-gray-50/50"
             : "bg-white",
@@ -1483,7 +1589,7 @@ function TransactionRow({
         {/* Description */}
         <td className="px-3 py-2.5">
           <p className="text-sm text-gray-800 truncate max-w-[800px]">
-            {isRulePreviewMatch && rulePreviewMatchType !== "regex" && rulePreviewPattern
+            {isRulePatternMatch && rulePreviewMatchType !== "regex" && rulePreviewPattern
               ? highlightMatch(item.normalized_description || item.description || "", rulePreviewPattern)
               : (item.normalized_description || item.description || "\u2014")}
           </p>
@@ -1542,6 +1648,12 @@ function TransactionRow({
                 ? allocInfo[0]
                 : `${allocInfo[0]} \u2026`}
             </span>
+          ) : isRulePreviewMatch ? (
+            <span className="text-xs">
+              <span className="line-through text-gray-300">N</span>
+              {" "}
+              <span className="text-green-600 font-medium">Y</span>
+            </span>
           ) : (
             <span className="text-xs text-gray-400">N</span>
           )}
@@ -1549,11 +1661,19 @@ function TransactionRow({
 
         {/* Status */}
         <td className="px-3 py-2.5">
-          <StatusPill
-            status={statusLabel(workflowStatus(item))}
-            semantic={statusPillSemantic(workflowStatus(item))}
-            className="text-xs"
-          />
+          {isRulePreviewMatch ? (
+            <StatusPill
+              status="New Allocation"
+              semantic="success"
+              className="text-xs"
+            />
+          ) : (
+            <StatusPill
+              status={statusLabel(workflowStatus(item))}
+              semantic={statusPillSemantic(workflowStatus(item))}
+              className="text-xs"
+            />
+          )}
         </td>
 
         {/* Expand/collapse */}
@@ -1575,9 +1695,10 @@ function TransactionRow({
           initialTab={initialTab}
           queueItems={queueItems}
           onPatternChange={onPatternChange}
+          onAccountChange={onAccountChange}
           onMatchTypeChange={onMatchTypeChange}
-          onSave={(lines, createRule) => { onPatternChange(""); onSave(item.id, lines, createRule) }}
-          onCancel={() => { onPatternChange(""); onRowClick(item.id) }}
+          onSave={(lines, createRule) => { onPatternChange(""); onAccountChange(false); onSave(item.id, lines, createRule) }}
+          onCancel={() => { onPatternChange(""); onAccountChange(false); onRowClick(item.id) }}
           saving={saving}
         />
       )}

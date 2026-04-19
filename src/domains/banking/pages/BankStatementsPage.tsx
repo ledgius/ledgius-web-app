@@ -405,7 +405,7 @@ export function BankStatementsPage() {
               </p>
               <Button
                 variant="secondary"
-                onClick={() => navigate("/bank-reconciliation")}
+                onClick={() => navigate("/bank-reconciliation", { state: { accountId: selectedAccountId } })}
               >
                 Go to Reconciliation
                 <ArrowRight className="h-3.5 w-3.5 ml-1.5" />

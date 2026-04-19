@@ -130,7 +130,7 @@ export const router = createBrowserRouter([
 
       // Cash & Banking
       { path: "settings/bank-feeds", element: <S><BankFeedsPage /></S> },
-      { path: "bank-import-transactions", element: <S><BankStatementsPage /></S> },
+      { path: "bank-statements", element: <S><BankStatementsPage /></S> },
       { path: "bank-reconciliation", element: <S><ReconciliationPage /></S> },
       { path: "captured-receipts", element: <S><CapturedReceiptsPage /></S> },
       { path: "logbook", element: <S><LogbookPage /></S> },
