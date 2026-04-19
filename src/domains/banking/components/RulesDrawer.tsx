@@ -250,8 +250,8 @@ function RuleCard({
   const [editAccountId, setEditAccountId] = useState<number | null>(rule.default_account_id)
   const [editTaxCodeId, setEditTaxCodeId] = useState<number | null>(rule.default_tax_code_id)
   const [editContactId, setEditContactId] = useState<number | null>(rule.default_contact_id)
-  const amountVal = (rule as unknown as Record<string, unknown>).amount_match_value as Record<string, unknown> | null
-  const [editAmountType, setEditAmountType] = useState<string>((rule as unknown as Record<string, unknown>).amount_match_type as string ?? "any")
+  const amountVal = rule.amount_match_value
+  const [editAmountType, setEditAmountType] = useState<string>(rule.amount_match_type ?? "any")
   const [editAmountValue, setEditAmountValue] = useState(() => {
     if (!amountVal) return ""
     if (amountVal.value != null) return String(amountVal.value)

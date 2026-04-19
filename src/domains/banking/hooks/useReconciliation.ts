@@ -134,6 +134,8 @@ export interface ReconRule {
   priority: number
   enabled: boolean
   direction: string
+  amount_match_type: string
+  amount_match_value: Record<string, unknown> | null
 }
 
 export interface AllocationLinePayload {
