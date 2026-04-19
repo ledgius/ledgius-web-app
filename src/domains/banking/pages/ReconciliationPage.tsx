@@ -23,6 +23,7 @@ import {
   type QueueSort,
   type ReconRule,
 } from "../hooks/useReconciliation"
+import { RulesDrawer } from "../components/RulesDrawer"
 import { cn } from "@/shared/lib/utils"
 import {
   CheckCircle2,
@@ -904,6 +905,7 @@ export function ReconciliationPage() {
   const [rulePreviewPattern, setRulePreviewPattern] = useState("")
   const [rulePreviewMatchType, setRulePreviewMatchType] = useState<"contains" | "exact" | "regex">("contains")
   const [rulePreviewHasAccount, setRulePreviewHasAccount] = useState(false)
+  const [rulesDrawerOpen, setRulesDrawerOpen] = useState(false)
 
   // Data queries
   const { data: queue, isLoading: queueLoading, error: queueError } = useReconQueue(selectedAccountId, "risk_first" as QueueSort, "all" as QueueFilter)
@@ -1398,6 +1400,15 @@ export function ReconciliationPage() {
               Approve{counts.proposed > 0 ? ` (${counts.proposed})` : ""}
             </Button>
 
+            {/* Manage Rules */}
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setRulesDrawerOpen(true)}
+            >
+              Rules ({reconRules.length})
+            </Button>
+
             {/* Date range */}
             <div className="flex items-center gap-1.5 ml-auto">
               <Calendar className="h-3.5 w-3.5 text-gray-400" />
@@ -1573,6 +1584,7 @@ export function ReconciliationPage() {
           </div>
         </>
       )}
+      <RulesDrawer open={rulesDrawerOpen} onClose={() => setRulesDrawerOpen(false)} />
     </PageShell>
   )
 }

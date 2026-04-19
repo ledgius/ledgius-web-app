@@ -131,6 +131,9 @@ export interface ReconRule {
   source: string // "manual" | "smart"
   use_count: number
   disabled: boolean
+  priority: number
+  enabled: boolean
+  direction: string
 }
 
 export interface AllocationLinePayload {
