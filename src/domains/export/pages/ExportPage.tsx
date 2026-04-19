@@ -5,6 +5,9 @@ import { StatusPill, DateValue } from "@/components/financial"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { api } from "@/shared/lib/api"
+import { useConnections, useDisconnect, usePush } from "@/hooks/useConnections"
+import { ConnectionCard } from "@/components/workflow"
+import { useFeedback } from "@/components/feedback"
 import { Download, Play, RefreshCw } from "lucide-react"
 
 const ENTITY_OPTIONS = [
@@ -30,18 +33,28 @@ type ExportFormat = "xero" | "myob" | "quickbooks" | "csv"
 const FORMAT_OPTIONS: { key: ExportFormat; label: string; description: string }[] = [
   { key: "xero", label: "Xero", description: "Xero-compatible CSV bundle for import into Xero" },
   { key: "myob", label: "MYOB", description: "MYOB AccountRight-compatible tab-delimited export" },
-  { key: "quickbooks", label: "QuickBooks Online", description: "QuickBooks-compatible CSV bundle — accounts, contacts, bank transactions" },
+  { key: "quickbooks", label: "QuickBooks Online", description: "CSV bundle or push via API — accounts, contacts, invoices, bills, bank transactions" },
   { key: "csv", label: "Generic CSV", description: "Standard CSV files for any system or spreadsheet" },
 ]
 
 export function ExportPage() {
   usePageHelp(pageHelpContent.dataExport)
   usePagePolicies(["export", "tax", "privacy", "compliance"])
+  const feedback = useFeedback()
   const [format, setFormat] = useState<ExportFormat>("xero")
   const [entities, setEntities] = useState<string[]>([])
   const [dateFrom, setDateFrom] = useState("")
   const [dateTo, setDateTo] = useState("")
   const [running, setRunning] = useState(false)
+
+  // API connections
+  const { data: connections } = useConnections()
+  const disconnect = useDisconnect()
+  const push = usePush()
+  const apiFormats = ["xero", "myob", "quickbooks"]
+  const brandColours: Record<string, string> = { xero: "#13B5EA", myob: "#6D28D9", quickbooks: "#2CA01C" }
+  const brandLabels: Record<string, string> = { xero: "Xero", myob: "MYOB", quickbooks: "QuickBooks Online" }
+  const getConnection = (system: string) => (connections ?? []).find((c) => c.system_code === system) ?? null
   const [error, setError] = useState("")
   const [lastResult, setLastResult] = useState<{ run_id: string; status: string; entity_counts: Record<string, number> } | null>(null)
   const [runs, setRuns] = useState<ExportRun[]>([])
@@ -209,6 +222,38 @@ export function ExportPage() {
           })}
         </div>
       </PageSection>
+
+      {apiFormats.includes(format) && (
+        <PageSection title="API Connection">
+          <ConnectionCard
+            system={format}
+            label={brandLabels[format] ?? format}
+            colour={brandColours[format] ?? "#6B7280"}
+            connection={getConnection(format)}
+            mode="export"
+            onConnect={() => {
+              window.location.href = `/api/v1/connect/${format}`
+            }}
+            onDisconnect={() => {
+              disconnect.mutate(format, {
+                onSuccess: () => feedback.success("Disconnected"),
+                onError: () => feedback.error("Failed to disconnect"),
+              })
+            }}
+            onPush={() => {
+              push.mutate(format, {
+                onSuccess: (result: any) => feedback.success(`Push complete: ${JSON.stringify(result)}`),
+                onError: (err: Error) => feedback.error("Push failed", err.message),
+              })
+            }}
+            pushing={push.isPending}
+            disconnecting={disconnect.isPending}
+          />
+          <p className="text-xs text-gray-400 mt-2">
+            Or download CSV files below — the API push sends data directly without file download.
+          </p>
+        </PageSection>
+      )}
 
       <PageSection title="Entity Selection">
         <div className="space-y-3">
