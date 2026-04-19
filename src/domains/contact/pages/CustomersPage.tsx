@@ -35,6 +35,12 @@ function InlineCustomerForm({ onClose }: { onClose: () => void }) {
   const [curr, setCurr] = useState("AUD")
   const [terms, setTerms] = useState("30")
   const [creditLimit, setCreditLimit] = useState("")
+  const [email, setEmail] = useState("")
+  const [phone, setPhone] = useState("")
+  const [addrLine1, setAddrLine1] = useState("")
+  const [addrCity, setAddrCity] = useState("")
+  const [addrState, setAddrState] = useState("")
+  const [addrPostcode, setAddrPostcode] = useState("")
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
 
@@ -53,6 +59,15 @@ function InlineCustomerForm({ onClose }: { onClose: () => void }) {
         curr,
         credit_limit: parseFloat(creditLimit) || 0,
         terms: parseInt(terms) || 30,
+        email: email || undefined,
+        phones: phone ? [{ class: "phone_office", value: phone }] : undefined,
+        postal_address: addrLine1 ? {
+          line_one: addrLine1,
+          city: addrCity,
+          state: addrState || undefined,
+          country_id: 15,
+          mail_code: addrPostcode || undefined,
+        } : undefined,
       })
       qc.invalidateQueries({ queryKey: ["customers"] })
       feedback.success("Customer created")
@@ -108,6 +123,44 @@ function InlineCustomerForm({ onClose }: { onClose: () => void }) {
           <input type="number" step="0.01" value={creditLimit} onChange={e => setCreditLimit(e.target.value)}
             className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm font-mono focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
             placeholder="0.00" />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-3 mt-3">
+        <div className="md:col-span-2">
+          <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
+          <input type="email" value={email} onChange={e => setEmail(e.target.value)}
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+            placeholder="billing@example.com" />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Phone</label>
+          <input type="tel" value={phone} onChange={e => setPhone(e.target.value)}
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+            placeholder="02 9000 0000" />
+        </div>
+        <div className="md:col-span-3">
+          <label className="block text-xs font-medium text-gray-600 mb-1">Street Address</label>
+          <input type="text" value={addrLine1} onChange={e => setAddrLine1(e.target.value)}
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500" />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-3 mt-3">
+        <div className="md:col-span-2">
+          <label className="block text-xs font-medium text-gray-600 mb-1">City / Suburb</label>
+          <input type="text" value={addrCity} onChange={e => setAddrCity(e.target.value)}
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500" />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">State</label>
+          <input type="text" value={addrState} onChange={e => setAddrState(e.target.value)}
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+            placeholder="NSW" maxLength={3} />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Postcode</label>
+          <input type="text" value={addrPostcode} onChange={e => setAddrPostcode(e.target.value)}
+            className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+            placeholder="2000" maxLength={4} />
         </div>
       </div>
       <div className="flex items-center gap-2 mt-3">
