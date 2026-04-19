@@ -31,10 +31,41 @@ function testPattern(description: string, pattern: string, matchType: string): b
   return desc.includes(pat)
 }
 
-function countMatches(items: RulesDrawerProps["queueItems"], pattern: string, matchType: string): number {
+function buildAmountFilter(amountType: string, amountValue: string): ((a: number) => boolean) | null {
+  if (amountType === "any" || !amountValue) return null
+  if (amountType === "exact") {
+    const v = parseFloat(amountValue)
+    return isNaN(v) ? null : (a) => Math.abs(a - v) < 0.01
+  }
+  if (amountType === "range") {
+    const parts = amountValue.split("-").map((s) => parseFloat(s.trim()))
+    return (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1]))
+      ? (a) => a >= parts[0] && a <= parts[1]
+      : null
+  }
+  if (amountType === "set") {
+    const entries: Array<{ min: number; max: number }> = []
+    for (const part of amountValue.split(",").map((s) => s.trim()).filter(Boolean)) {
+      if (part.includes("-")) {
+        const [minS, maxS] = part.split("-").map((s) => parseFloat(s.trim()))
+        if (!isNaN(minS) && !isNaN(maxS)) entries.push({ min: minS, max: maxS })
+      } else {
+        const v = parseFloat(part)
+        if (!isNaN(v)) entries.push({ min: v, max: v })
+      }
+    }
+    return entries.length > 0 ? (a) => entries.some((e) => a >= e.min && a <= e.max) : null
+  }
+  return null
+}
+
+function countMatches(items: RulesDrawerProps["queueItems"], pattern: string, matchType: string, amountType?: string, amountValue?: string): number {
+  const amtFilter = amountType && amountValue ? buildAmountFilter(amountType, amountValue) : null
   return items.filter((q) => {
     const desc = q.normalized_description || q.description || ""
-    return testPattern(desc, pattern, matchType)
+    if (!testPattern(desc, pattern, matchType)) return false
+    if (amtFilter && !amtFilter(Math.abs(q.amount))) return false
+    return true
   }).length
 }
 
@@ -286,8 +317,15 @@ function RuleCard({
     return ""
   })
 
-  const currentMatches = countMatches(queueItems, rule.match_pattern, rule.match_type)
-  const editedMatches = isEditing ? countMatches(queueItems, editPattern, editMatchType) : currentMatches
+  const currentAmountValue = (() => {
+    if (!amountVal) return ""
+    if (amountVal.value != null) return String(amountVal.value)
+    if (amountVal.entries) return (amountVal.entries as Array<{ min: number; max: number }>).map((e) => e.min === e.max ? String(e.min) : `${e.min}-${e.max}`).join(", ")
+    if (amountVal.min != null) return `${amountVal.min}-${amountVal.max}`
+    return ""
+  })()
+  const currentMatches = countMatches(queueItems, rule.match_pattern, rule.match_type, rule.amount_match_type, currentAmountValue)
+  const editedMatches = isEditing ? countMatches(queueItems, editPattern, editMatchType, editAmountType, editAmountValue) : currentMatches
 
   return (
     <div
@@ -385,9 +423,9 @@ function RuleCard({
           </div>
           {isEditing && (
             <p className="text-xs text-gray-500">
-              Matches <strong className="text-gray-700">{editedMatches}</strong> transaction{editedMatches !== 1 ? "s" : ""}
+              Matches <strong className="text-gray-700">{currentMatches}</strong> transaction{currentMatches !== 1 ? "s" : ""}
               {editedMatches !== currentMatches && (
-                <span className={editedMatches > currentMatches ? "text-green-600" : "text-amber-600"}> (was {currentMatches})</span>
+                <span className={editedMatches > currentMatches ? "text-green-600" : "text-amber-600"}> (now matches {editedMatches})</span>
               )}
             </p>
           )}
