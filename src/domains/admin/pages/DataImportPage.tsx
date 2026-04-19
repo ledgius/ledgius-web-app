@@ -8,6 +8,8 @@ import { useFeedback } from "@/components/feedback"
 import { useAccounts } from "@/domains/account/hooks/useAccounts"
 import { useCustomers, useVendors } from "@/domains/contact/hooks/useContacts"
 import { api } from "@/shared/lib/api"
+import { useConnections, useDisconnect, usePull } from "@/hooks/useConnections"
+import { ConnectionCard } from "@/components/workflow"
 import { Upload, Database, CheckCircle, AlertCircle, ArrowRight, Trash2, RefreshCw } from "lucide-react"
 
 const pipelineSteps: StatusStep[] = [
@@ -83,6 +85,16 @@ export function DataImportPage() {
 
   // Dynamic help content based on import source — loads from YAML with sub-context.
   usePageHelp(undefined, batch?.source_system ?? selectedSource ?? undefined)
+
+  // API connections
+  const { data: connections } = useConnections()
+  const disconnect = useDisconnect()
+  const pull = usePull()
+  const apiSources = ["xero", "myob", "quickbooks"]
+  const brandColours: Record<string, string> = { xero: "#13B5EA", myob: "#6D28D9", quickbooks: "#2CA01C" }
+  const brandLabels: Record<string, string> = { xero: "Xero", myob: "MYOB", quickbooks: "QuickBooks Online" }
+  const getConnection = (system: string) => (connections ?? []).find((c) => c.system_code === system) ?? null
+
   const [loading, setLoading] = useState(false)
   const [stagingAccounts, setStagingAccounts] = useState<StagingAccount[]>([])
   const [stagingContacts, setStagingContacts] = useState<StagingContact[]>([])
@@ -265,6 +277,39 @@ export function DataImportPage() {
     </PageSection>
   )
 
+  // ── API Connection cards ──
+  const connectionSection = selectedSource && apiSources.includes(selectedSource) ? (
+    <PageSection title="API Connection">
+      <ConnectionCard
+        system={selectedSource}
+        label={brandLabels[selectedSource] ?? selectedSource}
+        colour={brandColours[selectedSource] ?? "#6B7280"}
+        connection={getConnection(selectedSource)}
+        mode="import"
+        onConnect={() => {
+          window.location.href = `/api/v1/connect/${selectedSource}`
+        }}
+        onDisconnect={() => {
+          disconnect.mutate(selectedSource, {
+            onSuccess: () => feedback.success("Disconnected"),
+            onError: () => feedback.error("Failed to disconnect"),
+          })
+        }}
+        onPull={() => {
+          pull.mutate(selectedSource, {
+            onSuccess: (result: any) => feedback.success(`Pull complete: ${JSON.stringify(result)}`),
+            onError: (err: Error) => feedback.error("Pull failed", err.message),
+          })
+        }}
+        pulling={pull.isPending}
+        disconnecting={disconnect.isPending}
+      />
+      <p className="text-xs text-gray-400 mt-2">
+        Or upload files manually below — both methods feed into the same staging pipeline.
+      </p>
+    </PageSection>
+  ) : null
+
   // ── Buffered files (before batch creation) ──
   const [bufferedFiles, setBufferedFiles] = useState<{ type: string; file: File; contactType?: string }[]>([])
 
@@ -324,6 +369,7 @@ export function DataImportPage() {
       <PageShell header={header}>
         {infoPanel}
         {formatSelector}
+        {connectionSection}
 
         {selectedSource && (
           <>
