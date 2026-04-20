@@ -37,6 +37,7 @@ const PaymentDetailPage = lazy(() => import("@/domains/payment/pages/PaymentDeta
 
 const BankStatementsPage = lazy(() => import("@/domains/banking/pages/BankStatementsPage").then(m => ({ default: m.BankStatementsPage })))
 const BankFeedsPage = lazy(() => import("@/domains/bankfeed/pages/BankFeedsPage").then(m => ({ default: m.BankFeedsPage })))
+const BusinessSettingsPage = lazy(() => import("@/domains/admin/pages/BusinessSettingsPage").then(m => ({ default: m.BusinessSettingsPage })))
 const ReconciliationPage = lazy(() => import("@/domains/banking/pages/ReconciliationPage").then(m => ({ default: m.ReconciliationPage })))
 const BankingPage = lazy(() => import("@/domains/banking/pages/BankingPage").then(m => ({ default: m.BankingPage })))
 const TransfersPage = lazy(() => import("@/domains/banking/pages/TransfersPage").then(m => ({ default: m.TransfersPage })))
@@ -138,6 +139,7 @@ export const router = createBrowserRouter([
 
       // Cash & Banking
       { path: "settings/bank-feeds", element: <S><BankFeedsPage /></S> },
+      { path: "settings/business", element: <S><BusinessSettingsPage /></S> },
       { path: "bank-statements", element: <S><BankStatementsPage /></S> },
       { path: "bank-reconciliation", element: <S><ReconciliationPage /></S> },
       { path: "captured-receipts", element: <S><CapturedReceiptsPage /></S> },
