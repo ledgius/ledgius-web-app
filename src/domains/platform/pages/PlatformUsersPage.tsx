@@ -9,6 +9,13 @@ import { api } from "@/shared/lib/api"
 import { Search, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 
+interface UserTenantInfo {
+  tenant_id: string
+  tenant_name: string
+  tenant_slug: string
+  role: string
+}
+
 interface PlatformUser {
   id: string
   email: string
@@ -18,15 +25,11 @@ interface PlatformUser {
   auth_provider: string
   created_at: string
   updated_at: string
+  tenants: UserTenantInfo[]
 }
 
 type SortField = "display_name" | "email" | "status" | "created_at" | "updated_at"
 type SortDir = "asc" | "desc"
-
-function roleLabel(u: PlatformUser): string {
-  if (u.is_platform_admin) return "platform"
-  return "staff"
-}
 
 export function PlatformUsersPage() {
   usePageHelp(undefined)
@@ -35,6 +38,7 @@ export function PlatformUsersPage() {
   const [search, setSearch] = useState("")
   const [filterStatus, setFilterStatus] = useState("")
   const [filterRole, setFilterRole] = useState("")
+  const [filterTenant, setFilterTenant] = useState("")
   const [sortField, setSortField] = useState<SortField>("display_name")
   const [sortDir, setSortDir] = useState<SortDir>("asc")
 
@@ -66,8 +70,12 @@ export function PlatformUsersPage() {
       else if (filterRole === "staff") list = list.filter(u => !u.is_platform_admin)
     }
 
+    if (filterTenant) {
+      list = list.filter(u => u.tenants?.some(t => t.tenant_slug === filterTenant))
+    }
+
     return list
-  }, [all, search, filterStatus, filterRole])
+  }, [all, search, filterStatus, filterRole, filterTenant])
 
   // Sort
   const sorted = useMemo(() => {
@@ -106,8 +114,15 @@ export function PlatformUsersPage() {
     platform: all.filter(u => u.is_platform_admin).length,
   }
 
-  // Unique statuses for filter dropdown
+  // Unique statuses and tenants for filter dropdowns
   const statuses = [...new Set(all.map(u => u.status))].sort()
+  const tenantMap = new Map<string, string>()
+  for (const u of all) {
+    for (const t of u.tenants ?? []) {
+      tenantMap.set(t.tenant_slug, t.tenant_name)
+    }
+  }
+  const tenantOptions = [...tenantMap.entries()].sort((a, b) => a[1].localeCompare(b[1]))
 
   const header = (
     <div>
@@ -158,10 +173,20 @@ export function PlatformUsersPage() {
           <option value="platform">Platform Admin</option>
           <option value="staff">Staff</option>
         </select>
-        {(search || filterStatus || filterRole) && (
+        {tenantOptions.length > 0 && (
+          <select
+            value={filterTenant}
+            onChange={e => setFilterTenant(e.target.value)}
+            className="bg-white border border-gray-300 rounded px-2 py-1.5 text-sm pr-7"
+          >
+            <option value="">All tenants</option>
+            {tenantOptions.map(([slug, name]) => <option key={slug} value={slug}>{name}</option>)}
+          </select>
+        )}
+        {(search || filterStatus || filterRole || filterTenant) && (
           <button
             type="button"
-            onClick={() => { setSearch(""); setFilterStatus(""); setFilterRole("") }}
+            onClick={() => { setSearch(""); setFilterStatus(""); setFilterRole(""); setFilterTenant("") }}
             className="text-xs text-primary-600 hover:text-primary-700 font-medium"
           >
             Clear filters
@@ -186,6 +211,7 @@ export function PlatformUsersPage() {
                 <SortHeader label="Name" field="display_name" current={sortField} dir={sortDir} onSort={toggleSort} />
                 <SortHeader label="Email" field="email" current={sortField} dir={sortDir} onSort={toggleSort} />
                 <th className="text-left px-4 py-2.5 font-medium text-gray-600 text-xs uppercase tracking-wide">Role</th>
+                <th className="text-left px-4 py-2.5 font-medium text-gray-600 text-xs uppercase tracking-wide">Tenants</th>
                 <th className="text-left px-4 py-2.5 font-medium text-gray-600 text-xs uppercase tracking-wide">Auth</th>
                 <SortHeader label="Status" field="status" current={sortField} dir={sortDir} onSort={toggleSort} />
                 <SortHeader label="Created" field="created_at" current={sortField} dir={sortDir} onSort={toggleSort} />
@@ -202,6 +228,19 @@ export function PlatformUsersPage() {
                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 font-semibold">Platform Admin</span>
                     ) : (
                       <span className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600 font-medium">Staff</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-2.5">
+                    {(u.tenants ?? []).length === 0 ? (
+                      <span className="text-xs text-gray-400">—</span>
+                    ) : (
+                      <div className="flex flex-wrap gap-1">
+                        {u.tenants.map(t => (
+                          <span key={t.tenant_slug} className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-600" title={`${t.tenant_name} (${t.role})`}>
+                            {t.tenant_name}
+                          </span>
+                        ))}
+                      </div>
                     )}
                   </td>
                   <td className="px-4 py-2.5">
@@ -249,7 +288,7 @@ function SortHeader({ label, field, current, dir, onSort }: {
         {active ? (
           dir === "asc" ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />
         ) : (
-          <ChevronsUpDown className="h-3 w-3 text-gray-300 group-hover:text-primary-400" />
+          <ChevronsUpDown className="h-3 w-3 text-gray-400 group-hover:text-primary-500" />
         )}
       </span>
     </th>
