@@ -3,14 +3,14 @@
     
   </defs>
 
-    <rect x="18.00" y="18.00" width="30.40" height="7.94" rx="2.78" fill="#06B6D4" opacity="0.25"></rect>
-    <rect x="18.00" y="27.14" width="30.40" height="7.94" rx="2.78" fill="#06B6D4" opacity="0.4"></rect>
-    <rect x="18.00" y="36.29" width="30.40" height="7.94" rx="2.78" fill="#06B6D4" opacity="0.28"></rect>
-    <rect x="18.00" y="45.43" width="30.40" height="7.94" rx="2.78" fill="#06B6D4" opacity="0.45"></rect>
-    <rect x="18.00" y="54.57" width="30.40" height="7.94" rx="2.78" fill="#06B6D4" opacity="0.3"></rect>
-    <rect x="18.00" y="63.71" width="30.40" height="7.94" rx="2.78" fill="#06B6D4" opacity="0.5"></rect>
-    <rect x="18.00" y="72.86" width="64.00" height="7.94" rx="2.78" fill="#06B6D4" opacity="1"></rect>
-  <circle cx="76.24" cy="23.76" r="5.76" fill="#06B6D4"></circle>
-  <text x="114" y="44" font-family="&#39;Space Grotesk&#39;, Arial, sans-serif" font-weight="700" font-size="36" letter-spacing="-1.5" fill="#0C1A20">Ledgi<tspan fill="#06B6D4">us</tspan></text>
+    <rect x="18.00" y="18.00" width="30.40" height="7.94" rx="2.78" fill="#2563EB" opacity="0.25"></rect>
+    <rect x="18.00" y="27.14" width="30.40" height="7.94" rx="2.78" fill="#2563EB" opacity="0.4"></rect>
+    <rect x="18.00" y="36.29" width="30.40" height="7.94" rx="2.78" fill="#2563EB" opacity="0.28"></rect>
+    <rect x="18.00" y="45.43" width="30.40" height="7.94" rx="2.78" fill="#2563EB" opacity="0.45"></rect>
+    <rect x="18.00" y="54.57" width="30.40" height="7.94" rx="2.78" fill="#2563EB" opacity="0.3"></rect>
+    <rect x="18.00" y="63.71" width="30.40" height="7.94" rx="2.78" fill="#2563EB" opacity="0.5"></rect>
+    <rect x="18.00" y="72.86" width="64.00" height="7.94" rx="2.78" fill="#2563EB" opacity="1"></rect>
+  <circle cx="76.24" cy="23.76" r="5.76" fill="#2563EB"></circle>
+  <text x="114" y="44" font-family="&#39;Space Grotesk&#39;, Arial, sans-serif" font-weight="700" font-size="36" letter-spacing="-1.5" fill="#0C1A20">Ledgi<tspan fill="#2563EB">us</tspan></text>
   <text x="115" y="68" font-family="&#39;Space Grotesk&#39;, Arial, sans-serif" font-weight="400" font-size="10" letter-spacing="1.5" fill="#6B8A95" text-transform="uppercase">SMART ACCOUNTING FOR GROWING BUSINESSES</text>
 </svg>

@@ -1,12 +1,12 @@
 <svg width="340" height="200" viewBox="0 0 340 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect x="131.60" y="29.60" width="36.48" height="9.53" rx="3.34" fill="#06B6D4" opacity="0.25"></rect>
-  <rect x="131.60" y="40.57" width="36.48" height="9.53" rx="3.34" fill="#06B6D4" opacity="0.4"></rect>
-  <rect x="131.60" y="51.54" width="36.48" height="9.53" rx="3.34" fill="#06B6D4" opacity="0.28"></rect>
-  <rect x="131.60" y="62.51" width="36.48" height="9.53" rx="3.34" fill="#06B6D4" opacity="0.45"></rect>
-  <rect x="131.60" y="73.49" width="36.48" height="9.53" rx="3.34" fill="#06B6D4" opacity="0.3"></rect>
-  <rect x="131.60" y="84.46" width="36.48" height="9.53" rx="3.34" fill="#06B6D4" opacity="0.5"></rect>
-  <rect x="131.60" y="95.43" width="76.80" height="9.53" rx="3.34" fill="#06B6D4" opacity="1"></rect>
-  <circle cx="201.49" cy="36.51" r="6.91" fill="#06B6D4"></circle>
-  <text x="170" y="148" font-family="&#39;Space Grotesk&#39;, Arial, sans-serif" font-weight="700" font-size="40" letter-spacing="-2" fill="#0C1A20" text-anchor="middle">Ledgi<tspan fill="#06B6D4">us</tspan></text>
+  <rect x="131.60" y="29.60" width="36.48" height="9.53" rx="3.34" fill="#2563EB" opacity="0.25"></rect>
+  <rect x="131.60" y="40.57" width="36.48" height="9.53" rx="3.34" fill="#2563EB" opacity="0.4"></rect>
+  <rect x="131.60" y="51.54" width="36.48" height="9.53" rx="3.34" fill="#2563EB" opacity="0.28"></rect>
+  <rect x="131.60" y="62.51" width="36.48" height="9.53" rx="3.34" fill="#2563EB" opacity="0.45"></rect>
+  <rect x="131.60" y="73.49" width="36.48" height="9.53" rx="3.34" fill="#2563EB" opacity="0.3"></rect>
+  <rect x="131.60" y="84.46" width="36.48" height="9.53" rx="3.34" fill="#2563EB" opacity="0.5"></rect>
+  <rect x="131.60" y="95.43" width="76.80" height="9.53" rx="3.34" fill="#2563EB" opacity="1"></rect>
+  <circle cx="201.49" cy="36.51" r="6.91" fill="#2563EB"></circle>
+  <text x="170" y="148" font-family="&#39;Space Grotesk&#39;, Arial, sans-serif" font-weight="700" font-size="40" letter-spacing="-2" fill="#0C1A20" text-anchor="middle">Ledgi<tspan fill="#2563EB">us</tspan></text>
   <text x="170" y="170" font-family="&#39;Space Grotesk&#39;, Arial, sans-serif" font-weight="400" font-size="10" letter-spacing="1.8" fill="#6B8A95" text-anchor="middle">SMART ACCOUNTING FOR GROWING BUSINESSES</text>
 </svg>
