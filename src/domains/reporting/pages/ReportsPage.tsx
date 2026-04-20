@@ -373,7 +373,7 @@ function StatementDisplay({ data }: { data: StatementReport }) {
           </tr>
         </thead>
         <tbody className="divide-y">
-          {data.lines.map(line => (
+          {(data.lines ?? []).map(line => (
             <tr key={line.trans_id}>
               <td className="px-3 py-1.5">{line.transdate ? formatDate(line.transdate) : "-"}</td>
               <td className="px-3 py-1.5 font-mono">{line.reference}</td>
@@ -383,7 +383,7 @@ function StatementDisplay({ data }: { data: StatementReport }) {
               <td className="px-3 py-1.5 text-right font-mono">{formatCurrency(line.balance)}</td>
             </tr>
           ))}
-          {data.lines.length === 0 && <tr><td colSpan={6} className="px-3 py-4 text-center text-gray-500">No transactions.</td></tr>}
+          {(data.lines ?? []).length === 0 && <tr><td colSpan={6} className="px-3 py-4 text-center text-gray-500">No transactions.</td></tr>}
         </tbody>
       </table>
     </div>

@@ -9,7 +9,8 @@ import { usePageHelp } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { useFeedback } from "@/components/feedback"
 import { api } from "@/shared/lib/api"
-import { ArrowLeft, Upload, Users, Building2, FlaskConical } from "lucide-react"
+import { getAuthToken } from "@/shared/lib/auth"
+import { ArrowLeft, Upload, Users, Building2, FlaskConical, Plus, X } from "lucide-react"
 
 interface Tenant {
   id: string
@@ -55,7 +56,7 @@ export function TenantDetailPage() {
   const feedback = useFeedback()
   const qc = useQueryClient()
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, dataUpdatedAt } = useQuery({
     queryKey: ["platform", "tenants", id],
     queryFn: () => api.get<{ tenant: Tenant; users: TenantMembership[] }>(`/platform/tenants/${id}`),
     enabled: !!id,
@@ -85,18 +86,36 @@ export function TenantDetailPage() {
     mutationFn: async (file: File) => {
       const fd = new FormData()
       fd.append("logo", file)
-      return fetch(`/api/v1/platform/tenants/${id}/logo`, {
+      const token = getAuthToken()
+      const r = await fetch(`/api/v1/platform/tenants/${id}/logo`, {
         method: "POST",
         body: fd,
-        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
-      }).then(r => r.json())
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+      const text = await r.text()
+      const body = text ? JSON.parse(text) : {}
+      if (!r.ok) throw new Error(body?.detail || body?.error || body?.message || `Upload failed (${r.status})`)
+      return body
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["platform", "tenants", id] })
       feedback.success("Logo uploaded")
     },
-    onError: () => feedback.error("Logo upload failed"),
+    onError: (err: Error) => feedback.error("Logo upload failed", err.message),
   })
+
+  const addUser = useMutation({
+    mutationFn: (body: { email: string; display_name: string; role: string }) =>
+      api.post(`/platform/tenants/${id}/users`, body),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["platform", "tenants", id] })
+      feedback.success("User added")
+      setShowAddUser(false)
+    },
+    onError: (err: Error) => feedback.error("Failed to add user", err.message),
+  })
+
+  const [showAddUser, setShowAddUser] = useState(false)
 
   const tenant = data?.tenant
   const users = data?.users ?? []
@@ -117,10 +136,10 @@ export function TenantDetailPage() {
         {editing ? (
           <>
             <Button variant="secondary" onClick={() => setEditing(false)}>Cancel</Button>
-            <Button loading={updateTenant.isPending} onClick={() => form && updateTenant.mutate(form)}>Save Changes</Button>
+            <Button variant="primary" loading={updateTenant.isPending} onClick={() => form && updateTenant.mutate(form)}>Save Changes</Button>
           </>
         ) : (
-          <Button variant="secondary" onClick={startEdit}>Edit</Button>
+          <Button variant="primary" onClick={startEdit}>Edit</Button>
         )}
       </div>
     </div>
@@ -173,7 +192,7 @@ export function TenantDetailPage() {
             <div className="flex items-start gap-4">
               <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
                 {t.logo_path ? (
-                  <img src={`/data/${t.logo_path}`} alt="Logo" className="max-w-full max-h-full object-contain" />
+                  <img src={`/api/v1/tenants/${id}/logo?v=${dataUpdatedAt}`} alt="Logo" className="max-w-full max-h-full object-contain" />
                 ) : (
                   <Building2 className="h-8 w-8 text-gray-300" />
                 )}
@@ -184,19 +203,21 @@ export function TenantDetailPage() {
                   {t.logo_path ? `${t.logo_type?.toUpperCase()} logo uploaded` : "No logo uploaded"}
                 </p>
                 <p className="text-xs text-gray-400">SVG preferred. Also accepts PNG, JPEG, WebP.</p>
-                <label className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 transition-colors">
-                  <Upload className="h-3.5 w-3.5" />
-                  Upload Logo
-                  <input
-                    type="file"
-                    accept=".svg,.png,.jpg,.jpeg,.webp"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0]
-                      if (file) uploadLogo.mutate(file)
-                    }}
-                  />
-                </label>
+                {editing && (
+                  <label className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50 transition-colors">
+                    <Upload className="h-3.5 w-3.5" />
+                    Upload Logo
+                    <input
+                      type="file"
+                      accept=".svg,.png,.jpg,.jpeg,.webp"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0]
+                        if (file) uploadLogo.mutate(file)
+                      }}
+                    />
+                  </label>
+                )}
               </div>
             </div>
             <p className="text-xs text-gray-400 mt-3">
@@ -234,7 +255,7 @@ export function TenantDetailPage() {
           </PageSection>
 
           <PageSection title={`Users (${users.length})`}>
-            {users.length === 0 ? (
+            {users.length === 0 && !showAddUser ? (
               <p className="text-sm text-gray-400">No users assigned</p>
             ) : (
               <div className="space-y-2">
@@ -247,10 +268,19 @@ export function TenantDetailPage() {
                         <p className="text-xs text-gray-400">{m.user.email}</p>
                       </div>
                     </div>
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{m.role}</span>
+                    <div className="flex items-center gap-2">
+                      {m.user.status === "invited" && <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-600 font-medium">Invited</span>}
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">{m.role}</span>
+                    </div>
                   </div>
                 ))}
               </div>
+            )}
+            {showAddUser && <AddUserForm onCancel={() => setShowAddUser(false)} onAdd={(u) => addUser.mutate(u)} saving={addUser.isPending} />}
+            {editing && !showAddUser && (
+              <button type="button" onClick={() => setShowAddUser(true)} className="mt-3 flex items-center gap-1.5 text-xs text-primary-600 hover:text-primary-700 font-medium transition-colors">
+                <Plus className="h-3 w-3" />Add user
+              </button>
             )}
           </PageSection>
 
@@ -268,6 +298,49 @@ export function TenantDetailPage() {
 }
 
 // ── Reusable field component ──
+
+function AddUserForm({ onCancel, onAdd, saving }: {
+  onCancel: () => void
+  onAdd: (u: { email: string; display_name: string; role: string }) => void
+  saving: boolean
+}) {
+  const [email, setEmail] = useState("")
+  const [name, setName] = useState("")
+  const [role, setRole] = useState("bookkeeper")
+
+  return (
+    <div className="mt-3 p-3 border border-primary-200 rounded-lg bg-primary-50/30 space-y-2">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-medium text-gray-700">Add User</p>
+        <button type="button" onClick={onCancel} className="p-0.5 text-gray-400 hover:text-gray-600"><X className="h-3.5 w-3.5" /></button>
+      </div>
+      <div>
+        <label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
+        <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="user@example.com" className={inputCls} />
+      </div>
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Display Name</label>
+          <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Optional" className={inputCls} />
+        </div>
+        <div>
+          <label className="block text-xs font-medium text-gray-600 mb-1">Role</label>
+          <select value={role} onChange={e => setRole(e.target.value)} className={inputCls}>
+            <option value="owner">Owner</option>
+            <option value="master_accountant">Master Accountant</option>
+            <option value="accountant">Accountant</option>
+            <option value="bookkeeper">Bookkeeper</option>
+            <option value="viewer">Viewer</option>
+          </select>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 pt-1">
+        <Button variant="secondary" size="sm" onClick={onCancel}>Cancel</Button>
+        <Button variant="primary" size="sm" onClick={() => onAdd({ email, display_name: name, role })} loading={saving} disabled={!email}>Add User</Button>
+      </div>
+    </div>
+  )
+}
 
 function Field({ label, value, editing, onChange, type = "text", placeholder }: {
   label: string; value: string; editing: boolean
