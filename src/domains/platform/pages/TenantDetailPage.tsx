@@ -115,7 +115,34 @@ export function TenantDetailPage() {
     onError: (err: Error) => feedback.error("Failed to add user", err.message),
   })
 
+  const suspendTenant = useMutation({
+    mutationFn: () => api.post(`/platform/tenants/${id}/suspend`, {}),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["platform", "tenants", id] }); feedback.success("Tenant suspended") },
+    onError: (err: Error) => feedback.error("Suspend failed", err.message),
+  })
+
+  const unsuspendTenant = useMutation({
+    mutationFn: () => api.post(`/platform/tenants/${id}/unsuspend`, {}),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["platform", "tenants", id] }); feedback.success("Tenant reactivated") },
+    onError: (err: Error) => feedback.error("Reactivate failed", err.message),
+  })
+
+  const deleteTenant = useMutation({
+    mutationFn: (body: { reason: string; confirm_name: string }) => api.post(`/platform/tenants/${id}/delete`, body),
+    onSuccess: () => { feedback.success("Tenant deleted"); navigate("/platform/tenants") },
+    onError: (err: Error) => feedback.error("Delete failed", err.message),
+  })
+
+  const changePlan = useMutation({
+    mutationFn: (planId: number | null) => api.put(`/platform/tenants/${id}/plan`, { plan_id: planId }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["platform", "tenants", id] }); feedback.success("Plan updated") },
+    onError: (err: Error) => feedback.error("Plan change failed", err.message),
+  })
+
   const [showAddUser, setShowAddUser] = useState(false)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleteReason, setDeleteReason] = useState("")
+  const [deleteConfirmName, setDeleteConfirmName] = useState("")
 
   const tenant = data?.tenant
   const users = data?.users ?? []
@@ -137,6 +164,15 @@ export function TenantDetailPage() {
           <>
             <Button variant="secondary" onClick={() => setEditing(false)}>Cancel</Button>
             <Button variant="primary" loading={updateTenant.isPending} onClick={() => form && updateTenant.mutate(form)}>Save Changes</Button>
+            <span className="w-px h-6 bg-gray-200 mx-1" />
+            {tenant?.status === "suspended" ? (
+              <Button variant="secondary" size="sm" loading={unsuspendTenant.isPending} onClick={() => unsuspendTenant.mutate()}>Reactivate</Button>
+            ) : tenant?.status !== "deleted" ? (
+              <Button variant="secondary" size="sm" loading={suspendTenant.isPending} onClick={() => suspendTenant.mutate()}>Suspend</Button>
+            ) : null}
+            {tenant?.status !== "deleted" && (
+              <Button variant="danger" size="sm" onClick={() => setShowDeleteConfirm(true)}>Delete</Button>
+            )}
           </>
         ) : (
           <Button variant="primary" onClick={startEdit}>Edit</Button>
@@ -151,6 +187,25 @@ export function TenantDetailPage() {
 
   return (
     <PageShell header={header}>
+      {/* Delete confirmation */}
+      {showDeleteConfirm && (
+        <div className="border border-red-300 rounded-lg bg-red-50 p-4 mb-4 space-y-3">
+          <p className="text-sm font-semibold text-red-800">Delete Tenant — This cannot be undone</p>
+          <p className="text-xs text-red-700">This will soft-delete the tenant record. The tenant database and data directory are retained for manual recovery.</p>
+          <div>
+            <label className="block text-xs font-medium text-red-700 mb-1">Reason for deletion</label>
+            <input type="text" value={deleteReason} onChange={e => setDeleteReason(e.target.value)} placeholder="Required" className="w-full bg-white border border-red-300 rounded px-2 py-1.5 text-sm" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-red-700 mb-1">Type "{tenant?.display_name}" to confirm</label>
+            <input type="text" value={deleteConfirmName} onChange={e => setDeleteConfirmName(e.target.value)} className="w-full bg-white border border-red-300 rounded px-2 py-1.5 text-sm" />
+          </div>
+          <div className="flex gap-2">
+            <Button variant="secondary" size="sm" onClick={() => { setShowDeleteConfirm(false); setDeleteReason(""); setDeleteConfirmName("") }}>Cancel</Button>
+            <Button variant="danger" size="sm" loading={deleteTenant.isPending} disabled={!deleteReason || deleteConfirmName !== tenant?.display_name} onClick={() => deleteTenant.mutate({ reason: deleteReason, confirm_name: deleteConfirmName })}>Confirm Delete</Button>
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left column */}
         <div className="space-y-6">
@@ -224,6 +279,14 @@ export function TenantDetailPage() {
               The logo with trading name appears in the top-left of the app header.
               Logo, trading name, contact details, and billing address appear on invoices.
             </p>
+          </PageSection>
+
+          <PageSection title="Plan">
+            {editing ? (
+              <PlanSelector currentPlanId={t.plan_id} onChangePlan={(planId) => changePlan.mutate(planId)} saving={changePlan.isPending} />
+            ) : (
+              <p className="text-sm text-gray-800">{t.plan_id ? `Plan #${t.plan_id}` : "No plan assigned"}</p>
+            )}
           </PageSection>
 
           <PageSection title="Settings">
@@ -338,6 +401,33 @@ function AddUserForm({ onCancel, onAdd, saving }: {
         <Button variant="secondary" size="sm" onClick={onCancel}>Cancel</Button>
         <Button variant="primary" size="sm" onClick={() => onAdd({ email, display_name: name, role })} loading={saving} disabled={!email}>Add User</Button>
       </div>
+    </div>
+  )
+}
+
+interface PricingPlan { id: number; slug: string; name: string; status: string }
+
+function PlanSelector({ currentPlanId, onChangePlan, saving }: {
+  currentPlanId: number | null; onChangePlan: (id: number | null) => void; saving: boolean
+}) {
+  const { data: plans } = useQuery({
+    queryKey: ["platform", "plans"],
+    queryFn: () => api.get<PricingPlan[]>("/platform/plans"),
+  })
+  const activePlans = (plans ?? []).filter(p => p.status === "active")
+
+  return (
+    <div className="flex items-center gap-3">
+      <select
+        value={currentPlanId ?? ""}
+        onChange={e => onChangePlan(e.target.value ? parseInt(e.target.value) : null)}
+        className={inputCls}
+        disabled={saving}
+      >
+        <option value="">No plan</option>
+        {activePlans.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+      </select>
+      {saving && <span className="text-xs text-gray-400">Saving...</span>}
     </div>
   )
 }
