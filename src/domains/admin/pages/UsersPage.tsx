@@ -31,13 +31,21 @@ interface UsersResponse {
   invitations: Invitation[]
 }
 
+// Roles available for business owners to assign to their team.
+// master_accountant is a platform-level role assigned only via Platform Admin.
 const ROLES = [
   { value: "owner", label: "Owner", description: "Full access. Can manage users, settings, billing, and all accounting." },
-  { value: "master_accountant", label: "Master Accountant", description: "Full accounting access plus admin settings, BAS lodgement, and rules engine." },
-  { value: "accountant", label: "Accountant", description: "Full accounting operations — journals, invoices, bills, reconciliation, and reporting." },
-  { value: "bookkeeper", label: "Bookkeeper", description: "Day-to-day data entry — invoices, bills, receipts, bank reconciliation." },
-  { value: "viewer", label: "Viewer", description: "Read-only access to all data. Cannot create or modify anything." },
+  { value: "accountant", label: "Accountant", description: "Your external accountant or BAS agent. Full accounting access including BAS, reports, and period close." },
+  { value: "bookkeeper", label: "Bookkeeper", description: "Day-to-day data entry — invoices, bills, receipts, bank reconciliation, and payroll." },
+  { value: "viewer", label: "Viewer", description: "Read-only access to reports and data. Cannot create or modify anything." },
 ]
+
+// ALL_ROLES includes platform-level roles for display in pending invitation badges.
+const _allRoles = [
+  ...ROLES,
+  { value: "master_accountant", label: "Master Accountant", description: "Ledgius platform compliance role (assigned by Ledgius)." },
+]
+const roleLabelFor = (v: string) => _allRoles.find(r => r.value === v)?.label ?? v
 
 export function UsersPage() {
   usePageHelp(pageHelpContent.users)
@@ -114,8 +122,8 @@ export function UsersPage() {
           ))}
         </ul>
         <p className="mt-2 text-sm">
-          Your accountant or bookkeeper can be invited at no extra cost — they get their own login
-          with appropriate permissions.
+          Your accountant or bookkeeper can be invited at no extra cost — they get their own
+          login with appropriate permissions. Invite as many team members as your plan allows.
         </p>
       </InfoPanel>
 
@@ -144,13 +152,17 @@ export function UsersPage() {
                       <td className="px-4 py-2.5 font-medium text-gray-900">{m.user.display_name}</td>
                       <td className="px-4 py-2.5 text-gray-600 text-xs font-mono">{m.user.email}</td>
                       <td className="px-4 py-2.5">
-                        <select
-                          value={m.role}
-                          onChange={e => changeRole.mutate({ id: m.id, role: e.target.value })}
-                          className="bg-white border border-gray-200 rounded px-2 py-1 text-xs pr-6"
-                        >
-                          {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
-                        </select>
+                        {m.role === "master_accountant" ? (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 font-medium" title="Assigned by Ledgius platform admin">Master Accountant</span>
+                        ) : (
+                          <select
+                            value={m.role}
+                            onChange={e => changeRole.mutate({ id: m.id, role: e.target.value })}
+                            className="bg-white border border-gray-200 rounded px-2 py-1 text-xs pr-6"
+                          >
+                            {ROLES.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+                          </select>
+                        )}
                       </td>
                       <td className="px-4 py-2.5">
                         <button
@@ -190,7 +202,7 @@ export function UsersPage() {
                       <tr key={inv.id} className={i % 2 === 1 ? "bg-gray-50/50" : ""}>
                         <td className="px-4 py-2.5 text-gray-700 text-xs font-mono">{inv.email}</td>
                         <td className="px-4 py-2.5">
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">{ROLES.find(r => r.value === inv.role)?.label ?? inv.role}</span>
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-700">{roleLabelFor(inv.role)}</span>
                         </td>
                         <td className="px-4 py-2.5 text-xs text-gray-500">
                           {new Date(inv.expires_at).toLocaleDateString("en-AU")}
