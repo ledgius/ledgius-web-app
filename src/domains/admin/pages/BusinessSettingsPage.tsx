@@ -10,6 +10,7 @@ import { usePageHelp } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { useFeedback } from "@/components/feedback"
 import { api } from "@/shared/lib/api"
+import { getAuthToken } from "@/shared/lib/auth"
 import { Building2, Upload } from "lucide-react"
 
 interface BusinessSettings {
@@ -69,17 +70,22 @@ export function BusinessSettingsPage() {
     mutationFn: async (file: File) => {
       const fd = new FormData()
       fd.append("logo", file)
-      return fetch("/api/v1/settings/business/logo", {
+      const token = getAuthToken()
+      const r = await fetch("/api/v1/settings/business/logo", {
         method: "POST",
         body: fd,
-        headers: { Authorization: `Bearer ${localStorage.getItem("access_token")}` },
-      }).then(r => r.json())
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      })
+      const text = await r.text()
+      const body = text ? JSON.parse(text) : {}
+      if (!r.ok) throw new Error(body?.detail || body?.error || body?.message || `Upload failed (${r.status})`)
+      return body
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["settings", "business"] })
       feedback.success("Logo uploaded")
     },
-    onError: () => feedback.error("Logo upload failed"),
+    onError: (err: Error) => feedback.error("Logo upload failed", err.message),
   })
 
   const s = editing ? form! : settings
@@ -157,7 +163,7 @@ export function BusinessSettingsPage() {
             <div className="flex items-start gap-4">
               <div className="w-28 h-28 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center bg-gray-50">
                 {s.logo_path ? (
-                  <img src={`/data/${s.logo_path}`} alt="Business logo" className="max-w-full max-h-full object-contain p-2" />
+                  <img src={`/api/v1/settings/business/logo`} alt="Business logo" className="max-w-full max-h-full object-contain p-2" />
                 ) : (
                   <Building2 className="h-10 w-10 text-gray-300" />
                 )}
@@ -187,7 +193,7 @@ export function BusinessSettingsPage() {
               <p className="text-xs font-medium text-gray-500 mb-1">Preview — App Header</p>
               <div className="flex items-center gap-2 bg-white rounded px-3 py-2 border border-gray-200">
                 {s.logo_path ? (
-                  <img src={`/data/${s.logo_path}`} alt="" className="h-6 w-6 object-contain" />
+                  <img src={`/api/v1/settings/business/logo`} alt="" className="h-6 w-6 object-contain" />
                 ) : (
                   <Building2 className="h-5 w-5 text-gray-400" />
                 )}

@@ -136,7 +136,7 @@ export function LoginPage() {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="bg-white border border-gray-100 rounded-2xl p-8 w-full max-w-sm shadow-xl shadow-gray-200/60">
         <div className="flex justify-center mb-3">
-          <img src="/brand/logo/ledgius-400x120-transparent.png" alt="Ledgius" className="h-10 w-auto" />
+          <img src="/brand/logo/logo-primary.svg" alt="Ledgius" className="h-10 w-auto" />
         </div>
         <p className="text-sm text-gray-500 mb-1 text-center">Sign in to your account</p>
         {motivation && <p className="text-xs text-primary-600/70 mb-6 text-center italic">{motivation}</p>}

@@ -3,27 +3,32 @@
 /*
  * Ledgius brand colour system
  *
- * Primary:   #00B8C4 (cyan/teal) — trust, clarity, action
- * Secondary: #FF7A00 (orange)    — energy, attention, warmth
- * Accent:    #FFC400 (gold)      — highlights, awards, warnings
+ * Primary:   #2563EB (blue)   — trust, clarity, action
+ * Secondary: #FF7A00 (orange) — energy, attention, warmth
+ * Accent:    #FFC400 (gold)   — highlights, awards, warnings
+ *
+ * Brand grays match the logo ink palette:
+ *   Ink:      #0C1A20 (headings, primary text)
+ *   Ink Mid:  #2D4A55 (secondary text, labels)
+ *   Ink Soft: #6B8A95 (muted text, placeholders)
  *
  * Palette generated with accessible contrast ratios.
  * Primary-700 and darker pass WCAG AA on white backgrounds.
  */
 
 @theme {
-  /* Primary — Cyan/Teal */
-  --color-primary-50:  #e6fafb;
-  --color-primary-100: #b3eff4;
-  --color-primary-200: #80e5ed;
-  --color-primary-300: #4ddbe6;
-  --color-primary-400: #1ad1df;
-  --color-primary-500: #00B8C4;
-  --color-primary-600: #009da7;
-  --color-primary-700: #00838a;
-  --color-primary-800: #00696e;
-  --color-primary-900: #004f52;
-  --color-primary-950: #003538;
+  /* Primary — Blue (brand accent #2563EB) */
+  --color-primary-50:  #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #2563EB;
+  --color-primary-600: #2556d4;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+  --color-primary-950: #172554;
 
   /* Secondary — Orange */
   --color-secondary-50:  #fff5eb;
@@ -63,7 +68,7 @@
   --destructive-foreground: 210 40% 98%;
   --border: 214.3 31.8% 91.4%;
   --input: 214.3 31.8% 91.4%;
-  --ring: 183 100% 38%;
+  --ring: 224 76% 53%;
   --radius: 0.5rem;
 }
 
@@ -94,9 +99,9 @@ select {
 input:focus,
 textarea:focus,
 select:focus {
-  border-color: #00B8C4 !important; /* primary-500 on focus */
+  border-color: #2563EB !important; /* primary-500 on focus */
   outline: none;
-  box-shadow: 0 0 0 2px rgba(0, 184, 196, 0.15);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
 }
 
 /* Consistent placeholder colour across all form inputs */
