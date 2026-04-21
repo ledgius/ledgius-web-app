@@ -3,6 +3,7 @@ import { createBrowserRouter } from "react-router-dom"
 import { Layout } from "@/shared/components/Layout"
 import { RequireAuth } from "@/shared/components/RequireAuth"
 import { RequirePlatformAdmin } from "@/shared/components/RequirePlatformAdmin"
+import { RequireFeature } from "@/components/workflow/RequireFeature"
 import { PageLoader } from "@/components/primitives"
 
 // Lazy-load all page components — each becomes a separate chunk.
@@ -138,12 +139,12 @@ export const router = createBrowserRouter([
       { path: "payments/:id", element: <S><PaymentDetailPage /></S> },
 
       // Cash & Banking
-      { path: "settings/bank-feeds", element: <S><BankFeedsPage /></S> },
+      { path: "settings/bank-feeds", element: <RequireFeature feature="bank_feeds" label="Bank Feeds"><S><BankFeedsPage /></S></RequireFeature> },
       { path: "settings/business", element: <S><BusinessSettingsPage /></S> },
       { path: "bank-statements", element: <S><BankStatementsPage /></S> },
       { path: "bank-reconciliation", element: <S><ReconciliationPage /></S> },
       { path: "captured-receipts", element: <S><CapturedReceiptsPage /></S> },
-      { path: "logbook", element: <S><LogbookPage /></S> },
+      { path: "logbook", element: <RequireFeature feature="mileage" label="Mileage Tracking"><S><LogbookPage /></S></RequireFeature> },
       { path: "bank-reconciliation/legacy", element: <S><BankingPage /></S> },
       { path: "transfers", element: <S><TransfersPage /></S> },
 
@@ -157,24 +158,24 @@ export const router = createBrowserRouter([
       { path: "products/new", element: <S><CreateProductPage /></S> },
       { path: "products/:id/edit", element: <S><EditProductPage /></S> },
 
-      // Recurring & Templates
-      { path: "recurring", element: <S><RecurringPage /></S> },
+      // Recurring & Templates (feature-gated)
+      { path: "recurring", element: <RequireFeature feature="recurring" label="Recurring Transactions"><S><RecurringPage /></S></RequireFeature> },
       { path: "templates", element: <S><TemplatesPage /></S> },
 
-      // Currency
-      { path: "currencies", element: <S><CurrencyPage /></S> },
+      // Currency (feature-gated)
+      { path: "currencies", element: <RequireFeature feature="multi_currency" label="Multi-Currency"><S><CurrencyPage /></S></RequireFeature> },
 
-      // Payroll
-      { path: "employees", element: <S><EmployeesPage /></S> },
-      { path: "employees/new", element: <S><CreateEmployeePage /></S> },
-      { path: "employees/:id", element: <S><EmployeeDetailPage /></S> },
-      { path: "pay-runs", element: <S><PayRunsPage /></S> },
+      // Payroll (feature-gated)
+      { path: "employees", element: <RequireFeature feature="payroll" label="Payroll"><S><EmployeesPage /></S></RequireFeature> },
+      { path: "employees/new", element: <RequireFeature feature="payroll"><S><CreateEmployeePage /></S></RequireFeature> },
+      { path: "employees/:id", element: <RequireFeature feature="payroll"><S><EmployeeDetailPage /></S></RequireFeature> },
+      { path: "pay-runs", element: <RequireFeature feature="payroll"><S><PayRunsPage /></S></RequireFeature> },
 
-      // Fixed Assets
-      { path: "assets", element: <S><AssetRegisterPage /></S> },
-      { path: "assets/buy", element: <S><BuyAssetPage /></S> },
-      { path: "assets/sell", element: <S><SellDisposePage /></S> },
-      { path: "assets/depreciation", element: <S><DepreciationPage /></S> },
+      // Fixed Assets (feature-gated)
+      { path: "assets", element: <RequireFeature feature="fixed_assets" label="Fixed Assets"><S><AssetRegisterPage /></S></RequireFeature> },
+      { path: "assets/buy", element: <RequireFeature feature="fixed_assets"><S><BuyAssetPage /></S></RequireFeature> },
+      { path: "assets/sell", element: <RequireFeature feature="fixed_assets"><S><SellDisposePage /></S></RequireFeature> },
+      { path: "assets/depreciation", element: <RequireFeature feature="fixed_assets"><S><DepreciationPage /></S></RequireFeature> },
 
       // Loans / Liabilities
       { path: "loans", element: <S><LoanRegisterPage /></S> },
@@ -184,7 +185,7 @@ export const router = createBrowserRouter([
       // Admin
       { path: "payg-config", element: <S><PAYGConfigPage /></S> },
       { path: "super-rates", element: <S><SuperRatesPage /></S> },
-      { path: "super-obligations", element: <S><SuperObligationsPage /></S> },
+      { path: "super-obligations", element: <RequireFeature feature="payroll" label="Super Obligations"><S><SuperObligationsPage /></S></RequireFeature> },
       { path: "users", element: <S><UsersPage /></S> },
 
       // Audit

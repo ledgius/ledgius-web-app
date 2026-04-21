@@ -14,6 +14,7 @@ import {
 } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import { useAuthTokenSync, useAuth } from "@/shared/lib/auth"
+import { useFeatures } from "@/hooks/useFeatures"
 import { AppHeader } from "./AppHeader"
 import { FeedbackConsoleStrip } from "@/components/feedback"
 import { HelpPanelSidebar, useHelpDockPosition } from "@/components/workflow"
@@ -207,13 +208,6 @@ const settingsSections: NavSection[] = [
     ],
   },
   {
-    title: "Import / Export",
-    items: [
-      { to: "/import", label: "Data Import", icon: Import },
-      { to: "/export", label: "Data Export", icon: Upload },
-    ],
-  },
-  {
     title: "Administration",
     items: [
       { to: "/users", label: "Users & Roles", icon: UsersRound },
@@ -357,13 +351,13 @@ const modeNavMap: Record<SidebarMode, NavSection[]> = {
   ],
 }
 
-const modeLabels: { key: SidebarMode; label: string; icon: LucideIcon }[] = [
+const modeLabels: { key: SidebarMode; label: string; icon: LucideIcon; feature?: string }[] = [
   { key: "finance", label: "Finance", icon: Landmark },
-  { key: "assets", label: "Assets", icon: Package },
-  { key: "liabilities", label: "Liabilities", icon: CreditCard },
-  { key: "payroll", label: "Payroll", icon: Wallet },
+  { key: "assets", label: "Assets", icon: Package, feature: "fixed_assets" },
+  { key: "liabilities", label: "Liabilities", icon: CreditCard, feature: "liability_tracking" },
+  { key: "payroll", label: "Payroll", icon: Wallet, feature: "payroll" },
   { key: "tasks", label: "Tasks", icon: CheckCircle },
-  { key: "reports", label: "Reports", icon: BarChart3 },
+  { key: "reports", label: "Reports", icon: BarChart3, feature: "financial_reports" },
   { key: "ai", label: "AI", icon: Sparkles },
   { key: "settings", label: "Settings", icon: Settings2 },
   { key: "platform", label: "Platform", icon: Shield },
@@ -374,6 +368,7 @@ const modeLabels: { key: SidebarMode; label: string; icon: LucideIcon }[] = [
 export function Layout() {
   useAuthTokenSync()
   const { user } = useAuth()
+  const { hasFeature } = useFeatures()
   const navigate = useNavigate()
   const helpDock = useHelpDockPosition()
   const [commandOpen, setCommandOpen] = useState(false)
@@ -542,7 +537,7 @@ export function Layout() {
           <div className="border-t border-gray-200 p-2">
             {sidebarCollapsed ? (
               <div className="flex flex-col items-center gap-1">
-                {modeLabels.filter(m => m.key !== "platform" || user?.is_platform_admin).map(({ key, icon: Icon }) => (
+                {modeLabels.filter(m => (m.key !== "platform" || user?.is_platform_admin) && (!m.feature || hasFeature(m.feature))).map(({ key, icon: Icon }) => (
                   <button
                     key={key}
                     type="button"
@@ -561,7 +556,7 @@ export function Layout() {
               </div>
             ) : (
               <div className="grid grid-cols-4 gap-1">
-                {modeLabels.filter(m => m.key !== "platform" || user?.is_platform_admin).map(({ key, label, icon: Icon }) => (
+                {modeLabels.filter(m => (m.key !== "platform" || user?.is_platform_admin) && (!m.feature || hasFeature(m.feature))).map(({ key, label, icon: Icon }) => (
                   <button
                     key={key}
                     type="button"
