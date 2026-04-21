@@ -150,21 +150,21 @@ export function PlatformUsersPage() {
   const tenantOptions = [...tenantMap.entries()].sort((a, b) => a[1].localeCompare(b[1]))
 
   const header = (
-    <div className="flex items-center justify-between">
-      <div>
-        <div className="flex items-baseline gap-3">
-          <h1 className="text-xl font-semibold text-gray-900">Users</h1>
-          <span className="text-sm text-gray-400">
-            {stats.total} total · {stats.active} active · {stats.platform} admin{stats.platform !== 1 ? "s" : ""}
-            {stats.invited > 0 && ` · ${stats.invited} invited`}
-            {stats.suspended > 0 && ` · ${stats.suspended} suspended`}
-          </span>
-        </div>
-        <p className="text-sm text-gray-500">Manage platform and tenant users</p>
+    <div>
+      <div className="flex items-baseline gap-3">
+        <h1 className="text-xl font-semibold text-gray-900">Users</h1>
+        <span className="text-sm text-gray-400">
+          {stats.total} total · {stats.active} active · {stats.platform} admin{stats.platform !== 1 ? "s" : ""}
+          {stats.invited > 0 && ` · ${stats.invited} invited`}
+          {stats.suspended > 0 && ` · ${stats.suspended} suspended`}
+        </span>
       </div>
-      <Button variant="primary" size="sm" onClick={() => setShowCreateForm(true)}>
-        <Plus className="h-3.5 w-3.5" />Add User
-      </Button>
+      <p className="text-sm text-gray-500">Manage platform and tenant users</p>
+      <div className="flex items-center gap-2 mt-3">
+        <Button variant="primary" size="sm" onClick={() => setShowCreateForm(true)}>
+          <Plus className="h-3.5 w-3.5" />Add User
+        </Button>
+      </div>
     </div>
   )
 
