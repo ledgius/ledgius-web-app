@@ -1,12 +1,13 @@
 // Spec references: R-0068 (PA-020 through PA-027).
 import { useState, useMemo } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { PageShell } from "@/components/layout"
-import { InfoPanel, Skeleton } from "@/components/primitives"
+import { Button, InfoPanel, Skeleton } from "@/components/primitives"
+import { useFeedback } from "@/components/feedback"
 import { usePageHelp } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { api } from "@/shared/lib/api"
-import { Search, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react"
+import { Search, ChevronUp, ChevronDown, ChevronsUpDown, Plus, X, Check } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 
 interface UserTenantInfo {
@@ -42,9 +43,33 @@ export function PlatformUsersPage() {
   const [sortField, setSortField] = useState<SortField>("display_name")
   const [sortDir, setSortDir] = useState<SortDir>("asc")
 
+  const feedback = useFeedback()
+  const qc = useQueryClient()
+  const [showCreateForm, setShowCreateForm] = useState(false)
+
   const { data: users, isLoading } = useQuery({
     queryKey: ["platform", "users"],
     queryFn: () => api.get<PlatformUser[]>("/platform/users"),
+  })
+
+  const createUser = useMutation({
+    mutationFn: (body: { email: string; display_name: string; is_platform_admin: boolean }) =>
+      api.post("/platform/users", body),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["platform", "users"] }); feedback.success("User created"); setShowCreateForm(false) },
+    onError: (err: Error) => feedback.error("Create failed", err.message),
+  })
+
+  const updateUser = useMutation({
+    mutationFn: ({ id, ...body }: { id: string; display_name?: string; is_platform_admin?: boolean; status?: string }) =>
+      api.put(`/platform/users/${id}`, body),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["platform", "users"] }); feedback.success("User updated") },
+    onError: (err: Error) => feedback.error("Update failed", err.message),
+  })
+
+  const deactivateUser = useMutation({
+    mutationFn: (id: string) => api.post(`/platform/users/${id}/deactivate`, {}),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["platform", "users"] }); feedback.success("User deactivated") },
+    onError: (err: Error) => feedback.error("Deactivate failed", err.message),
   })
 
   const all = users ?? []
@@ -125,16 +150,21 @@ export function PlatformUsersPage() {
   const tenantOptions = [...tenantMap.entries()].sort((a, b) => a[1].localeCompare(b[1]))
 
   const header = (
-    <div>
-      <div className="flex items-baseline gap-3">
-        <h1 className="text-xl font-semibold text-gray-900">Users</h1>
-        <span className="text-sm text-gray-400">
-          {stats.total} total · {stats.active} active · {stats.platform} admin{stats.platform !== 1 ? "s" : ""}
-          {stats.invited > 0 && ` · ${stats.invited} invited`}
-          {stats.suspended > 0 && ` · ${stats.suspended} suspended`}
-        </span>
+    <div className="flex items-center justify-between">
+      <div>
+        <div className="flex items-baseline gap-3">
+          <h1 className="text-xl font-semibold text-gray-900">Users</h1>
+          <span className="text-sm text-gray-400">
+            {stats.total} total · {stats.active} active · {stats.platform} admin{stats.platform !== 1 ? "s" : ""}
+            {stats.invited > 0 && ` · ${stats.invited} invited`}
+            {stats.suspended > 0 && ` · ${stats.suspended} suspended`}
+          </span>
+        </div>
+        <p className="text-sm text-gray-500">Manage platform and tenant users</p>
       </div>
-      <p className="text-sm text-gray-500">Manage platform and tenant users</p>
+      <Button variant="primary" size="sm" onClick={() => setShowCreateForm(true)}>
+        <Plus className="h-3.5 w-3.5" />Add User
+      </Button>
     </div>
   )
 
@@ -143,6 +173,9 @@ export function PlatformUsersPage() {
       <InfoPanel title="User management" storageKey="platform-users-info" collapsible>
         <p>View and manage platform administrators and tenant users across all organisations. Platform admins can access the Platform sidebar and manage all tenants.</p>
       </InfoPanel>
+
+      {/* Create User Form */}
+      {showCreateForm && <CreateUserForm onCancel={() => setShowCreateForm(false)} onCreate={(u) => createUser.mutate(u)} saving={createUser.isPending} />}
 
       {/* Filters */}
       <div className="flex items-center gap-3 flex-wrap">
@@ -216,11 +249,12 @@ export function PlatformUsersPage() {
                 <SortHeader label="Status" field="status" current={sortField} dir={sortDir} onSort={toggleSort} />
                 <SortHeader label="Created" field="created_at" current={sortField} dir={sortDir} onSort={toggleSort} />
                 <SortHeader label="Updated" field="updated_at" current={sortField} dir={sortDir} onSort={toggleSort} />
+                <th className="px-4 py-2.5 w-28"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {sorted.map((u, i) => (
-                <tr key={u.id} className={i % 2 === 1 ? "bg-gray-50/50" : ""}>
+                <tr key={u.id} className={`group ${i % 2 === 1 ? "bg-gray-50/50" : ""}`}>
                   <td className="px-4 py-2.5 font-medium text-gray-900">{u.display_name}</td>
                   <td className="px-4 py-2.5 text-gray-600 font-mono text-xs">{u.email}</td>
                   <td className="px-4 py-2.5">
@@ -262,6 +296,28 @@ export function PlatformUsersPage() {
                   <td className="px-4 py-2.5 text-gray-500 text-xs tabular-nums">
                     {new Date(u.updated_at).toLocaleDateString("en-AU")}
                   </td>
+                  <td className="px-4 py-2.5">
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); updateUser.mutate({ id: u.id, is_platform_admin: !u.is_platform_admin }) }}
+                        className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 hover:bg-primary-50 hover:text-primary-600 transition-colors"
+                        title={u.is_platform_admin ? "Remove admin" : "Make admin"}
+                      >
+                        {u.is_platform_admin ? "Remove Admin" : "Make Admin"}
+                      </button>
+                      {u.status === "active" && (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); deactivateUser.mutate(u.id) }}
+                          className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+                          title="Deactivate user"
+                        >
+                          Deactivate
+                        </button>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -269,6 +325,39 @@ export function PlatformUsersPage() {
         </div>
       )}
     </PageShell>
+  )
+}
+
+function CreateUserForm({ onCancel, onCreate, saving }: {
+  onCancel: () => void; onCreate: (u: { email: string; display_name: string; is_platform_admin: boolean }) => void; saving: boolean
+}) {
+  const [email, setEmail] = useState("")
+  const [name, setName] = useState("")
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  return (
+    <div className="border border-primary-200 rounded-lg bg-primary-50/30 p-4 mb-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <p className="text-sm font-semibold text-gray-900">Create User</p>
+        <button type="button" onClick={onCancel} className="p-1 text-gray-400 hover:text-gray-600"><X className="h-4 w-4" /></button>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div><label className="block text-xs font-medium text-gray-600 mb-1">Email</label>
+          <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="user@example.com" className="w-full bg-white border border-gray-300 rounded px-2 py-1.5 text-sm" /></div>
+        <div><label className="block text-xs font-medium text-gray-600 mb-1">Display Name</label>
+          <input type="text" value={name} onChange={e => setName(e.target.value)} placeholder="Full name" className="w-full bg-white border border-gray-300 rounded px-2 py-1.5 text-sm" /></div>
+      </div>
+      <label className="flex items-center gap-2 text-xs text-gray-600">
+        <input type="checkbox" checked={isAdmin} onChange={e => setIsAdmin(e.target.checked)} className="rounded border-gray-300 text-primary-600" />
+        Platform administrator
+      </label>
+      <div className="flex items-center gap-2">
+        <Button variant="secondary" size="sm" onClick={onCancel}>Cancel</Button>
+        <Button variant="primary" size="sm" onClick={() => onCreate({ email, display_name: name, is_platform_admin: isAdmin })} loading={saving} disabled={!email || !name}>
+          <Check className="h-3.5 w-3.5" />Create User
+        </Button>
+      </div>
+    </div>
   )
 }
 

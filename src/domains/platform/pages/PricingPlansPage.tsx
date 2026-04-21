@@ -137,6 +137,15 @@ export function PricingPlansPage() {
     onError: (err: Error) => feedback.error("Failed to save features", err.message),
   })
 
+  const archivePlan = useMutation({
+    mutationFn: (planId: number) => api.post(`/platform/plans/${planId}/archive`, {}),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["platform", "plans"] })
+      feedback.success("Plan archived")
+    },
+    onError: (err: Error) => feedback.error("Archive failed", err.message),
+  })
+
   const createPlan = useMutation({
     mutationFn: (plan: Partial<PricingPlan>) => api.post("/platform/plans", plan),
     onSuccess: () => {
@@ -243,6 +252,7 @@ export function PricingPlansPage() {
           allFeatures={allFeatures ?? []}
           onSaveFeatures={(planId, features) => savePlanFeatures.mutate({ planId, features })}
           savingFeatures={savePlanFeatures.isPending}
+          onArchive={(planId) => archivePlan.mutate(planId)}
         />
       ) : (
         <PreviewTab />
@@ -253,7 +263,7 @@ export function PricingPlansPage() {
 
 // --- Manage Tab ---
 
-function ManageTab({ plans, isLoading, editingId, onEdit, onSave, saving, onMoveUp, onMoveDown, allPlans, showCreateForm, onShowCreate, onCancelCreate, onCreate, creating, allFeatures, onSaveFeatures, savingFeatures }: {
+function ManageTab({ plans, isLoading, editingId, onEdit, onSave, saving, onMoveUp, onMoveDown, allPlans, showCreateForm, onShowCreate, onCancelCreate, onCreate, creating, allFeatures, onSaveFeatures, savingFeatures, onArchive }: {
   plans: PricingPlan[]; isLoading: boolean; editingId: number | null
   onEdit: (id: number) => void; onSave: (plan: PricingPlan) => void
   saving: boolean; onMoveUp: (i: number) => void; onMoveDown: (i: number) => void
@@ -261,6 +271,7 @@ function ManageTab({ plans, isLoading, editingId, onEdit, onSave, saving, onMove
   showCreateForm: boolean; onShowCreate: () => void; onCancelCreate: () => void
   onCreate: (plan: Partial<PricingPlan>) => void; creating: boolean
   allFeatures: Feature[]; onSaveFeatures: (planId: number, features: PlanFeatureAssignment[]) => void; savingFeatures: boolean
+  onArchive: (planId: number) => void
 }) {
   return (
     <>
@@ -297,6 +308,7 @@ function ManageTab({ plans, isLoading, editingId, onEdit, onSave, saving, onMove
               allFeatures={allFeatures}
               onSaveFeatures={onSaveFeatures}
               savingFeatures={savingFeatures}
+              onArchive={onArchive}
             />
           ))}
         </div>
@@ -307,11 +319,12 @@ function ManageTab({ plans, isLoading, editingId, onEdit, onSave, saving, onMove
 
 // --- Plan Card (Manage) ---
 
-function PlanCard({ plan, index, total, isEditing, onEdit, onSave, saving, onMoveUp, onMoveDown, allPlans, allFeatures, onSaveFeatures, savingFeatures }: {
+function PlanCard({ plan, index, total, isEditing, onEdit, onSave, saving, onMoveUp, onMoveDown, allPlans, allFeatures, onSaveFeatures, savingFeatures, onArchive }: {
   plan: PricingPlan; index: number; total: number; isEditing: boolean
   onEdit: () => void; onSave: (plan: PricingPlan) => void; saving: boolean
   onMoveUp: () => void; onMoveDown: () => void; allPlans: PricingPlan[]
   allFeatures: Feature[]; onSaveFeatures: (planId: number, features: PlanFeatureAssignment[]) => void; savingFeatures: boolean
+  onArchive: (planId: number) => void
 }) {
   const [edit, setEdit] = useState(plan)
   const bullets = (() => { try { return JSON.parse(plan.feature_bullets ?? "[]") as string[] } catch { return [] } })()
@@ -475,6 +488,9 @@ function PlanCard({ plan, index, total, isEditing, onEdit, onSave, saving, onMov
           <div className="flex items-center gap-2 pt-1">
             <Button variant="secondary" size="sm" onClick={onEdit}>Cancel</Button>
             <Button variant="primary" size="sm" onClick={() => onSave(edit)} loading={saving}><Check className="h-3.5 w-3.5" />Save Plan</Button>
+            {plan.status !== "archived" && (
+              <Button variant="danger" size="sm" onClick={() => onArchive(plan.id)}>Archive</Button>
+            )}
           </div>
 
           {/* Feature assignments */}
