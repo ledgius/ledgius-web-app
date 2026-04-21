@@ -208,13 +208,6 @@ const settingsSections: NavSection[] = [
     ],
   },
   {
-    title: "Import / Export",
-    items: [
-      { to: "/import", label: "Data Import", icon: Import },
-      { to: "/export", label: "Data Export", icon: Upload },
-    ],
-  },
-  {
     title: "Administration",
     items: [
       { to: "/users", label: "Users & Roles", icon: UsersRound },
