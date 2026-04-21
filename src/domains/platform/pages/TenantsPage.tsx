@@ -9,7 +9,7 @@ import { usePageHelp } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { api } from "@/shared/lib/api"
 import {
-  Search, Building2, Users, FlaskConical, CreditCard, MapPin,
+  Search, Building2, Users, FlaskConical, CreditCard,
   ChevronRight, AlertCircle, CheckCircle
 } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
