@@ -10,7 +10,7 @@ import { api } from "@/shared/lib/api"
 import {
   Server, Database, HardDrive, Download, RefreshCw, Play,
   CheckCircle, XCircle, AlertCircle, Clock, FlaskConical,
-  ArrowLeft, ChevronUp, ChevronDown, ChevronsUpDown
+  ArrowLeft, ChevronUp, ChevronDown, ChevronsUpDown, Search
 } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 
@@ -22,9 +22,13 @@ interface Machine {
 
 interface DatabaseSize {
   name: string; size_bytes: number; size_human: string
-  tenant_id?: string; tenant_name?: string; is_test?: boolean
+  tenant_id?: string; tenant_name?: string; tenant_slug?: string
+  is_test?: boolean; billing_state?: string; billing_city?: string
+  plan_name?: string; status?: string
   flyway_version?: string; flyway_script?: string
 }
+
+type DbSortField = "name" | "size_bytes" | "tenant_name" | "billing_state" | "flyway_version"
 
 interface StorageInfo {
   slug: string; tenant_id?: string; name?: string
@@ -184,6 +188,12 @@ type SortDir = "asc" | "desc"
 
 function DatabasesTab() {
   const [selectedDb, setSelectedDb] = useState<string | null>(null)
+  const [search, setSearch] = useState("")
+  const [filterState, setFilterState] = useState("")
+  const [filterTest, setFilterTest] = useState("")
+  const [sortField, setSortField] = useState<DbSortField>("size_bytes")
+  const [sortDir, setSortDir] = useState<SortDir>("desc")
+
   const { data: databases, isLoading } = useQuery({
     queryKey: ["platform", "operations", "databases"],
     queryFn: () => api.get<DatabaseSize[]>("/platform/operations/databases"),
@@ -191,63 +201,139 @@ function DatabasesTab() {
 
   if (isLoading) return <Skeleton className="h-48" />
 
-  const totalSize = (databases ?? []).reduce((sum, d) => sum + d.size_bytes, 0)
+  if (selectedDb) {
+    return (
+      <div>
+        <button type="button" onClick={() => setSelectedDb(null)} className="flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700 mb-3">
+          <ArrowLeft className="h-3 w-3" />Back to databases
+        </button>
+        <TableSizesView dbName={selectedDb} />
+      </div>
+    )
+  }
+
+  const all = databases ?? []
+
+  // Filters.
+  const filtered = all.filter(db => {
+    if (search) {
+      const s = search.toLowerCase()
+      if (!db.name.toLowerCase().includes(s) && !(db.tenant_name ?? "").toLowerCase().includes(s) && !(db.billing_city ?? "").toLowerCase().includes(s)) return false
+    }
+    if (filterState && db.billing_state !== filterState) return false
+    if (filterTest === "true" && !db.is_test) return false
+    if (filterTest === "false" && db.is_test) return false
+    return true
+  })
+
+  // Sort.
+  const sorted = [...filtered].sort((a, b) => {
+    let av: string | number, bv: string | number
+    switch (sortField) {
+      case "name": av = a.name; bv = b.name; break
+      case "size_bytes": av = a.size_bytes; bv = b.size_bytes; break
+      case "tenant_name": av = a.tenant_name ?? ""; bv = b.tenant_name ?? ""; break
+      case "billing_state": av = a.billing_state ?? ""; bv = b.billing_state ?? ""; break
+      case "flyway_version": av = a.flyway_version ?? ""; bv = b.flyway_version ?? ""; break
+      default: av = ""; bv = ""
+    }
+    const cmp = typeof av === "number" ? av - (bv as number) : (av as string).localeCompare(bv as string)
+    return sortDir === "asc" ? cmp : -cmp
+  })
+
+  const toggleSort = (field: DbSortField) => {
+    if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc")
+    else { setSortField(field); setSortDir(field === "size_bytes" ? "desc" : "asc") }
+  }
+
+  const totalSize = filtered.reduce((sum, d) => sum + d.size_bytes, 0)
+  const states = [...new Set(all.map(d => d.billing_state).filter(Boolean) as string[])].sort()
+
+  const SortTh = ({ label, field, align = "left" }: { label: string; field: DbSortField; align?: "left" | "right" }) => {
+    const active = sortField === field
+    return (
+      <th className={cn("px-4 py-2 font-medium text-xs uppercase tracking-wide cursor-pointer select-none group transition-colors hover:text-primary-600", align === "right" ? "text-right" : "text-left")}
+        onClick={() => toggleSort(field)}>
+        <span className={cn("inline-flex items-center gap-1", active ? "text-primary-600" : "text-gray-600")}>
+          {label}
+          {active ? (sortDir === "asc" ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />) : <ChevronsUpDown className="h-3 w-3 text-gray-400 group-hover:text-primary-500" />}
+        </span>
+      </th>
+    )
+  }
 
   return (
-    <div className="space-y-4">
-      {selectedDb && (
-        <div>
-          <button type="button" onClick={() => setSelectedDb(null)} className="flex items-center gap-1 text-xs text-primary-600 hover:text-primary-700 mb-3">
-            <ArrowLeft className="h-3 w-3" />Back to databases
-          </button>
-          <TableSizesView dbName={selectedDb} />
+    <div className="space-y-3">
+      {/* Filters */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="relative w-56">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
+          <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name, tenant, city..."
+            className="w-full pl-8 pr-3 py-1.5 text-sm bg-white border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-primary-500" />
         </div>
-      )}
+        {states.length > 0 && (
+          <select value={filterState} onChange={e => setFilterState(e.target.value)} className="bg-white border border-gray-300 rounded px-2 py-1.5 text-sm pr-7">
+            <option value="">All states</option>
+            {states.map(s => <option key={s} value={s}>{s}</option>)}
+          </select>
+        )}
+        <select value={filterTest} onChange={e => setFilterTest(e.target.value)} className="bg-white border border-gray-300 rounded px-2 py-1.5 text-sm pr-7">
+          <option value="">Test & Real</option>
+          <option value="false">Real only</option>
+          <option value="true">Test only</option>
+        </select>
+        {(search || filterState || filterTest) && (
+          <button type="button" onClick={() => { setSearch(""); setFilterState(""); setFilterTest("") }} className="text-xs text-primary-600 hover:text-primary-700 font-medium">Clear</button>
+        )}
+      </div>
 
-      {!selectedDb && (
-        <div>
-          <p className="text-xs text-gray-500 mb-3">Total: {(databases ?? []).length} databases, {humanSize(totalSize)}. Click a database to see table breakdown.</p>
-          <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="text-left px-4 py-2 font-medium text-gray-600 text-xs uppercase">Database</th>
-                  <th className="text-left px-4 py-2 font-medium text-gray-600 text-xs uppercase">Tenant</th>
-                  <th className="text-right px-4 py-2 font-medium text-gray-600 text-xs uppercase">Size</th>
-                  <th className="text-left px-4 py-2 font-medium text-gray-600 text-xs uppercase">Flyway Version</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {(databases ?? []).map((db, i) => (
-                  <tr key={db.name} className={cn(i % 2 === 1 ? "bg-gray-50/50" : "", "hover:bg-primary-50/30 cursor-pointer transition-colors")} onClick={() => setSelectedDb(db.name)}>
-                    <td className="px-4 py-2.5">
-                      <span className="font-mono text-sm text-primary-600 hover:text-primary-700 underline decoration-primary-200">{db.name}</span>
-                    </td>
-                    <td className="px-4 py-2.5">
-                      {db.tenant_name ? (
-                        <span className="flex items-center gap-1.5 text-sm text-gray-700">
-                          {db.tenant_name}
-                          {db.is_test && <span title="Test tenant"><FlaskConical className="h-3 w-3 text-amber-500" /></span>}
-                        </span>
-                      ) : (
-                        <span className="text-xs text-gray-400">{db.name === "ledgius_platform" ? "Platform DB" : "—"}</span>
-                      )}
-                    </td>
-                    <td className="px-4 py-2.5 text-right tabular-nums text-gray-700">{db.size_human}</td>
-                    <td className="px-4 py-2.5">
-                      {db.flyway_version ? (
-                        <span className="text-xs font-mono text-gray-600" title={db.flyway_script}>V{db.flyway_version}</span>
-                      ) : (
-                        <span className="text-xs text-gray-400">—</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+      <p className="text-xs text-gray-500">{filtered.length} databases, {humanSize(totalSize)}. Click a database to see table breakdown.</p>
+
+      <div className="border border-gray-200 rounded-lg overflow-hidden bg-white">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <SortTh label="Database" field="name" />
+              <SortTh label="Tenant" field="tenant_name" />
+              <SortTh label="Location" field="billing_state" />
+              <th className="text-left px-4 py-2 font-medium text-gray-600 text-xs uppercase">Plan</th>
+              <SortTh label="Size" field="size_bytes" align="right" />
+              <SortTh label="Flyway" field="flyway_version" />
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {sorted.map((db, i) => (
+              <tr key={db.name} className={cn(i % 2 === 1 ? "bg-gray-50/50" : "", "hover:bg-primary-50/30 cursor-pointer transition-colors")} onClick={() => setSelectedDb(db.name)}>
+                <td className="px-4 py-2.5">
+                  <span className="font-mono text-sm text-primary-600 underline decoration-primary-200">{db.name}</span>
+                </td>
+                <td className="px-4 py-2.5">
+                  {db.tenant_name ? (
+                    <span className="flex items-center gap-1.5 text-sm text-gray-700">
+                      {db.tenant_name}
+                      {db.is_test && <span title="Test tenant"><FlaskConical className="h-3 w-3 text-amber-500" /></span>}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-gray-400">{db.name === "ledgius_platform" ? "Platform DB" : "—"}</span>
+                  )}
+                </td>
+                <td className="px-4 py-2.5 text-sm text-gray-600">
+                  {[db.billing_city, db.billing_state].filter(Boolean).join(", ") || "—"}
+                </td>
+                <td className="px-4 py-2.5 text-xs text-gray-600">{db.plan_name || "—"}</td>
+                <td className="px-4 py-2.5 text-right tabular-nums text-gray-700">{db.size_human}</td>
+                <td className="px-4 py-2.5">
+                  {db.flyway_version ? (
+                    <span className="text-xs font-mono text-gray-600" title={db.flyway_script}>V{db.flyway_version}</span>
+                  ) : (
+                    <span className="text-xs text-gray-400">—</span>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   )
 }
