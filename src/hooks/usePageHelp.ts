@@ -418,8 +418,19 @@ export const pageHelpContent = {
     sections: [
       { heading: "What is this?", body: "Your fixed asset register tracks every capital item — plant, equipment, vehicles, IT. Each asset carries its purchase cost, depreciation method, and current book value." },
       { heading: "Categories", body: "Assets are grouped by category: Plant & Equipment, Motor Vehicles, Office Equipment, Furniture & Fittings, and IT Equipment. Each category may have different depreciation rates." },
-      { heading: "Status", body: "Active = currently in use and depreciating. Disposed = sold, scrapped, or donated. Fully Depreciated = book value has reached zero but the asset is still in use." },
-      { heading: "Tip", body: "Click any asset to view its full depreciation history and current details." },
+      { heading: "Status", body: "Active = currently depreciating. Fully Depreciated = book value has reached residual. Disposed = sold, scrapped, donated, or traded in. Disposed assets are hidden by default — toggle 'Show disposed' to see them." },
+      { heading: "Annual estimate review", body: "AASB 116 requires you to review useful life and residual value at each year-end. The review workflow lands with a later update; the underlying command is already in place." },
+      { heading: "Tip", body: "Click any row to drill into per-asset detail — summary, activity timeline, and actions." },
+    ],
+  },
+  assetDetail: {
+    title: "Asset Detail",
+    sections: [
+      { heading: "What is this?", body: "The single-asset hub — summary figures, estimate history, activity timeline, and the actions available for this asset's current state." },
+      { heading: "Status meanings", body: "Draft = captured but no GL yet. Active = on the books, depreciating. Fully Depreciated = book value at residual, no more depreciation accrues. Disposed = sold/scrapped/donated/traded, disposal journal posted. Archived = disposed + past the retention window." },
+      { heading: "Correction paths (AASB 108)", body: "Four distinct paths, each with its own journal shape. (1) Non-posting edit — name/description/business-use %. (2) Same-period reclassification — reverse + repost before the period closes. (3) Prospective estimate change — useful life/residual revised, future runs only. (4) Prior-period restatement — current-period correction to Retained Earnings (Opening) when the target period is locked. Use the Edit menu to pick the right path; the system will route to the correct command or explain why it can't." },
+      { heading: "Reading the activity timeline", body: "The timeline shows every mutation as an immutable audit row: who, when, and the before/after diff. Posted journals appear with the action (acquired, dep_posted, disposed) and any linked transaction reference." },
+      { heading: "Accounting vs tax", body: "Everything on this page is the accounting view under AASB 116. Income-tax depreciation (Div 40), CGT on disposal, and FBT on motor vehicles run in separate layers — they don't always produce the same number." },
     ],
   },
   buyAsset: {
