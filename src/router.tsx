@@ -73,6 +73,7 @@ const PlatformAdminPage = lazy(() => import("@/domains/admin/pages/PlatformAdmin
 const FeedbackStatusPage = lazy(() => import("@/domains/admin/pages/FeedbackStatusPage").then(m => ({ default: m.FeedbackStatusPage })))
 
 const AssetRegisterPage = lazy(() => import("@/domains/assets/pages/AssetRegisterPage").then(m => ({ default: m.AssetRegisterPage })))
+const AssetDetailPage = lazy(() => import("@/domains/assets/pages/AssetDetailPage").then(m => ({ default: m.AssetDetailPage })))
 const BuyAssetPage = lazy(() => import("@/domains/assets/pages/BuyAssetPage").then(m => ({ default: m.BuyAssetPage })))
 const SellDisposePage = lazy(() => import("@/domains/assets/pages/SellDisposePage").then(m => ({ default: m.SellDisposePage })))
 const DepreciationPage = lazy(() => import("@/domains/assets/pages/DepreciationPage").then(m => ({ default: m.DepreciationPage })))
@@ -176,6 +177,7 @@ export const router = createBrowserRouter([
       { path: "assets/buy", element: <RequireFeature feature="fixed_assets"><S><BuyAssetPage /></S></RequireFeature> },
       { path: "assets/sell", element: <RequireFeature feature="fixed_assets"><S><SellDisposePage /></S></RequireFeature> },
       { path: "assets/depreciation", element: <RequireFeature feature="fixed_assets"><S><DepreciationPage /></S></RequireFeature> },
+      { path: "assets/:id", element: <RequireFeature feature="fixed_assets"><S><AssetDetailPage /></S></RequireFeature> },
 
       // Loans / Liabilities
       { path: "loans", element: <S><LoanRegisterPage /></S> },

@@ -1,0 +1,61 @@
+page: /assets/:id
+title: Asset Detail
+spec: R-0062
+sections:
+  - heading: What is this?
+    body: >
+      The single-asset hub. Summary figures, estimate change history,
+      activity timeline, and actions available for the asset's current
+      state. Every mutation to this asset goes through one of the four
+      correction paths defined below — no in-place edits to posting-
+      impacting fields.
+
+  - heading: Status meanings
+    body: >
+      - **Draft** — captured but no GL yet (rare, wizard flow)
+      - **Active** — on the books, depreciating
+      - **Fully Depreciated** — book value at residual; no more depreciation accrues
+      - **Disposed** — sold, scrapped, donated, or traded; disposal journal posted
+      - **Archived** — disposed + past retention window (hidden from UI)
+
+  - heading: Four correction paths (AASB 108)
+    body: >
+      Each path has a distinct journal shape and audit treatment. Pick the
+      right one from the Edit menu; the backend rejects mismatched paths.
+
+      1. **Non-posting edit** — name, description, business-use %. In-place, no GL, one audit row. Per R-0062 AST-015.
+      2. **Same-period reclassification** — fix a wrong capital account, supplier, or GST treatment **before** the period closes. Posts a reversal + fresh acquisition in one tx. Per AST-015a.
+      3. **Prospective estimate change** — revised useful life or residual value (AASB 116 §51). No reversal, no GL rows; applied forward from the effective date. Per AST-015b.
+      4. **Prior-period restatement** — material error affecting a **closed** or BAS-lodged period (AASB 108 §41–49). Posts a current-period correction tagged `restatement_id`; P&L portion routes to Retained Earnings (Opening). Requires accountant-level permission. Per AST-015c.
+
+  - heading: When to use which correction path
+    body: >
+      - Typo in the name? Path 1.
+      - Posted to the wrong account this month and the period is still open? Path 2.
+      - Realised the useful life should be 7 years not 5 based on new info? Path 3 (prospective).
+      - Found a posting error in a period you've already BAS-lodged? Path 4 (with accountant sign-off).
+
+      {{warn:Never try to rewrite a locked period's rows. The ledger is
+      append-only under A-0009 and the closed-period lock will refuse.}}
+
+  - heading: Reading the activity timeline
+    body: >
+      Every mutation writes an immutable audit row with actor, timestamp,
+      and before/after diff. Posted journals show the action
+      (`acquired`, `dep_posted`, `disposed`) alongside any linked
+      transaction reference. Sort is newest-first.
+
+  - heading: Accounting vs tax
+    body: >
+      The figures shown on this page are the **accounting** view under
+      AASB 116. Income-tax depreciation (Div 40), CGT on disposal, and
+      FBT on motor vehicles run in separate layers (R-0073, future
+      FBT module) and don't always produce the same number. The tax
+      layer reads these GL rows — it doesn't overwrite them.
+
+  - heading: Policies
+    body: >
+      - AASB 116 — Property, Plant and Equipment (§68 classification of gain/loss)
+      - AASB 108 — Accounting policies, estimate changes, errors
+      - ITAA 1997 Division 40 — Capital allowances
+      - ATO TR 2022/1 — Depreciation of depreciating assets
