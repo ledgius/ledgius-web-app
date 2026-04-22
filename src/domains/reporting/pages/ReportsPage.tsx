@@ -180,7 +180,7 @@ function AgeingTable({ report }: { report: AgeingReport }) {
           </tr>
         </thead>
         <tbody className="divide-y">
-          {report.lines.map(line => (
+          {(report.lines ?? []).map(line => (
             <tr key={line.contact_id}>
               <td className="px-4 py-2">{line.contact_name}</td>
               <td className="px-4 py-2 text-right font-mono">{fmtBucket(line.buckets.current)}</td>
@@ -258,7 +258,7 @@ function GLDetailTab({ from, to, onFromChange, onToChange }: { from: string; to:
               </tr>
             </thead>
             <tbody className="divide-y">
-              {data.lines.map(line => (
+              {(data.lines ?? []).map(line => (
                 <tr key={line.entry_id}>
                   <td className="px-3 py-1.5">{line.transdate ? formatDate(line.transdate) : "-"}</td>
                   <td className="px-3 py-1.5 font-mono">{line.reference}</td>
