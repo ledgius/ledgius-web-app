@@ -1,40 +1,103 @@
-// Spec references: R-0062.
-import { useState, useCallback } from "react"
+// Spec references: R-0062, A-0040, A-0041, T-0029.
+import { useState, useCallback, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
 import { Button, InfoPanel, InlineAlert } from "@/components/primitives"
+import { MoneyValue } from "@/components/financial"
 import { useEscapeKey } from "@/hooks/useEscapeKey"
-import { useFeedback } from "@/components/feedback"
+import {
+  useAcquireAsset,
+  useAssetCategories,
+  useInstantWriteoffThreshold,
+  type DepreciationMethod,
+} from "../hooks/useAssets"
+import { useAccounts } from "@/domains/account/hooks/useAccounts"
+
+// Returns the 1-July anchor for the AU FY containing `date`.
+// 1-Jul through 30-Jun is one FY.
+function fyStartForDate(date: string): string {
+  if (!date) return ""
+  const d = new Date(date)
+  const y = d.getMonth() < 6 ? d.getFullYear() - 1 : d.getFullYear()
+  return `${y}-07-01`
+}
 
 export function BuyAssetPage() {
   usePageHelp(pageHelpContent.buyAsset)
-  usePagePolicies(["account", "tax"])
+  usePagePolicies(["account", "tax", "assets"])
   const navigate = useNavigate()
   const handleCancel = useCallback(() => navigate("/assets"), [navigate])
   useEscapeKey(handleCancel)
-  const feedback = useFeedback()
 
+  const acquire = useAcquireAsset()
+  const { data: categories } = useAssetCategories()
+  const { data: accounts } = useAccounts()
+
+  // Form state — decimals held as strings until submit to avoid float drift.
   const [assetName, setAssetName] = useState("")
-  const [category, setCategory] = useState("")
+  const [categoryId, setCategoryId] = useState("")
   const [purchaseDate, setPurchaseDate] = useState("")
-  const [purchasePrice, setPurchasePrice] = useState("")
-  const [supplier, setSupplier] = useState("")
-  const [glAccount, setGlAccount] = useState("")
-  const [depreciationMethod, setDepreciationMethod] = useState("")
+  const [costExGST, setCostExGST] = useState("")
+  const [gstAmount, setGstAmount] = useState("")
+  const [gstApplies, setGstApplies] = useState(true)
+  const [bankAccountId, setBankAccountId] = useState("")
+  const [depreciationMethod, setDepreciationMethod] = useState<DepreciationMethod | "">("")
   const [usefulLife, setUsefulLife] = useState("")
+  const [residualValue, setResidualValue] = useState("")
   const [description, setDescription] = useState("")
   const [error, setError] = useState("")
 
+  // Surface the current-FY instant-write-off threshold for the acquisition
+  // date, so we can nudge users toward it when eligible.
+  const fyStart = purchaseDate ? fyStartForDate(purchaseDate) : undefined
+  const { data: threshold } = useInstantWriteoffThreshold(fyStart)
+  const eligibleForInstantWriteoff = useMemo(() => {
+    if (!threshold || !costExGST) return false
+    const cost = parseFloat(costExGST)
+    const thr = parseFloat(threshold.threshold_aud)
+    return !Number.isNaN(cost) && !Number.isNaN(thr) && cost > 0 && cost <= thr
+  }, [costExGST, threshold])
+
+  // Only show bank-side accounts (category 'A' — typical bank code range
+  // 10xx-11xx per the AU COA seed). Users can see all category-A accounts
+  // and pick the right one.
+  const bankAccounts = useMemo(
+    () => (accounts ?? []).filter((a) => a.category === "A" && !a.obsolete),
+    [accounts],
+  )
+
   const handleCreate = async () => {
     setError("")
-    if (!assetName || !category || !purchaseDate || !purchasePrice || !depreciationMethod) {
-      setError("Asset name, category, purchase date, purchase price, and depreciation method are required")
-      return
+    if (!assetName.trim()) return setError("Asset name is required")
+    if (!categoryId) return setError("Category is required")
+    if (!purchaseDate) return setError("Purchase date is required")
+    if (!costExGST) return setError("Cost (ex GST) is required")
+    if (!depreciationMethod) return setError("Depreciation method is required")
+    if (!bankAccountId) return setError("Bank account is required")
+    if (depreciationMethod !== "instant_writeoff" && !usefulLife) {
+      return setError("Useful life is required for straight-line and diminishing-value methods")
     }
-    // API not built yet — show coming soon feedback
-    feedback.info("Coming soon — asset creation will be available once the API is ready")
+
+    try {
+      const asset = await acquire.mutateAsync({
+        name: assetName.trim(),
+        description: description.trim() || undefined,
+        category_id: categoryId,
+        purchase_date: purchaseDate,
+        cost_ex_gst: costExGST,
+        gst_amount: gstApplies ? (gstAmount || "0") : "0",
+        gst_applies: gstApplies,
+        useful_life_years: usefulLife ? parseInt(usefulLife, 10) : undefined,
+        residual_value: residualValue || "0",
+        depreciation_method: depreciationMethod as DepreciationMethod,
+        bank_account_id: parseInt(bankAccountId, 10),
+      })
+      navigate(`/assets/${asset.id}`)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Acquisition failed")
+    }
   }
 
   const header = (
@@ -42,11 +105,11 @@ export function BuyAssetPage() {
       <div className="flex items-baseline gap-3">
         <h1 className="text-xl font-semibold text-gray-900">Buy Asset</h1>
       </div>
-      <p className="text-sm text-gray-500 mt-0.5">Record a new asset purchase</p>
+      <p className="text-sm text-gray-500 mt-0.5">Record a new asset purchase (cash / bank mode)</p>
       <div className="flex items-center gap-2 mt-3">
         <Button variant="secondary" onClick={handleCancel}>Cancel</Button>
-        <Button onClick={handleCreate}>
-          Record Purchase
+        <Button onClick={handleCreate} disabled={acquire.isPending}>
+          {acquire.isPending ? "Recording…" : "Record Purchase"}
         </Button>
       </div>
     </div>
@@ -54,14 +117,30 @@ export function BuyAssetPage() {
 
   return (
     <PageShell header={header}>
-      <InfoPanel title="Recording an Asset Purchase" storageKey="buy-asset-info">
+      <InfoPanel title="Recording an Asset Purchase" storageKey="buy-asset-info" collapsible>
         <p>
-          Record a new asset purchase. The asset will be added to the register and depreciation
-          will be calculated automatically based on the method selected.
+          Record a new asset purchase paid from a bank account. On submit, the system posts a
+          balanced acquisition journal (Dr capital, Dr GST, Cr bank), creates the asset row with
+          status <strong>Active</strong>, and writes an audit entry — all in one database
+          transaction.
+        </p>
+        <p className="mt-1.5">
+          Bill-linked acquisitions (create a new bill at the same time, or capitalise an existing
+          bill line) arrive in a follow-up task. For now, cash / bank mode only.
         </p>
       </InfoPanel>
 
       {error && <InlineAlert variant="error" className="mb-4">{error}</InlineAlert>}
+
+      {eligibleForInstantWriteoff && depreciationMethod !== "instant_writeoff" && (
+        <InlineAlert variant="warning" className="mb-4">
+          This asset (<MoneyValue amount={costExGST || "0"} currency="AUD" />) is below the
+          current ATO instant asset write-off threshold
+          (<MoneyValue amount={threshold?.threshold_aud ?? "0"} currency="AUD" />). Consider
+          switching <strong>Depreciation Method</strong> to <em>Instant Write-off</em> to fully
+          expense it in the acquisition period.
+        </InlineAlert>
+      )}
 
       <PageSection title="Asset Details">
         <div className="grid grid-cols-2 gap-4">
@@ -78,16 +157,14 @@ export function BuyAssetPage() {
           <div>
             <label className="block text-xs font-medium text-gray-600 mb-1">Category</label>
             <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
               className="w-full border border-gray-300 rounded px-2 py-1.5 pr-7 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
             >
               <option value="">Select category...</option>
-              <option value="plant_equipment">Plant &amp; Equipment</option>
-              <option value="motor_vehicles">Motor Vehicles</option>
-              <option value="office_equipment">Office Equipment</option>
-              <option value="furniture_fittings">Furniture &amp; Fittings</option>
-              <option value="it_equipment">IT Equipment</option>
+              {categories?.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
             </select>
           </div>
           <div>
@@ -100,12 +177,12 @@ export function BuyAssetPage() {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Purchase Price</label>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Cost (ex GST)</label>
             <input
               type="number"
               step="0.01"
-              value={purchasePrice}
-              onChange={(e) => setPurchasePrice(e.target.value)}
+              value={costExGST}
+              onChange={(e) => setCostExGST(e.target.value)}
               className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm font-mono focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
               placeholder="0.00"
             />
@@ -113,27 +190,43 @@ export function BuyAssetPage() {
         </div>
       </PageSection>
 
-      <PageSection title="Supplier & Account">
+      <PageSection title="GST &amp; Payment">
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Supplier (Contact)</label>
+            <label className="flex items-center gap-2 text-xs font-medium text-gray-600 mb-1">
+              <input
+                type="checkbox"
+                checked={gstApplies}
+                onChange={(e) => setGstApplies(e.target.checked)}
+                className="rounded border-gray-300"
+              />
+              GST applies (supplier registered for GST)
+            </label>
             <input
-              type="text"
-              value={supplier}
-              onChange={(e) => setSupplier(e.target.value)}
-              className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-              placeholder="Search suppliers..."
+              type="number"
+              step="0.01"
+              value={gstApplies ? gstAmount : "0"}
+              onChange={(e) => setGstAmount(e.target.value)}
+              disabled={!gstApplies}
+              className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm font-mono focus:ring-1 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100 disabled:text-gray-500"
+              placeholder="0.00"
             />
+            <p className="text-xs text-gray-400 mt-1">
+              BAS G10 / G11 classification is derived automatically from the CAP tax code.
+            </p>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">GL Account</label>
-            <input
-              type="text"
-              value={glAccount}
-              onChange={(e) => setGlAccount(e.target.value)}
-              className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-              placeholder="e.g. 1820 - Plant & Equipment"
-            />
+            <label className="block text-xs font-medium text-gray-600 mb-1">Bank Account</label>
+            <select
+              value={bankAccountId}
+              onChange={(e) => setBankAccountId(e.target.value)}
+              className="w-full border border-gray-300 rounded px-2 py-1.5 pr-7 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+            >
+              <option value="">Select bank account...</option>
+              {bankAccounts.map((a) => (
+                <option key={a.id} value={a.id}>{a.accno} — {a.description ?? ""}</option>
+              ))}
+            </select>
           </div>
         </div>
       </PageSection>
@@ -144,7 +237,7 @@ export function BuyAssetPage() {
             <label className="block text-xs font-medium text-gray-600 mb-1">Depreciation Method</label>
             <select
               value={depreciationMethod}
-              onChange={(e) => setDepreciationMethod(e.target.value)}
+              onChange={(e) => setDepreciationMethod(e.target.value as DepreciationMethod)}
               className="w-full border border-gray-300 rounded px-2 py-1.5 pr-7 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
             >
               <option value="">Select method...</option>
@@ -170,6 +263,20 @@ export function BuyAssetPage() {
               className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:ring-1 focus:ring-primary-500 focus:border-primary-500 disabled:bg-gray-100 disabled:text-gray-500"
               placeholder="e.g. 5"
             />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">Residual Value</label>
+            <input
+              type="number"
+              step="0.01"
+              value={residualValue}
+              onChange={(e) => setResidualValue(e.target.value)}
+              className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm font-mono focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+              placeholder="0.00"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Estimated salvage value at end of useful life. Depreciation floors at this amount.
+            </p>
           </div>
         </div>
       </PageSection>
