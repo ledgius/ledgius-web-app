@@ -26,7 +26,7 @@ const methodLabels: Record<string, string> = {
 
 export function DepreciationPage() {
   usePageHelp(pageHelpContent.depreciation)
-  usePagePolicies(["account", "tax"])
+  usePagePolicies(["account", "tax", "assets"])
   const feedback = useFeedback()
 
   // API not built yet — empty data

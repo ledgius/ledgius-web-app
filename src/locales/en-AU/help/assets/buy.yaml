@@ -4,26 +4,70 @@ spec: R-0062
 sections:
   - heading: What is this?
     body: >
-      Record a new asset purchase. The asset is added to the register
-      and the appropriate {{term:GL}} entries are created: debit the
-      asset account, credit your bank or {{term:AP}} account.
+      Record a new asset purchase paid directly from a bank account.
+      On submit, the system posts a balanced acquisition journal and
+      creates the asset row with status {{good:Active}}, all in one
+      database transaction. If anything fails (validation, locked
+      period, missing account), nothing is committed.
+
+  - heading: What gets posted
+    body: >
+      - Debit the asset's capital {{term:GL}} account for the cost
+        (ex GST).
+      - Debit {{term:GST}} Paid for the GST amount (if GST applies).
+      - Credit your bank account for the total (cost + GST).
+
+      Sum of debits equals sum of credits — a balanced entry per
+      A-0009. Every row is tagged with the new `asset_id` so per-
+      asset queries and the reconciliation job can trace back to
+      ledger truth.
+
+  - heading: Cash / bank mode only (for now)
+    body: >
+      This page is the cash-mode acquisition: one bank account pays
+      directly for the asset. Bill-linked modes — {{good:Create a new
+      bill at the same time}}, or {{good:Capitalise an existing bill
+      line}} (where a supplier invoice was already posted to a generic
+      expense and you realised it should be an asset) — arrive in a
+      follow-up task (T-0030).
 
   - heading: Depreciation method
     body: >
-      - **Straight Line** — equal annual amounts over the useful life
-      - **Diminishing Value** — higher in early years, reduces over time
-        (ATO formula: book value × 200% ÷ useful life)
-      - **Instant Write-off** — fully depreciated in the purchase period
-        if cost ≤ ATO threshold for the financial year
+      - **Straight Line** — equal amounts over the useful life.
+      - **Diminishing Value** — higher in early years, reduces over
+        time (ATO formula: book value × 200% ÷ useful life).
+      - **Instant Write-off** — fully depreciated in the purchase
+        period if cost ≤ ATO threshold for the {{term:FY}}. The form
+        shows an amber tip when the cost is under the current FY
+        threshold, suggesting this method.
 
   - heading: GST on capital purchases
     body: >
-      {{good:Use tax code CAP for capital acquisitions.}} This ensures
-      the GST is reported correctly on your BAS at label G10 (Capital
-      acquisitions).
+      {{good:Use tax code CAP for capital acquisitions.}} BAS
+      classification — G10 for capital purchases >$1,000, G11 for
+      ≤$1,000 — is derived downstream by the BAS extraction layer
+      from the CAP tax code and the cost. You don't pick the BAS
+      label here; it's automatic.
+
+  - heading: Instant write-off threshold — important
+    body: >
+      {{warn:The threshold changes each financial year.}} Selecting
+      {{term:Instant Write-off}} with a cost over the current FY
+      threshold will be rejected server-side with a clear error. The
+      form shows the current threshold once you enter a purchase
+      date.
+
+  - heading: Residual value
+    body: >
+      Estimated salvage value at the end of the asset's useful life.
+      Depreciation floors at this amount — the book value never goes
+      below residual. Default 0 for most assets; set for vehicles
+      and equipment with a meaningful end-of-life value.
 
   - heading: Policies
     body: >
-      - ATO Instant Asset Write-off thresholds
-      - ITAA 1997 s40-70 (Effective life)
+      - ATO Instant Asset Write-off thresholds (check annually)
+      - ITAA 1997 Division 40 / s40-70 (Effective life)
       - ATO TR 2022/1 (Depreciation methods)
+      - AASB 116 (Property, Plant and Equipment)
+      - AASB 108 (Estimate changes / error correction paths)

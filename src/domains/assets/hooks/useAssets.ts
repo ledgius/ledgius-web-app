@@ -198,6 +198,44 @@ export function useUpdateAssetNonPosting(id: string) {
   })
 }
 
+/**
+ * AcquireAssetPayload mirrors the backend's acquireRequest in
+ * internal/asset/handler.go. Decimal amounts are strings to avoid float
+ * precision issues; dates are YYYY-MM-DD.
+ *
+ * Cash mode only for now — bill-linked modes (create-new-bill,
+ * link-existing-bill) land in T-0030.
+ */
+export interface AcquireAssetPayload {
+  name: string
+  description?: string
+  category_id: string
+  purchase_date: string
+  cost_ex_gst: string
+  gst_amount?: string
+  gst_applies?: boolean
+  useful_life_years?: number
+  residual_value?: string
+  depreciation_method: DepreciationMethod
+  business_use_pct?: string
+  supplier_entity_id?: number
+  capital_account_id_override?: number
+  accum_depreciation_account_id_override?: number
+  depreciation_expense_account_id_override?: number
+  bank_account_id: number
+}
+
+export function useAcquireAsset() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: AcquireAssetPayload) =>
+      api.post<Asset>("/assets", payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["assets"] })
+    },
+  })
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function buildQueryString(f: AssetListFilters): string {

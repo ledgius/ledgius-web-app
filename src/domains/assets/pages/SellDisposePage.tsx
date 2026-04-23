@@ -11,7 +11,7 @@ import { useFeedback } from "@/components/feedback"
 
 export function SellDisposePage() {
   usePageHelp(pageHelpContent.sellAsset)
-  usePagePolicies(["account", "tax"])
+  usePagePolicies(["account", "tax", "assets"])
   const navigate = useNavigate()
   const handleCancel = useCallback(() => navigate("/assets"), [navigate])
   useEscapeKey(handleCancel)

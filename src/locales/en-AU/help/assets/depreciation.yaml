@@ -5,27 +5,78 @@ sections:
   - heading: What is this?
     body: >
       Depreciation reduces the book value of your assets over their
-      useful life. Run it monthly or quarterly to keep your accounts
-      accurate. Each run posts journal entries: debit depreciation
-      expense, credit accumulated depreciation.
+      useful life. Each posted run creates balanced journal entries:
+      debit depreciation expense (P&L), credit accumulated
+      depreciation (a contra-asset on the balance sheet).
 
-  - heading: How it works
+  - heading: Monthly period
     body: >
-      - **Straight Line**: (cost − residual) ÷ useful life, prorated
-      - **Diminishing Value**: book value × (200% ÷ life) × (days ÷ 365)
-      - **Instant Write-off**: full cost in the purchase period
+      Depreciation periods are {{good:monthly}} by default, anchored
+      on calendar month-end in your tenant timezone. A period starts
+      1-of-month and ends on the last day of that month. Quarterly
+      cadence is a tenant-configurable option on the roadmap.
 
-      {{good:Ledgius calculates per the ATO formula automatically.}}
-      You just click "Run Depreciation" each period.
-
-  - heading: When to run
+  - heading: Why runs are idempotent
     body: >
-      Run depreciation at least quarterly (before BAS lodgement) or
-      monthly for accurate P&L. The depreciation expense flows through
-      to your tax return and reduces assessable income.
+      {{warn:You cannot run depreciation twice for the same period.}}
+      The database has a unique constraint on (tenant, period_end)
+      for posted runs. The Preview button is safe to click as many
+      times as you like — it calculates without posting. Run commits
+      the calculated lines in one transaction.
+
+  - heading: Reversing a wrong run
+    body: >
+      If a run was posted in error (wrong period, wrong asset set),
+      use Reverse Run. The system posts compensating journal entries,
+      rolls back each asset's accumulated depreciation, and flips the
+      run to status `reversed`. The original rows are NOT deleted —
+      they remain for audit. After reversal, the period is eligible
+      for a fresh run.
+
+  - heading: Methods
+    body: >
+      - **Straight Line** — (cost − residual) ÷ useful-life ×
+        (days-in-period ÷ 365).
+      - **Diminishing Value** — book-value × (days ÷ 365) × (200% ÷
+        useful-life) per the ATO TR 2022/1 formula. Floors at residual.
+      - **Instant Write-off** — full cost minus residual in the
+        acquisition period, if cost ≤ FY threshold (see the Buy Asset
+        page for the current threshold).
+
+  - heading: Vehicle business-use split
+    body: >
+      For Motor Vehicles with a business-use % under 100, the
+      depreciation expense row is split into deductible (tagged
+      `deductible=true`) and non-deductible (tagged `deductible=false`)
+      legs at ledger level. {{warn:This is presentation metadata only
+      — it is NOT a tax determination.}} The true tax-deductible
+      amount uses entity type, FBT context, and record-keeping basis,
+      and is computed by the tax layer (R-0073), not read from this
+      tag.
+
+  - heading: Accounting vs tax depreciation
+    body: >
+      What this page posts is the {{good:accounting}} depreciation
+      under AASB 116. Income-tax depreciation (Division 40) and the
+      small-business simplified depreciation pool (Division 328) run
+      in a separate tax layer and can produce different numbers. The
+      two layers reconcile at year-end; they don't need to match
+      month-by-month.
+
+  - heading: Annual estimate review
+    body: >
+      AASB 116 §51 requires you to review useful life and residual
+      value at least annually. Changes flow through the Change
+      Depreciation Estimate command (AASB 108 §32–40) — they are
+      {{good:prospective only}} and do not reverse past depreciation.
+      The year-end review workflow arrives with R-0072; the underlying
+      command is available now via the Asset Detail page.
 
   - heading: Policies
     body: >
-      - ATO TR 2022/1 (Depreciation of depreciating assets)
-      - ITAA 1997 Division 40 (Capital allowances)
-      - ATO effective life determination (updated annually)
+      - ATO TR 2022/1 — Depreciation of depreciating assets
+      - ITAA 1997 Division 40 — Capital allowances
+      - ITAA 1997 s40-70 — Effective life
+      - AASB 116 §43–62 — Depreciation measurement
+      - AASB 116 §51 — Annual review of useful life and residual
+      - AASB 108 §32–40 — Changes in accounting estimates
