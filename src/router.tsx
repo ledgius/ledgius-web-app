@@ -57,6 +57,10 @@ const RecurringPage = lazy(() => import("@/domains/recurring/pages/RecurringPage
 const TemplatesPage = lazy(() => import("@/domains/template/pages/TemplatesPage").then(m => ({ default: m.TemplatesPage })))
 const CurrencyPage = lazy(() => import("@/domains/currency/pages/CurrencyPage").then(m => ({ default: m.CurrencyPage })))
 
+// Report Designer
+const ReportTemplatesPage = lazy(() => import("@/domains/reporting/pages/ReportTemplatesPage").then(m => ({ default: m.ReportTemplatesPage })))
+const ReportDesignerPage = lazy(() => import("@/domains/reporting/pages/ReportDesignerPage").then(m => ({ default: m.ReportDesignerPage })))
+
 const EmployeesPage = lazy(() => import("@/domains/payroll/pages/EmployeesPage").then(m => ({ default: m.EmployeesPage })))
 const CreateEmployeePage = lazy(() => import("@/domains/payroll/pages/CreateEmployeePage").then(m => ({ default: m.CreateEmployeePage })))
 const EmployeeDetailPage = lazy(() => import("@/domains/payroll/pages/EmployeeDetailPage").then(m => ({ default: m.EmployeeDetailPage })))
@@ -192,6 +196,10 @@ export const router = createBrowserRouter([
 
       // Audit
       { path: "audit-log", element: <S><AuditLogPage /></S> },
+
+      // Report Designer
+      { path: "reports/templates", element: <S><ReportTemplatesPage /></S> },
+      { path: "reports/templates/:id/edit", element: <ReportDesignerPage /> },
 
       // Data Import / Export
       { path: "import", element: <S><DataImportPage /></S> },
