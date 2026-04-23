@@ -11,7 +11,7 @@ import { useFeedback } from "@/components/feedback"
 
 export function LoanPayoutPage() {
   usePageHelp(pageHelpContent.loanPayout)
-  usePagePolicies(["account"])
+  usePagePolicies(["account", "tax", "liabilities"])
   const navigate = useNavigate()
   const handleCancel = useCallback(() => navigate("/loans"), [navigate])
   useEscapeKey(handleCancel)

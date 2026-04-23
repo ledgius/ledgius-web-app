@@ -5,26 +5,62 @@ sections:
   - heading: What is this?
     body: >
       Record loan repayments. Each payment is split into principal
-      (reduces the loan balance on your balance sheet) and interest
-      (expense on your P&L). The {{term:GL}} entries are created
-      automatically.
+      (reduces the loan liability) and interest (expense or clears
+      accrued-interest-payable, depending on your tenant's basis). The
+      {{term:GL}} entries are created atomically with the payment row
+      and audit trail.
 
-  - heading: Principal vs Interest
+  - heading: Principal vs interest split rules
     body: >
-      - **Principal** — debit liability account, credit bank
-      - **Interest** — debit interest expense, credit bank
+      The split is auto-calculated from the loan's current accrued
+      interest balance plus the scheduled repayment amount. Your
+      lender's statement may show a different breakdown — {{good:you
+      can override either side}} on the Record Payment form and the
+      other auto-recomputes to match the total.
+      {{warn:The total amount must match your bank statement.}}
 
-      {{good:The split is calculated automatically from the loan's
-      interest rate.}} You can override if your lender's statement
-      shows a different breakdown.
-
-  - heading: Reconciliation
+  - heading: Cash-basis vs accrual-basis tenants
     body: >
-      Compare the loan balance shown here against your lender's
-      statement periodically. If they differ, check for missed payments,
-      rounding, or fee adjustments.
+      The posting shape depends on a per-tenant setting
+      (`loan_interest_basis`):
+
+      - **Accrual basis** (default): interest accrues monthly via the
+        accrual engine (debit Interest Expense, credit Accrued Interest
+        Payable). Payments clear the accrued balance — Dr Accrued
+        Interest, Dr Loan Liability, Cr Bank.
+      - **Cash basis**: no periodic accrual runs. Payment posts Dr
+        Interest Expense, Dr Loan Liability, Cr Bank directly.
+
+      Most business tenants run on accrual; small sole traders may
+      elect cash.
+
+  - heading: Part-payments and prepayments
+    body: >
+      - **Part-payment** — total < scheduled amount. Principal is
+        reduced by whatever remains after clearing the accrued interest
+        first. Balance carries forward.
+      - **Prepayment** — total > scheduled amount. The excess reduces
+        principal further, bringing the next period's interest down.
+        No penalty for prepayment in Ledgius's default tracking.
+
+  - heading: Overpayments
+    body: >
+      If the total you enter exceeds `current_balance + accrued_interest`,
+      the system rejects the payment with {{bad:ErrOverpayment}}. To
+      fully settle a loan and close it out, use the **Payout** flow
+      instead — it handles the final accrual + balance clearance + any
+      early-termination fee in one transaction.
+
+  - heading: Reversal
+    body: >
+      Recorded a wrong payment? Use Reverse Payment from the row-
+      level menu. The system posts an offsetting journal, restores
+      the loan balance and accrued interest, and marks the original
+      payment as reversed. Original rows are preserved for audit.
 
   - heading: Policies
     body: >
-      - ITAA 1997 s8-1 (Interest deductibility)
-      - ATO mixed-purpose loan apportionment rules
+      - ITAA 1997 s8-1 — Interest deductibility
+      - TR 95/25 — Mixed-use apportionment
+      - AASB 9 — Amortised-cost measurement of financial liabilities
+      - ATO BAS guide — interest as input-taxed supply (s40-5)
