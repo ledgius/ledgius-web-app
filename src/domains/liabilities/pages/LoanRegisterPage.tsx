@@ -87,7 +87,7 @@ const columns: Column<Loan>[] = [
 
 export function LoanRegisterPage() {
   usePageHelp(pageHelpContent.loanRegister)
-  usePagePolicies(["account"])
+  usePagePolicies(["account", "tax", "liabilities"])
   const navigate = useNavigate()
 
   // API not built yet — empty array shows the empty state
