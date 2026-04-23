@@ -290,48 +290,99 @@ function DockSwitcher({ current, onChange }: {
 }
 
 // ── Help content panel ──
+//
+// Content resolution order (per T-0038 §KHM-015..§KHM-017):
+//   1. If `content` is set (legacy `usePageHelp(pageHelpContent.xxx)` or
+//      local YAML), render that. Kept working for the ~40 pages still on
+//      the legacy pattern.
+//   2. Otherwise, render any internal-policy articles from the resolved
+//      page payload — these are the API-served Ledgius help articles.
+//   3. Otherwise, render the empty-state prompt.
+//
+// External-authority articles (ATO, AASB, etc.) never appear on the Help
+// tab — they're the Policies tab's job so users can distinguish Ledgius
+// guidance from regulatory source material at a glance.
 
-function HelpContentPanel({ content }: { content: HelpPanelState["content"] }) {
-  if (!content) {
+function HelpContentPanel({
+  content,
+  policies,
+}: {
+  content: HelpPanelState["content"]
+  policies: ResolvedPage | null
+}) {
+  if (content) {
     return (
-      <div className="text-sm text-gray-400 text-center py-8">
-        No help available for this page. Press <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs font-mono">F1</kbd> to toggle.
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900 mb-3">{content.title}</h3>
+        <div className="space-y-4">
+          {content.sections.map((section, i) => (
+            <div key={i}>
+              {section.heading && (
+                <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+                  {section.heading}
+                </h4>
+              )}
+              <HelpMarkup text={section.body} />
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  const internalArticles = (policies?.articles ?? []).filter(
+    (a) => a.authority_type === "internal_policy",
+  )
+  if (internalArticles.length > 0) {
+    return (
+      <div className="space-y-5">
+        {internalArticles.map((article) => (
+          <div key={article.id}>
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">{article.title}</h3>
+            <div className="space-y-4">
+              {article.sections.map((sec) => (
+                <div key={sec.id}>
+                  {sec.heading && (
+                    <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+                      {sec.heading}
+                    </h4>
+                  )}
+                  <HelpMarkup text={sec.body} />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     )
   }
 
   return (
-    <div>
-      <h3 className="text-sm font-semibold text-gray-900 mb-3">{content.title}</h3>
-      <div className="space-y-4">
-        {content.sections.map((section, i) => (
-          <div key={i}>
-            {section.heading && (
-              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
-                {section.heading}
-              </h4>
-            )}
-            <HelpMarkup text={section.body} />
-          </div>
-        ))}
-      </div>
+    <div className="text-sm text-gray-400 text-center py-8">
+      No help available for this page. Press <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs font-mono">F1</kbd> to toggle.
     </div>
   )
 }
 
 // ── Policies content panel ──
+//
+// Renders external-authority articles only — internal-policy articles
+// appear on the Help tab so the two tabs serve distinct purposes.
 
 function PoliciesContent({ policies }: { policies: ResolvedPage | null }) {
-  if (!policies || policies.articles.length === 0) {
+  const external = (policies?.articles ?? []).filter(
+    (a) => a.authority_type !== "internal_policy",
+  )
+  if (external.length === 0) {
     return (
       <div className="text-sm text-gray-400 text-center py-8">
-        No policies apply to this page.
+        No external policies apply to this page.
       </div>
     )
   }
   return (
     <div className="space-y-5">
-      {policies.articles.map((article) => (
+      {external.map((article) => (
         <PolicyArticle key={article.id} article={article} />
       ))}
     </div>
@@ -369,7 +420,7 @@ function PanelInner({ ctx, policyCount }: { ctx: HelpPanelState; policyCount: nu
 
       <div className="flex-1 overflow-y-auto p-4">
         {ctx.activeTab === "help" ? (
-          <HelpContentPanel content={ctx.content} />
+          <HelpContentPanel content={ctx.content} policies={ctx.policies} />
         ) : (
           <PoliciesContent policies={ctx.policies} />
         )}
@@ -493,7 +544,11 @@ export function HelpPanelSidebar() {
 
   if (!ctx || !ctx.isOpen) return null
 
-  const policyCount = ctx.policies?.articles.length ?? 0
+  // Policies tab badge counts external authorities only — internal-policy
+  // articles surface on the Help tab instead (per T-0038 §KHM-017).
+  const policyCount = (ctx.policies?.articles ?? []).filter(
+    (a) => a.authority_type !== "internal_policy",
+  ).length
 
   if (ctx.dockPosition === "float") {
     return <FloatingPanel ctx={ctx} policyCount={policyCount} />

@@ -94,10 +94,24 @@ Every entity: `/entity` (list), `/entity/new` (create), `/entity/:id` (detail wi
 
 ### 8. Help System
 - F1 toggles help panel
-- YAML-based content in `locales/en-AU/help/`
+- **Help + policy content is served by the knowledge pipeline API** per
+  R-0008 §KNW-PIP-004 / §KNW-PIP-018 / §KNW-PIP-025 — articles live as
+  YAML in `ledgius-api/docs/authority/articles/` (authored content under
+  `articles/internal/`; ingested external authority under `articles/ato/`
+  etc.), loaded at API boot, and served via `GET /api/v1/knowledge/
+  articles?page=&domains=` with ETag + Cache-Control.
+- **Do NOT add help YAML to `src/locales/en-AU/help/`** — that tier is
+  being retired per T-0038. Pages that still have local YAML there
+  (migration in progress) can keep theirs for now, but new pages must
+  use internal-policy articles instead.
+- Pages declare domain tags via `usePagePolicies(["domain1", "domain2"])`;
+  the knowledge resolver returns matching articles (internal + external).
+  The Help tab renders internal-policy articles; the Policies tab
+  renders external authorities (colour-coded by type per §KNW-PIP-022).
 - `{{term:AR}}` syntax for glossary tooltips
 - `{{good:}}`, `{{warn:}}`, `{{bad:}}` for semantic markup
-- Sub-context help (e.g. Data Import switches for MYOB/Xero)
+- Sub-context help is a legacy pattern on the local-YAML tier; new pages
+  use a narrower domain tag or manifest override instead.
 
 ### 9. Feedback System
 - F2 opens feedback panel
@@ -152,9 +166,44 @@ When working on a feature branch, **merge master into the branch** before runnin
 
 ## Help Content
 
-Help YAML files live in `src/locales/en-AU/help/`. Each page has a YAML file with:
-- `page:` — route path
-- `title:` — help panel title
-- `sections:` — array of heading + body with markup support
+Help + policy content is served by the knowledge pipeline API per R-0008
+§KNW-PIP-004 / §KNW-PIP-018 / §KNW-PIP-025 — migration in progress via
+T-0038.
 
-All features must have help content updated when UX behaviour changes.
+**Canonical home for new help content:**
+`ledgius-api/docs/authority/articles/internal/ledgius-{domain}-{page}.yaml`
+
+Article structure (authored):
+```yaml
+id: LEDGIUS-DOMAIN-PAGE           # Stable, uppercase, hyphenated
+title: Page Title
+jurisdiction: AU                  # AU | NZ | UK | ...
+issuer: Ledgius
+authority_type: internal_policy
+effective:
+  start: "2026-04-01"
+review_date: "2027-04-01"
+domains: [account, tax, assets]   # Match the page's usePagePolicies() call
+sections:
+  - id: what-is-this              # Stable, hyphenated, derived from heading
+    heading: What is this?
+    body: |
+      Prose with {{term:glossary}}, {{good:highlights}}, {{warn:warnings}}.
+```
+
+The knowledge store loads everything under `docs/authority/articles/`
+recursively at API boot. Reloads require an API restart (hot-reload not
+yet implemented). Endpoints serve with ETag + Cache-Control; the frontend
+uses `usePagePolicies(domains)` and the help panel picks up internal-
+policy articles on the Help tab + external authorities on the Policies
+tab automatically.
+
+**Legacy local YAML under `src/locales/en-AU/help/`:**
+
+Pre-T-0038 pages may still use the local YAML loader (`src/lib/help/
+loader.ts`) or the `pageHelpContent` map in `src/hooks/usePageHelp.ts`.
+These tiers are being retired — do NOT add new entries. Migrate legacy
+content to knowledge articles when you touch a page substantially.
+
+All features must have help content updated when UX behaviour changes —
+but you update the knowledge article, not the frontend YAML.

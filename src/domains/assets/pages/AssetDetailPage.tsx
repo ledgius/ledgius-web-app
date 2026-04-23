@@ -2,7 +2,6 @@
 import { useState, useMemo } from "react"
 import { useParams, useNavigate, Link } from "react-router-dom"
 import { Pencil, Trash2, RotateCcw, Package, ArrowLeft } from "lucide-react"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
 import { Button, InfoPanel, InlineAlert, Badge } from "@/components/primitives"
@@ -40,7 +39,6 @@ const methodLabels: Record<string, string> = {
 }
 
 export function AssetDetailPage() {
-  usePageHelp(pageHelpContent.assetDetail)
   usePagePolicies(["account", "tax", "assets"])
 
   const { id } = useParams<{ id: string }>()

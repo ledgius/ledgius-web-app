@@ -1,7 +1,6 @@
 // Spec references: R-0063.
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell } from "@/components/layout"
 import { Button, InfoPanel } from "@/components/primitives"
@@ -86,7 +85,6 @@ const columns: Column<Loan>[] = [
 ]
 
 export function LoanRegisterPage() {
-  usePageHelp(pageHelpContent.loanRegister)
   usePagePolicies(["account", "tax", "liabilities"])
   const navigate = useNavigate()
 
