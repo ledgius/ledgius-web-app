@@ -1,6 +1,5 @@
 // Spec references: R-0062.
 import { useState } from "react"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
 import { Button, InfoPanel } from "@/components/primitives"
@@ -25,7 +24,6 @@ const methodLabels: Record<string, string> = {
 }
 
 export function DepreciationPage() {
-  usePageHelp(pageHelpContent.depreciation)
   usePagePolicies(["account", "tax", "assets"])
   const feedback = useFeedback()
 
