@@ -2,7 +2,6 @@ import { BackLink } from "@/components/primitives"
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import { CheckCircle2, Circle, Clock } from "lucide-react"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell } from "@/components/layout"
 import { InfoPanel } from "@/components/primitives"
@@ -10,8 +9,7 @@ import { useBAS, useGSTDetail } from "../hooks/useBAS"
 import { formatCurrency } from "@/shared/lib/utils"
 
 export function BASPage() {
-  usePageHelp(pageHelpContent.bas)
-  usePagePolicies(["tax"])
+  usePagePolicies(["tax", "reporting", "audit"])
   const [from, setFrom] = useState("2026-01-01")
   const [to, setTo] = useState("2026-03-31")
   const [showDetail, setShowDetail] = useState(false)

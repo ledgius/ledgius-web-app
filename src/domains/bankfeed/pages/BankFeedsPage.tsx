@@ -4,6 +4,7 @@
 
 import { useState } from "react"
 import { Button, Badge, Skeleton, EmptyState, InlineAlert, Combobox } from "@/components/primitives"
+import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { useAccounts } from "@/domains/account/hooks/useAccounts"
 import { formatDate } from "@/shared/lib/utils"
 import {
@@ -18,6 +19,7 @@ import {
 } from "../hooks/useBankFeed"
 
 export function BankFeedsPage() {
+  usePagePolicies(["banking", "account"])
   const { data: connections, isLoading, error, refetch } = useBankFeedConnections()
   const connect = useConnectBank()
   const [contactEmail, setContactEmail] = useState("")

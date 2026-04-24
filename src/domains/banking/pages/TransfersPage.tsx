@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react"
 import { Link } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
 import { InfoPanel } from "@/components/primitives"
@@ -9,8 +8,7 @@ import { api } from "@/shared/lib/api"
 import { formatCurrency } from "@/shared/lib/utils"
 
 export function TransfersPage() {
-  usePageHelp(pageHelpContent.transfers)
-  usePagePolicies(["banking"])
+  usePagePolicies(["banking", "account"])
   const { data: accounts } = useAccounts()
   const bankAccounts = accounts?.filter(a => a.category === "A") ?? []
 

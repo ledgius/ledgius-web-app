@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
 import { Button, Combobox } from "@/components/primitives"
@@ -22,8 +21,7 @@ import {
 import { formatCurrency, formatDate } from "@/shared/lib/utils"
 
 export function BankingPage() {
-  usePageHelp(pageHelpContent.banking)
-  usePagePolicies(["banking"])
+  usePagePolicies(["banking", "account", "audit"])
   const { data: accounts } = useAccounts()
   const [selectedAccount, setSelectedAccount] = useState(0)
   const [statementBalance, setStatementBalance] = useState("")

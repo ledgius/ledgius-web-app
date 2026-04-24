@@ -1,7 +1,6 @@
 import { BackLink } from "@/components/primitives"
 import { useState } from "react"
 import { Link } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
 import { Button, InfoPanel } from "@/components/primitives"
@@ -17,8 +16,7 @@ interface JournalLineInput {
 }
 
 export function GLPage() {
-  usePageHelp(pageHelpContent.journalEntry)
-  usePagePolicies(["journal"])
+  usePagePolicies(["account", "journal", "audit"])
   const [showForm, setShowForm] = useState(false)
   const [reference, setReference] = useState("")
   const [description, setDescription] = useState("")

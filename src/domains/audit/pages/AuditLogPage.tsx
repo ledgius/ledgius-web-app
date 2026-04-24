@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell } from "@/components/layout"
 import { DataTable } from "@/shared/components/DataTable"
@@ -15,8 +14,7 @@ const columns = [
 ]
 
 export function AuditLogPage() {
-  usePageHelp(pageHelpContent.auditLog)
-  usePagePolicies(["platform"])
+  usePagePolicies(["audit", "account"])
   const [entityType, setEntityType] = useState("")
   const { data: entries, isLoading, error } = useAuditLog(entityType || undefined)
 
