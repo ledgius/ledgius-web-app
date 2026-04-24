@@ -20,6 +20,8 @@ export interface ResolvedArticle {
   sections: ResolvedSection[]
   /** T-0039 KCR-004 — page-top Info Panel content. Omitted when not authored. */
   info_panel?: ResolvedInfoPanel
+  /** Primary article for the current page (request page matched article.routes). */
+  is_primary?: boolean
 }
 
 export interface ResolvedInfoPanel {
