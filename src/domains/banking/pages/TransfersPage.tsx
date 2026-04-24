@@ -1,8 +1,6 @@
 import { useState, useMemo } from "react"
-import { Link } from "react-router-dom"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
-import { InfoPanel } from "@/components/primitives"
 import { useAccounts } from "@/domains/account/hooks/useAccounts"
 import { api } from "@/shared/lib/api"
 import { formatCurrency } from "@/shared/lib/utils"
@@ -50,22 +48,6 @@ export function TransfersPage() {
 
   return (
     <PageShell header={header}>
-      <InfoPanel title="About Bank Transfers" storageKey="transfers-info">
-        <p>
-          <strong>Bank Transfers</strong> record money moving between your own bank accounts — for example, shifting
-          funds from your main trading account to a savings or tax-provision account. Both accounts are{" "}
-          <Link to="/accounts" className="underline font-medium">asset accounts</Link> you control.
-        </p>
-        <p className="mt-1.5">
-          A transfer posts two ledger lines — a credit on the source account and a matching debit on the destination —
-          with no GST impact. The reference is auto-generated (<code className="font-mono text-xs">XFER-XXXXXX</code>)
-          but editable so you can match a bank's own transfer identifier.
-        </p>
-        <p className="mt-1.5 text-blue-600">
-          Don't use transfers for payments to third parties (use <Link to="/payments" className="underline font-medium">Payments</Link>) or
-          for drawings/loans to owners (use a journal entry against the owner's equity or loan account).
-        </p>
-      </InfoPanel>
       {error && <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-md">{error}</div>}
       {success && <div className="mb-4 p-3 bg-green-50 text-green-700 text-sm rounded-md">{success}</div>}
       <PageSection title="Transfer Details">

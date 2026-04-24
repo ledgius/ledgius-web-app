@@ -3,7 +3,7 @@ import { useState, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
-import { Button, InfoPanel, InlineAlert } from "@/components/primitives"
+import { Button, InlineAlert } from "@/components/primitives"
 import { MoneyValue } from "@/components/financial"
 import { useEscapeKey } from "@/hooks/useEscapeKey"
 import { useFeedback } from "@/components/feedback"
@@ -58,13 +58,6 @@ export function LoanPayoutPage() {
 
   return (
     <PageShell header={header}>
-      <InfoPanel title="About Loan Payout" storageKey="loan-payout-info">
-        <p>
-          Close out a loan by recording the final payout. This zeros the loan balance,
-          records any early termination fees, and creates the closing journal entries.
-        </p>
-      </InfoPanel>
-
       {error && <InlineAlert variant="error" className="mb-4">{error}</InlineAlert>}
 
       <PageSection title="Payout Details">

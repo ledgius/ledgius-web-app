@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom"
 import { Plus } from "lucide-react"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell } from "@/components/layout"
-import { Button, InfoPanel, Badge } from "@/components/primitives"
+import { Button, Badge } from "@/components/primitives"
 import { MoneyValue, DateValue } from "@/components/financial"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import {
@@ -175,14 +175,6 @@ export function AssetRegisterPage() {
 
   return (
     <PageShell header={header} loading={isLoading}>
-      <InfoPanel title="About Fixed Assets" storageKey="asset-register-info" collapsible>
-        <p>
-          Your fixed asset register tracks every capital item — plant, equipment, vehicles, IT.
-          Each asset carries its purchase cost, depreciation method, and current book value.
-          Click any row to drill into history, adjust estimates, or dispose.
-        </p>
-      </InfoPanel>
-
       {totals && items.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
           <SummaryCard label="Active" value={String(totals.count_active)} />

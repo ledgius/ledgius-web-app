@@ -2,7 +2,7 @@
 import { useState } from "react"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
-import { Button, InfoPanel } from "@/components/primitives"
+import { Button } from "@/components/primitives"
 import { MoneyValue } from "@/components/financial"
 import { useFeedback } from "@/components/feedback"
 import { Play } from "lucide-react"
@@ -61,14 +61,6 @@ export function DepreciationPage() {
 
   return (
     <PageShell header={header} loading={isLoading}>
-      <InfoPanel title="About Depreciation" storageKey="depreciation-info">
-        <p>
-          Depreciation reduces the book value of your assets over their useful life.
-          Run depreciation monthly or quarterly to keep your accounts accurate.
-          Instant write-off assets are fully depreciated in the purchase period.
-        </p>
-      </InfoPanel>
-
       {/* Summary cards */}
       <PageSection title="Summary">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">

@@ -3,7 +3,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell } from "@/components/layout"
-import { Button, InfoPanel } from "@/components/primitives"
+import { Button } from "@/components/primitives"
 import { MoneyValue, DateValue } from "@/components/financial"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { Plus } from "lucide-react"
@@ -112,13 +112,6 @@ export function LoanRegisterPage() {
 
   return (
     <PageShell header={header} loading={isLoading}>
-      <InfoPanel title="About Loans" storageKey="loan-register-info">
-        <p>
-          Your loan register tracks every financing arrangement — bank loans, equipment finance,
-          vehicle chattel mortgages. Each loan carries its balance, repayment schedule, and interest rate.
-        </p>
-      </InfoPanel>
-
       <DataTable
         columns={columns}
         data={loans}

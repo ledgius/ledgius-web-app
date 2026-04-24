@@ -1,8 +1,8 @@
 // Spec references: R-0065 (Phase 1), A-0036
 import { useState, useCallback, useMemo, useRef, useEffect } from "react"
-import { useLocation, useNavigate } from "react-router-dom"
+import { useLocation } from "react-router-dom"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
-import { Button, Combobox, Skeleton, InlineAlert, InfoPanel, StatBar, StatCell } from "@/components/primitives"
+import { Button, Combobox, Skeleton, InlineAlert, StatBar, StatCell } from "@/components/primitives"
 import { MoneyValue, DateValue, StatusPill } from "@/components/financial"
 import { PageShell } from "@/components/layout"
 import { useFeedback } from "@/components/feedback"
@@ -26,11 +26,9 @@ import { api } from "@/shared/lib/api"
 import { RulesDrawer } from "../components/RulesDrawer"
 import { cn } from "@/shared/lib/utils"
 import {
-  CheckCircle2,
   ChevronDown,
   ChevronRight,
   ChevronUp,
-  Circle,
   Search,
   X,
   Plus,
@@ -970,30 +968,6 @@ export function ReconciliationPage() {
   const { data: vendors } = useVendors()
   const searchRef = useRef<HTMLInputElement>(null)
   const location = useLocation()
-  const navigate = useNavigate()
-
-  // Hover-to-highlight: glow target element orange, clear previous immediately
-  const activeGlowRef = useRef<{ el: HTMLElement; li: HTMLElement | null } | null>(null)
-  const clearGlow = useCallback(() => {
-    if (activeGlowRef.current) {
-      activeGlowRef.current.el.style.boxShadow = ""
-      if (activeGlowRef.current.li) activeGlowRef.current.li.style.backgroundColor = ""
-      activeGlowRef.current = null
-    }
-  }, [])
-  const glowTarget = useCallback((targetId: string, liElement?: HTMLElement | null) => {
-    clearGlow()
-    const el = document.querySelector(`[data-guide-target="${targetId}"]`) as HTMLElement | null
-    if (!el) return
-    el.style.boxShadow = "0 0 0 3px rgba(251, 146, 60, 0.5)"
-    el.style.transition = "box-shadow 0.3s ease"
-    el.style.borderRadius = el.style.borderRadius || "0.5rem"
-    if (liElement) {
-      liElement.style.backgroundColor = "rgba(255, 237, 213, 0.6)"
-      liElement.style.transition = "background-color 0.2s ease"
-    }
-    activeGlowRef.current = { el, li: liElement ?? null }
-  }, [clearGlow])
   const navState = location.state as { accountId?: number } | null
 
   // State
@@ -1262,92 +1236,6 @@ export function ReconciliationPage() {
   return (
     <div className="flex h-full">
     <PageShell header={header} layout="stacked" className="flex-1 min-w-0">
-      {/* Info Panel */}
-      <InfoPanel title="Getting started with bank reconciliation" storageKey="recon-v2-info" collapsible>
-        {(() => {
-          // Compute step progress
-          const hasAccount = selectedAccountId > 0
-          const hasTransactions = queueRaw.length > 0
-          const hasUnallocated = counts.unallocated > 0
-          const hasProposed = counts.proposed > 0
-          const hasApproved = counts.approved > 0
-          const allAllocated = hasTransactions && counts.unallocated === 0
-
-          const steps: Array<{
-            label: React.ReactNode
-            status: "done" | "active" | "pending"
-            target?: string
-          }> = [
-            {
-              label: <><strong>Select a bank account</strong> — use the dropdown above to choose which bank account you want to reconcile. If you have multiple accounts, you can switch between them at any time.</>,
-              status: hasAccount ? "done" : "active",
-              target: "bank-account-header",
-            },
-            {
-              label: <>
-                <strong>Import transactions</strong> — upload a bank statement file (OFX, QIF, or CSV) via{" "}
-                <button type="button" onClick={() => navigate("/bank-statements", { state: { accountId: selectedAccountId || undefined } })} className="text-blue-700 underline hover:text-blue-900 font-medium">Bank Statements</button>
-                {", "}or if you have automatic bank feeds configured, transactions arrive via your{" "}
-                <button type="button" onClick={() => navigate("/settings/bank-feeds")} className="text-blue-700 underline hover:text-blue-900 font-medium">live feed connection</button>.
-              </>,
-              status: hasTransactions ? "done" : hasAccount ? "active" : "pending",
-            },
-            {
-              label: <><strong>Work through unallocated transactions</strong> — click the <em>Unallocated</em> tab to see transactions that need your attention. Click any row to expand it and choose how to handle it:</>,
-              status: hasTransactions && !hasUnallocated ? "done" : hasTransactions ? "active" : "pending",
-              target: "filter-tabs",
-            },
-            {
-              label: <>
-                <strong>Choose an allocation method</strong> for each transaction:
-                <ul className="list-disc list-inside ml-4 mt-0.5 space-y-0.5">
-                  <li className="rounded px-1 -mx-1 transition-colors" onMouseEnter={(e) => glowTarget("tab-manual", e.currentTarget)} onMouseLeave={clearGlow}><strong>Manual Allocation</strong> — select a GL account, tax code, and contact. Use <em>Add line</em> to split across multiple accounts (e.g., 70% business expense, 30% owner drawings).</li>
-                  <li className="rounded px-1 -mx-1 transition-colors" onMouseEnter={(e) => glowTarget("tab-rule", e.currentTarget)} onMouseLeave={clearGlow}><strong>Allocation Rule</strong> — create a reusable pattern that automatically allocates this and all matching transactions. Rules save you time on recurring payments like rent, subscriptions, and EFTPOS deposits.</li>
-                  <li className="rounded px-1 -mx-1 transition-colors" onMouseEnter={(e) => glowTarget("tab-link", e.currentTarget)} onMouseLeave={clearGlow}><strong>Link Existing</strong> — connect to an invoice, bill, or journal entry already in your books. Use this when you've already recorded the transaction and just need to mark it as reconciled.</li>
-                  <li className="rounded px-1 -mx-1 transition-colors" onMouseEnter={(e) => glowTarget("tab-transfer", e.currentTarget)} onMouseLeave={clearGlow}><strong>Transfer Money</strong> — record a movement between your own bank accounts (e.g., cheque to savings, credit card payment).</li>
-                </ul>
-                <p className="mt-1">You can also <strong>defer</strong> a transaction to come back to it later, or <strong>exclude</strong> it from reconciliation entirely.</p>
-              </>,
-              status: allAllocated ? "done" : hasUnallocated ? "active" : "pending",
-            },
-            {
-              label: <><strong>Review your work</strong> — click the <em>Proposed</em> tab to see all allocations you've made. Everything here is in a safe staging area — nothing has affected your books yet. You can change or undo any allocation before approving.</>,
-              status: hasApproved && !hasProposed ? "done" : hasProposed ? "active" : "pending",
-              target: "filter-tabs",
-            },
-            {
-              label: <><strong>Approve</strong> — becomes enabled once you have at least one proposed allocation or exception. You don't have to finish everything in one session — approve what's ready now and come back for the rest later. Only approved transactions create journal entries in your books.</>,
-              status: hasApproved && !hasProposed ? "done" : hasProposed ? "active" : "pending",
-              target: "approve-button",
-            },
-          ]
-
-          return (
-            <ol className="space-y-1.5">
-              {steps.map((step, i) => (
-                <li
-                  key={i}
-                  className="flex items-start gap-2 cursor-default rounded px-1 -mx-1 transition-colors"
-                  onMouseEnter={step.target ? (e) => glowTarget(step.target!, e.currentTarget) : undefined}
-                  onMouseLeave={clearGlow}
-                >
-                  <span className="shrink-0 mt-0.5">
-                    {step.status === "done" ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                    ) : step.status === "active" ? (
-                      <Circle className="h-4 w-4 text-blue-400" />
-                    ) : (
-                      <Circle className="h-4 w-4 text-gray-300" />
-                    )}
-                  </span>
-                  <span>{step.label}</span>
-                </li>
-              ))}
-            </ol>
-          )
-        })()}
-      </InfoPanel>
-
       {/* Bank Account Header (REC-008 to REC-010) — CSS Grid: row 1 = labels, row 2 = values */}
       <div className="border border-gray-300 rounded-lg bg-white px-5 py-3" data-guide-target="bank-account-header">
         {(() => {

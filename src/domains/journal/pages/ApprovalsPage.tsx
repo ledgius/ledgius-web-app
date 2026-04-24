@@ -1,7 +1,5 @@
-import { Link } from "react-router-dom"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell } from "@/components/layout"
-import { InfoPanel } from "@/components/primitives"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { usePendingApprovals, useApproveTransaction, useRejectTransaction, type PendingApproval } from "../hooks/useJournal"
 import { formatDate } from "@/shared/lib/utils"
@@ -65,24 +63,6 @@ export function ApprovalsPage() {
 
   return (
     <PageShell header={header} loading={isLoading}>
-      <InfoPanel title="About Transaction Approvals" storageKey="approvals-info">
-        <p>
-          <strong>Transaction Approvals</strong> gates high-impact postings — journal entries, year-end closes, and any
-          transaction over your configured approval threshold — so a second pair of eyes signs off before the entry
-          hits the ledger.
-        </p>
-        <p className="mt-1.5">
-          Each pending transaction shows the date, description, total amount, and who submitted it. Click{" "}
-          <strong>Approve</strong> to post, or <strong>Reject</strong> with a reason to send it back. Rejected
-          transactions stay as drafts on their origin page (e.g. a rejected manual journal returns to{" "}
-          <Link to="/gl" className="underline font-medium">Journal Entries</Link>) for the submitter to fix and
-          resubmit.
-        </p>
-        <p className="mt-1.5 text-blue-600">
-          Approvals are audit events — the approver, timestamp, and any rejection reason are permanently recorded and
-          visible on the transaction's detail page.
-        </p>
-      </InfoPanel>
       {message && (
         <div className="mb-4 p-3 bg-gray-50 border-l-[3px] border-l-green-400 border border-gray-200 text-sm text-gray-800 rounded-md">{message}</div>
       )}

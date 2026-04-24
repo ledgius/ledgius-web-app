@@ -1,9 +1,9 @@
 // Spec references: R-0019, A-0019
 import { useState, useRef, useCallback } from "react"
-import { useNavigate, Link } from "react-router-dom"
+import { useNavigate } from "react-router-dom"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell } from "@/components/layout"
-import { Button, Combobox, Badge, Skeleton, InfoPanel } from "@/components/primitives"
+import { Button, Combobox, Badge, Skeleton } from "@/components/primitives"
 import { useFeedback } from "@/components/feedback"
 import { DataTable } from "@/shared/components/DataTable"
 import type { Column } from "@/shared/components/DataTable"
@@ -18,9 +18,6 @@ import { formatDate, cn } from "@/shared/lib/utils"
 import {
   Upload,
   CheckCircle,
-  CheckCircle2,
-  Circle,
-  Clock,
   AlertCircle,
   ArrowRight,
   FileText,
@@ -261,48 +258,6 @@ export function BankStatementsPage() {
 
   return (
     <PageShell header={header}>
-      {/* Info panel */}
-      <InfoPanel title="How to import bank transactions" storageKey="bank-import-transactions-info">
-        <div className="space-y-2">
-          <div className="flex items-start gap-2">
-            {selectedAccountId > 0 ? (
-              <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-            ) : (
-              <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
-            )}
-            <p className="text-xs"><strong>1. Select a bank account</strong> from the dropdown below.</p>
-          </div>
-          <div className="flex items-start gap-2">
-            {(batches ?? []).length > 0 ? (
-              <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-            ) : selectedAccountId > 0 ? (
-              <Clock className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-            ) : (
-              <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
-            )}
-            <p className="text-xs"><strong>2. Upload a bank statement</strong> file using the <strong>"Choose File"</strong> button or drag and drop (OFX, CSV, QIF, or QBO).</p>
-          </div>
-          <div className="flex items-start gap-2">
-            {(batches ?? []).some((b: { status: string }) => b.status === "complete") ? (
-              <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-            ) : (batches ?? []).length > 0 ? (
-              <Clock className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-            ) : (
-              <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
-            )}
-            <p className="text-xs"><strong>3. Review imported transactions</strong> in the Import History table below — check for duplicates and verify totals.</p>
-          </div>
-          <div className="flex items-start gap-2">
-            {unmatchedCount === 0 && (batches ?? []).length > 0 ? (
-              <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
-            ) : (
-              <Circle className="h-4 w-4 text-gray-300 shrink-0 mt-0.5" />
-            )}
-            <p className="text-xs"><strong>4. Go to <Link to="/bank-reconciliation" className="text-primary-600 hover:text-primary-800 underline">Reconciliation</Link></strong> to match imported transactions against your ledger entries.</p>
-          </div>
-        </div>
-      </InfoPanel>
-
       {/* Bank account selector */}
       <div className="bg-white border border-gray-200 rounded-lg p-5 space-y-3">
         <h2 className="text-sm font-semibold text-gray-700">Bank Account</h2>
