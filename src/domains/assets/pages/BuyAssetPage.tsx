@@ -3,7 +3,7 @@ import { useState, useCallback, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
-import { Button, InfoPanel, InlineAlert } from "@/components/primitives"
+import { Button, InlineAlert } from "@/components/primitives"
 import { MoneyValue } from "@/components/financial"
 import { useEscapeKey } from "@/hooks/useEscapeKey"
 import {
@@ -115,19 +115,6 @@ export function BuyAssetPage() {
 
   return (
     <PageShell header={header}>
-      <InfoPanel title="Recording an Asset Purchase" storageKey="buy-asset-info" collapsible>
-        <p>
-          Record a new asset purchase paid from a bank account. On submit, the system posts a
-          balanced acquisition journal (Dr capital, Dr GST, Cr bank), creates the asset row with
-          status <strong>Active</strong>, and writes an audit entry — all in one database
-          transaction.
-        </p>
-        <p className="mt-1.5">
-          Bill-linked acquisitions (create a new bill at the same time, or capitalise an existing
-          bill line) arrive in a follow-up task. For now, cash / bank mode only.
-        </p>
-      </InfoPanel>
-
       {error && <InlineAlert variant="error" className="mb-4">{error}</InlineAlert>}
 
       {eligibleForInstantWriteoff && depreciationMethod !== "instant_writeoff" && (

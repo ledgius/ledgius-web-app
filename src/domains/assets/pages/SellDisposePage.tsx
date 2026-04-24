@@ -3,7 +3,7 @@ import { useState, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
-import { Button, InfoPanel, InlineAlert } from "@/components/primitives"
+import { Button, InlineAlert } from "@/components/primitives"
 import { MoneyValue } from "@/components/financial"
 import { useEscapeKey } from "@/hooks/useEscapeKey"
 import { useFeedback } from "@/components/feedback"
@@ -54,13 +54,6 @@ export function SellDisposePage() {
 
   return (
     <PageShell header={header}>
-      <InfoPanel title="About Asset Disposal" storageKey="sell-dispose-info">
-        <p>
-          Record the sale or disposal of an asset. The system calculates the gain or loss
-          based on the current book value vs sale proceeds and creates the appropriate journal entries.
-        </p>
-      </InfoPanel>
-
       {error && <InlineAlert variant="error" className="mb-4">{error}</InlineAlert>}
 
       <PageSection title="Disposal Details">

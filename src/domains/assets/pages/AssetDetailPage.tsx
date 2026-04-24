@@ -4,7 +4,7 @@ import { useParams, useNavigate, Link } from "react-router-dom"
 import { Pencil, Trash2, RotateCcw, Package, ArrowLeft } from "lucide-react"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
-import { Button, InfoPanel, InlineAlert, Badge } from "@/components/primitives"
+import { Button, InlineAlert, Badge } from "@/components/primitives"
 import { MoneyValue, DateValue, StatusPill } from "@/components/financial"
 import { AuditTimeline, type AuditEvent } from "@/components/workflow"
 import {
@@ -124,15 +124,6 @@ export function AssetDetailPage() {
 
   return (
     <PageShell header={header}>
-      <InfoPanel title="Working with this asset" storageKey="asset-detail-info" collapsible>
-        <p>
-          This page is the hub for everything about a single asset. Edit non-posting fields
-          (name, description, business-use %) in-place; use <strong>Dispose</strong> when you sell
-          or scrap it. Reclassifications, estimate changes and prior-period restatements arrive
-          with the correction commands in a later task.
-        </p>
-      </InfoPanel>
-
       {editing && <EditPanel asset={asset} onClose={() => setEditing(false)} />}
 
       <PageSection title="Summary">

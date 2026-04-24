@@ -18,10 +18,24 @@ interface BusinessSettings {
   info_panels_enabled?: boolean
 }
 
-/** Pick the first internal-policy article with an info_panel. */
+/**
+ * Pick the article whose info_panel should render at the top of the
+ * page. The article must be:
+ *
+ *   - internal_policy (external authorities never feed the info panel)
+ *   - carry an info_panel block
+ *   - flagged is_primary by the resolver — i.e. the request's page
+ *     path matched one of the article's `routes`
+ *
+ * Without the is_primary check the panel leaks onto unrelated pages
+ * (Books Overview, etc.) by latching onto whatever article happens to
+ * share a domain tag like `tax` or `account`.
+ */
 function firstInfoPanelArticle(articles: ResolvedArticle[] | undefined): ResolvedArticle | undefined {
   if (!articles) return undefined
-  return articles.find((a) => a.authority_type === "internal_policy" && a.info_panel !== undefined)
+  return articles.find(
+    (a) => a.is_primary && a.authority_type === "internal_policy" && a.info_panel !== undefined,
+  )
 }
 
 export function ArticleInfoPanel() {

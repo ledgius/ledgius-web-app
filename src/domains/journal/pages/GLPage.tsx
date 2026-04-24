@@ -1,9 +1,8 @@
 import { BackLink } from "@/components/primitives"
 import { useState } from "react"
-import { Link } from "react-router-dom"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
-import { Button, InfoPanel } from "@/components/primitives"
+import { Button } from "@/components/primitives"
 import { usePostJournal, usePendingApprovals, useApproveTransaction, useYearEndClose } from "../hooks/useJournal"
 import { useAccounts } from "@/domains/account/hooks/useAccounts"
 import { formatCurrency, formatDate } from "@/shared/lib/utils"
@@ -153,27 +152,6 @@ export function GLPage() {
   return (
     <PageShell header={header}>
       <BackLink />
-      <InfoPanel title="About Journal Entries" storageKey="journal-info">
-        <p>
-          <strong>Journal Entries</strong> are the raw debits and credits that move money between accounts in your
-          general ledger. Most entries are created automatically as side-effects of invoices, bills, payments, and
-          receipts — this page shows them all plus any manual adjustments you post.
-        </p>
-        <p className="mt-1.5">
-          <strong>Double-entry rule:</strong> every manual journal entry must balance — total debits equal total
-          credits. The <strong>Post Entry</strong> button stays disabled until the entry balances.
-        </p>
-        <p className="mt-1.5">
-          Manual journals typically cover prepayments, accruals, depreciation, or correcting mistakes. If you're not
-          sure whether to use a journal, first check if a <Link to="/invoices" className="underline font-medium">bill</Link>,{" "}
-          <Link to="/bills" className="underline font-medium">invoice</Link>, or{" "}
-          <Link to="/transfers" className="underline font-medium">transfer</Link> would capture what you're doing — those flow through supporting documents and are easier to audit.
-        </p>
-        <p className="mt-1.5 text-blue-600">
-          Posted entries are <strong>immutable</strong> — to reverse one, post a contra entry. Entries over your
-          approval threshold show in <Link to="/approvals" className="underline font-medium">Transaction Approvals</Link> for sign-off before they hit the ledger.
-        </p>
-      </InfoPanel>
       {error && <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-md">{error}</div>}
       {success && <div className="mb-4 p-3 bg-green-50 text-green-700 text-sm rounded-md">{success}</div>}
 

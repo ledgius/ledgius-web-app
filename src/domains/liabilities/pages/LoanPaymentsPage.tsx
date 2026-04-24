@@ -3,7 +3,7 @@ import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell } from "@/components/layout"
-import { Button, InfoPanel } from "@/components/primitives"
+import { Button } from "@/components/primitives"
 import { MoneyValue, DateValue } from "@/components/financial"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { Plus } from "lucide-react"
@@ -102,13 +102,6 @@ export function LoanPaymentsPage() {
 
   return (
     <PageShell header={header} loading={isLoading}>
-      <InfoPanel title="About Loan Payments" storageKey="loan-payments-info">
-        <p>
-          Each loan payment splits into principal (reduces the loan balance) and interest (expense).
-          Record payments here to keep your loan balances accurate and interest expenses up to date.
-        </p>
-      </InfoPanel>
-
       <DataTable
         columns={columns}
         data={payments}
