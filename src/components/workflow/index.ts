@@ -21,6 +21,8 @@ export type { KeyboardShortcutOverlayProps } from "./KeyboardShortcutOverlay"
 
 export { HelpPanelProvider, useHelpPanel, useHelpPanelToggle, useHelpDockPosition, HelpPanelSidebar } from "./HelpPanel"
 
+export { ArticleInfoPanel } from "./ArticleInfoPanel"
+
 export { SessionPlanner } from "./SessionPlanner"
 
 export { ConnectionCard } from "./ConnectionCard"
