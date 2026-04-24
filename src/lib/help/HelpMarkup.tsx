@@ -14,7 +14,13 @@ import { lookupTerm } from "./loader"
  *   - item            → bullet list (at line start)
  */
 export function HelpMarkup({ text }: { text: string }) {
-  const lines = text.split("\n")
+  // YAML `|` block bodies wrap long lines, which can split a markup
+  // token like `{{warn:Mixed-use loans require\napportionment}}`
+  // across two lines. The line-by-line render below would then never
+  // see a complete token and the literal `{{...}}` text leaks to the
+  // user. Normalise whitespace inside markup tokens to single spaces
+  // before splitting.
+  const lines = normaliseMarkupNewlines(text).split("\n")
   const elements: ReactNode[] = []
   let listItems: string[] = []
 
@@ -72,6 +78,18 @@ function InlineMarkup({ text }: { text: string }) {
       ))}
     </>
   )
+}
+
+// normaliseMarkupNewlines collapses any whitespace inside a Ledgius
+// markup token ({{good:…}}, {{warn:…}}, {{bad:…}}, {{term:…}}) down
+// to a single space. The line-splitting render path that follows
+// can then see complete tokens regardless of how the source YAML
+// wrapped the surrounding prose.
+const markupTokenRE = /\{\{(good|warn|bad|term):([\s\S]+?)\}\}/g
+function normaliseMarkupNewlines(text: string): string {
+  return text.replace(markupTokenRE, (_full, prefix: string, inner: string) => {
+    return `{{${prefix}:${inner.replace(/\s+/g, " ").trim()}}}`
+  })
 }
 
 function parseInline(text: string): ReactNode[] {
