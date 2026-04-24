@@ -1,6 +1,7 @@
 import type { ReactNode } from "react"
 import { cn } from "@/shared/lib/utils"
 import { PageLoader } from "@/components/primitives"
+import { ArticleInfoPanel } from "@/components/workflow/ArticleInfoPanel"
 
 /**
  * Standard accounting page composition shell.
@@ -54,6 +55,12 @@ export function PageShell({
     <div className={cn("flex flex-col h-full min-h-0", className)}>
       {/* Header zone */}
       {header && <div className="shrink-0 mb-6">{header}</div>}
+
+      {/* API-served Info Panel — sits below the page header, above the
+          primary content. The component renders nothing when the
+          current route has no primary-bound article (Books Overview,
+          detail pages, unmigrated pages). */}
+      <ArticleInfoPanel />
 
       {/* Main content zone */}
       <div className={cn(
