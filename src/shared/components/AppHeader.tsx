@@ -3,11 +3,12 @@ import { useNavigate } from "react-router-dom"
 import {
   Search, Plus, User, LogOut, Settings, HelpCircle, MessageSquare,
   FileText, Receipt, Landmark, Users, BookOpen,
-  ChevronDown, CreditCard, DollarSign,
+  ChevronDown, ChevronLeft, ChevronRight, CreditCard, DollarSign,
 } from "lucide-react"
 import { useQuery } from "@tanstack/react-query"
 import { cn } from "@/shared/lib/utils"
 import { useAuth } from "@/shared/lib/auth"
+import { useActivePeriod } from "@/shared/lib/active-period"
 import { useHelpPanelToggle } from "@/components/workflow"
 import { FinancialTimeline, useCalendarBadge } from "@/components/workflow/FinancialTimeline"
 import { api } from "@/shared/lib/api"
@@ -26,25 +27,6 @@ const quickCreateItems = [
   { label: "New Vendor", path: "/contacts/new?type=vendor", icon: Users },
   { label: "New Account", path: "/accounts/new", icon: BookOpen },
 ]
-
-function getFinancialYear(date: Date): string {
-  const month = date.getMonth()
-  const year = date.getFullYear()
-  // Australian FY: July–June
-  if (month >= 6) {
-    return `FY ${year}–${year + 1}`
-  }
-  return `FY ${year - 1}–${year}`
-}
-
-function getQuarter(date: Date): string {
-  const month = date.getMonth()
-  // Australian FY quarters: Q1=Jul-Sep, Q2=Oct-Dec, Q3=Jan-Mar, Q4=Apr-Jun
-  if (month >= 6 && month <= 8) return "Q1"
-  if (month >= 9 && month <= 11) return "Q2"
-  if (month >= 0 && month <= 2) return "Q3"
-  return "Q4"
-}
 
 function formatHeaderDate(date: Date): string {
   return date.toLocaleDateString("en-AU", {
@@ -139,13 +121,9 @@ export function AppHeader({ onSearchOpen, onFeedbackOpen }: AppHeaderProps & { o
         )}
       </div>
 
-      {/* ── Center: Time Context (hidden on mobile) ── */}
-      <div className="hidden md:flex flex-1 items-center justify-center gap-4 text-xs text-gray-500 relative" ref={calendarRef}>
-        <span className="font-medium text-gray-700">
-          {getFinancialYear(now)}
-        </span>
-        <span className="text-gray-300" aria-hidden="true">&middot;</span>
-        <span>{getQuarter(now)} | {now.toLocaleDateString("en-AU", { month: "long" })}</span>
+      {/* ── Center: Active-period selector + date (hidden on mobile) ── */}
+      <div className="hidden md:flex flex-1 items-center justify-center gap-3 text-xs text-gray-500 relative" ref={calendarRef}>
+        <ActivePeriodSelector />
         <span className="text-gray-300" aria-hidden="true">&middot;</span>
         <button
           type="button"
@@ -327,5 +305,123 @@ export function AppHeader({ onSearchOpen, onFeedbackOpen }: AppHeaderProps & { o
         </div>
       </div>
     </header>
+  )
+}
+
+// ActivePeriodSelector — top-nav control from T-0039 KCR-030.
+// Shows "< Q3 FY 2025-26 >"; left moves earlier, right moves later
+// but is disabled when active_period === current_period. Clicking the
+// label opens a popover with presets and a "reset to current" button.
+function ActivePeriodSelector() {
+  const { period, label, isCurrent, shiftQuarter, setPeriod, currentPeriod, resetToCurrent } = useActivePeriod()
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function onClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener("mousedown", onClick)
+    return () => document.removeEventListener("mousedown", onClick)
+  }, [])
+
+  // Preset resolver — previous quarter, previous FY (same quarter one year back).
+  function previousQuarter(): typeof period {
+    const m = /^(\d{4})-Q([1-4])$/.exec(period)
+    if (!m) return period
+    let year = parseInt(m[1], 10)
+    let q = parseInt(m[2], 10)
+    q -= 1
+    if (q < 1) {
+      q = 4
+      year -= 1
+    }
+    return `${year}-Q${q}` as typeof period
+  }
+  function previousFY(): typeof period {
+    const m = /^(\d{4})-Q([1-4])$/.exec(period)
+    if (!m) return period
+    const year = parseInt(m[1], 10) - 1
+    const q = m[2]
+    return `${year}-Q${q}` as typeof period
+  }
+
+  return (
+    <div ref={ref} className="relative flex items-center gap-1">
+      <button
+        type="button"
+        onClick={() => shiftQuarter(-1)}
+        className="p-0.5 rounded hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+        title="Previous quarter"
+        aria-label="Previous quarter"
+      >
+        <ChevronLeft className="h-3.5 w-3.5" />
+      </button>
+      <button
+        type="button"
+        onClick={() => setOpen(!open)}
+        className={cn(
+          "px-2 py-0.5 rounded-md text-xs font-medium transition-colors",
+          isCurrent
+            ? "text-gray-700 hover:bg-gray-100"
+            : "text-amber-700 border-b-2 border-amber-400 hover:bg-amber-50",
+        )}
+        title={isCurrent ? "Active period (current quarter)" : `Viewing past period — current is ${currentPeriod}`}
+      >
+        {label}
+      </button>
+      <button
+        type="button"
+        onClick={() => shiftQuarter(1)}
+        disabled={isCurrent}
+        className={cn(
+          "p-0.5 rounded",
+          isCurrent
+            ? "text-gray-300 cursor-not-allowed"
+            : "hover:bg-gray-100 text-gray-500 hover:text-gray-700",
+        )}
+        title={isCurrent ? "Already at current quarter" : "Next quarter"}
+        aria-label="Next quarter"
+      >
+        <ChevronRight className="h-3.5 w-3.5" />
+      </button>
+      {open && (
+        <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50 py-1 text-left">
+          <button
+            type="button"
+            onClick={() => { resetToCurrent(); setOpen(false) }}
+            className="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
+          >
+            Current quarter
+          </button>
+          <button
+            type="button"
+            onClick={() => { setPeriod(previousQuarter()); setOpen(false) }}
+            className="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
+          >
+            Previous quarter
+          </button>
+          <button
+            type="button"
+            onClick={() => { setPeriod(previousFY()); setOpen(false) }}
+            className="w-full text-left px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50"
+          >
+            Previous FY (same Q)
+          </button>
+          {!isCurrent && (
+            <>
+              <div className="border-t border-gray-100 my-1" />
+              <button
+                type="button"
+                onClick={() => { resetToCurrent(); setOpen(false) }}
+                className="w-full text-left px-3 py-1.5 text-xs text-primary-700 hover:bg-primary-50 font-medium"
+              >
+                Reset to current
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
   )
 }

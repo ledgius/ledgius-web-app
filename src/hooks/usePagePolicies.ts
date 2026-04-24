@@ -2,6 +2,7 @@ import { useEffect, useMemo } from "react"
 import { useQuery } from "@tanstack/react-query"
 import { api } from "@/shared/lib/api"
 import { useHelpPanel } from "@/components/workflow"
+import { useActivePeriodOrDefault } from "@/shared/lib/active-period"
 
 /** The shape returned by GET /api/v1/knowledge/articles?page=&domains= */
 export interface ResolvedPage {
@@ -17,6 +18,18 @@ export interface ResolvedArticle {
   source_url?: string
   effective: { start: string; end?: string }
   sections: ResolvedSection[]
+  /** T-0039 KCR-004 — page-top Info Panel content. Omitted when not authored. */
+  info_panel?: ResolvedInfoPanel
+}
+
+export interface ResolvedInfoPanel {
+  steps: string[]
+  quick_links?: ResolvedQuickLink[]
+}
+
+export interface ResolvedQuickLink {
+  label: string
+  route: string
 }
 
 export interface ResolvedSection {
@@ -37,15 +50,17 @@ export interface PublicRule {
  */
 export function usePagePolicies(domains: string[]) {
   const { setPolicies } = useHelpPanel()
+  const period = useActivePeriodOrDefault()
 
   // Stable key — sort a copy, never mutate the input.
   const domainsKey = useMemo(() => [...domains].sort().join(","), [domains.join(",")])
 
   const { data, error } = useQuery<ResolvedPage>({
-    queryKey: ["knowledge", "policies", domainsKey],
+    // Period is part of the key so a period change invalidates.
+    queryKey: ["knowledge", "policies", domainsKey, period],
     queryFn: () =>
       api.get<ResolvedPage>(
-        `/knowledge/articles?page=${encodeURIComponent(window.location.pathname)}&domains=${encodeURIComponent(domainsKey)}`
+        `/knowledge/articles?page=${encodeURIComponent(window.location.pathname)}&domains=${encodeURIComponent(domainsKey)}&period=${encodeURIComponent(period)}`
       ),
     enabled: domainsKey.length > 0,
     staleTime: 5 * 60 * 1000,

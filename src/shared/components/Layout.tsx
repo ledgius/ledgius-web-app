@@ -17,7 +17,7 @@ import { useAuthTokenSync, useAuth } from "@/shared/lib/auth"
 import { useFeatures } from "@/hooks/useFeatures"
 import { AppHeader } from "./AppHeader"
 import { FeedbackConsoleStrip } from "@/components/feedback"
-import { HelpPanelSidebar, useHelpDockPosition } from "@/components/workflow"
+import { HelpPanelSidebar, useHelpDockPosition, ArticleInfoPanel } from "@/components/workflow"
 import { FeedbackPanel, FlowPulse, initActionTrail, trailNavigate } from "@/lib/feedback"
 import { GlobalCommandPalette } from "@/components/workflow/GlobalCommandPalette"
 import { KeyboardShortcutOverlay } from "@/components/workflow/KeyboardShortcutOverlay"
@@ -584,6 +584,7 @@ export function Layout() {
         <div className="flex-1 flex flex-col min-h-0">
           <main className="flex-1 overflow-auto">
             <div className="p-6">
+              <ArticleInfoPanel />
               <Outlet />
             </div>
           </main>
