@@ -334,25 +334,34 @@ function HelpContentPanel({
     (a) => a.authority_type === "internal_policy",
   )
   if (internalArticles.length > 0) {
+    // Split by is_primary so the route-matched article sits inline at
+    // the top and cross-references collapse into a "Related" accordion.
+    // If the resolver returned no primary match (unbound page), every
+    // article falls through to the related section so the user still
+    // sees help for unmigrated routes — but in a compact form.
+    const primary = internalArticles.filter((a) => a.is_primary)
+    const related = internalArticles.filter((a) => !a.is_primary)
+    const inlineArticles = primary.length > 0 ? primary : []
+    const accordionArticles = primary.length > 0 ? related : internalArticles
+
     return (
       <div className="space-y-5">
-        {internalArticles.map((article) => (
-          <div key={article.id}>
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">{article.title}</h3>
-            <div className="space-y-4">
-              {article.sections.map((sec) => (
-                <div key={sec.id}>
-                  {sec.heading && (
-                    <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
-                      {sec.heading}
-                    </h4>
-                  )}
-                  <HelpMarkup text={sec.body} />
-                </div>
+        {inlineArticles.map((article) => (
+          <ArticleBlock key={article.id} article={article} />
+        ))}
+        {accordionArticles.length > 0 && (
+          <details className="group border-t border-gray-200 pt-4">
+            <summary className="cursor-pointer list-none flex items-center gap-1.5 text-xs font-medium text-gray-500 hover:text-gray-700 select-none">
+              <ChevronRight className="h-3 w-3 transition-transform group-open:rotate-90" />
+              Related articles ({accordionArticles.length})
+            </summary>
+            <div className="mt-4 space-y-5 pl-4 border-l border-gray-100">
+              {accordionArticles.map((article) => (
+                <ArticleBlock key={article.id} article={article} />
               ))}
             </div>
-          </div>
-        ))}
+          </details>
+        )}
       </div>
     )
   }
@@ -360,6 +369,28 @@ function HelpContentPanel({
   return (
     <div className="text-sm text-gray-400 text-center py-8">
       No help available for this page. Press <kbd className="px-1.5 py-0.5 bg-gray-100 rounded text-xs font-mono">F1</kbd> to toggle.
+    </div>
+  )
+}
+
+// ArticleBlock renders a single resolved article (title + sections).
+// Shared between the primary inline render and the Related accordion.
+function ArticleBlock({ article }: { article: ResolvedArticle }) {
+  return (
+    <div>
+      <h3 className="text-sm font-semibold text-gray-900 mb-3">{article.title}</h3>
+      <div className="space-y-4">
+        {article.sections.map((sec) => (
+          <div key={sec.id}>
+            {sec.heading && (
+              <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">
+                {sec.heading}
+              </h4>
+            )}
+            <HelpMarkup text={sec.body} />
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
