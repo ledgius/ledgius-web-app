@@ -1,7 +1,6 @@
 // Spec references: R-0019, A-0019
 import { useState, useRef, useCallback } from "react"
 import { useNavigate, Link } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell } from "@/components/layout"
 import { Button, Combobox, Badge, Skeleton, InfoPanel } from "@/components/primitives"
@@ -105,8 +104,7 @@ function UploadResultPanel({ result }: { result: UploadResult }) {
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export function BankStatementsPage() {
-  usePageHelp(pageHelpContent.banking)
-  usePagePolicies(["banking"])
+  usePagePolicies(["banking", "audit"])
 
   const navigate = useNavigate()
   const feedback = useFeedback()

@@ -146,51 +146,13 @@ export const pageHelpContent = {
     ],
   },
 
-  // ── Banking ──
-  banking: {
-    title: "Bank Reconciliation",
-    sections: [
-      { heading: "What is this?", body: "Reconcile your bank statement with the ledger. Match imported bank transactions against recorded entries to verify your cash position." },
-      { heading: "Workflow", body: "Select a bank account, enter the statement balance, then review uncleared transactions and imported bank lines." },
-      { heading: "Matching", body: "Unmatched imported transactions appear in the lower section. Match them to ledger entries or create new transactions from them." },
-      { heading: "Status", body: "Once all items are matched and the balance agrees, submit the reconciliation for approval." },
-    ],
-  },
-  transfers: {
-    title: "Bank Transfers",
-    sections: [
-      { heading: "What is this?", body: "Record cash movements between your own bank accounts. Transfers create a debit in one account and a credit in another." },
-      { heading: "Required fields", body: "Select the source and destination bank accounts, enter the amount, date, and a reference." },
-      { heading: "Note", body: "Transfers do not affect profit or loss — they only move cash between balance sheet accounts." },
-    ],
-  },
-
-  // ── General Ledger ──
-  journalEntry: {
-    title: "Journal Entries",
-    sections: [
-      { heading: "What is this?", body: "Manual journal entries allow you to post directly to the general ledger. They must balance — total debits must equal total credits." },
-      { heading: "Balance indicator", body: "The totals row shows whether the entry is balanced. The Post button is disabled until debits equal credits." },
-      { heading: "When to use", body: "Use journal entries for adjustments, corrections, bank interest, depreciation, and other transactions that don't flow through AR or AP." },
-      { heading: "Approvals", body: "Pending entries awaiting approval are shown below the entry form." },
-    ],
-  },
-  journalDetail: {
-    title: "Journal Entry Detail",
-    sections: [
-      { heading: "What is this?", body: "The full detail of a posted journal entry showing all debit and credit lines." },
-      { heading: "Debit & Credit", body: "Positive amounts are debits, negative amounts are credits. The entry must net to zero." },
-      { heading: "Activity", body: "The activity panel shows when the entry was created, posted, and by whom." },
-    ],
-  },
-  approvals: {
-    title: "Approvals",
-    sections: [
-      { heading: "What is this?", body: "Transactions awaiting approval before they are posted to the ledger." },
-      { heading: "Actions", body: "Approve to post the transaction, or Reject with a reason to send it back. Rejected transactions include the reason in the audit trail." },
-      { heading: "Tip", body: "Review the transaction details carefully before approving — posted entries cannot be directly edited." },
-    ],
-  },
+  // ── Banking, GL, Approvals ──
+  //
+  // Migrated to the knowledge pipeline per T-0038 Tranche A. Articles live in
+  // ledgius-api/docs/authority/articles/internal/ledgius-{bank-reconciliation,
+  // bank-statements,bank-feeds,transfers,journal-entries,journal-detail,
+  // approvals}.yaml. Pages declare domains via usePagePolicies() — no inline
+  // help entries needed here.
 
   // ── Chart of Accounts ──
   chartOfAccounts: {
@@ -273,15 +235,8 @@ export const pageHelpContent = {
       { heading: "Export", body: "Reports can be exported for use in spreadsheets or for your accountant." },
     ],
   },
-  bas: {
-    title: "BAS / GST",
-    sections: [
-      { heading: "What is this?", body: "Business Activity Statement preparation. Shows GST collected, GST paid, and the net amount owing to or refundable from the ATO." },
-      { heading: "GST Collected", body: "GST you've charged on sales invoices. This is a liability — you owe it to the ATO." },
-      { heading: "GST Paid", body: "GST you've paid on purchase bills. This is a credit — the ATO owes it back to you." },
-      { heading: "Net position", body: "If GST collected exceeds GST paid, you owe the difference. If GST paid exceeds collected, you're entitled to a refund." },
-    ],
-  },
+  // bas: migrated to knowledge pipeline (T-0038 Tranche A) — see
+  // ledgius-api/docs/authority/articles/internal/ledgius-bas.yaml.
 
   // ── Products ──
   products: {
@@ -308,15 +263,8 @@ export const pageHelpContent = {
     ],
   },
 
-  // ── Tax Codes ──
-  taxCodes: {
-    title: "Tax Codes",
-    sections: [
-      { heading: "What is this?", body: "Tax codes define the GST rates applied to invoice and bill line items. The standard codes are GST (10%) and GST Free (0%)." },
-      { heading: "Creating codes", body: "Enter a code name, rate (as a decimal, e.g. 0.10 for 10%), and the linked tax accounts for collection and payment." },
-      { heading: "Tip", body: "Most Australian businesses need only GST (10%) and GST Free. Add custom codes for special rates like input-taxed or export supplies." },
-    ],
-  },
+  // taxCodes: migrated to knowledge pipeline (T-0038 Tranche A) — see
+  // ledgius-api/docs/authority/articles/internal/ledgius-tax-codes.yaml.
 
   // ── Currency ──
   currency: {
@@ -365,15 +313,8 @@ export const pageHelpContent = {
     ],
   },
 
-  // ── Audit ──
-  auditLog: {
-    title: "Audit Log",
-    sections: [
-      { heading: "What is this?", body: "The system-wide immutable audit trail. Every create, update, and delete action is recorded with who did it and when." },
-      { heading: "Filtering", body: "Filter by entity type (invoice, bill, account, etc.) to find specific changes." },
-      { heading: "Immutable", body: "Audit entries cannot be modified or deleted. They are append-only by design for compliance and accountability." },
-    ],
-  },
+  // auditLog: migrated to knowledge pipeline (T-0038 Tranche A) — see
+  // ledgius-api/docs/authority/articles/internal/ledgius-audit-log.yaml.
 
   // ── Admin ──
   users: {

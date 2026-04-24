@@ -1,4 +1,3 @@
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell } from "@/components/layout"
 import { DataTable } from "@/shared/components/DataTable"
@@ -20,8 +19,7 @@ const columns = [
 ]
 
 export function TaxCodesPage() {
-  usePageHelp(pageHelpContent.taxCodes)
-  usePagePolicies(["tax"])
+  usePagePolicies(["tax", "account"])
   const { data: codes, isLoading, error } = useTaxCodes()
 
   const header = (

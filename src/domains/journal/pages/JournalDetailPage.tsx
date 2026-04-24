@@ -1,5 +1,4 @@
 import { useParams } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection, TotalsCard } from "@/components/layout"
 import { EntityHeader, AuditTimeline } from "@/components/workflow"
@@ -42,8 +41,7 @@ const lineColumns: Column<GLLine>[] = [
 ]
 
 export function JournalDetailPage() {
-  usePageHelp(pageHelpContent.journalDetail)
-  usePagePolicies(["journal"])
+  usePagePolicies(["account", "journal", "audit"])
   const { id } = useParams<{ id: string }>()
   const entryId = parseInt(id ?? "0")
   const { data: entry, isLoading, error } = useJournalEntry(entryId)

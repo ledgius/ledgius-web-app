@@ -1,7 +1,6 @@
 // Spec references: R-0065 (Phase 1), A-0036
 import { useState, useCallback, useMemo, useRef, useEffect } from "react"
 import { useLocation, useNavigate } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { Button, Combobox, Skeleton, InlineAlert, InfoPanel, StatBar, StatCell } from "@/components/primitives"
 import { MoneyValue, DateValue, StatusPill } from "@/components/financial"
@@ -962,8 +961,7 @@ function SortHeader({
 // ── Main Page ────────────────────────────────────────────────────────────────
 
 export function ReconciliationPage() {
-  usePageHelp(pageHelpContent.banking)
-  usePagePolicies(["banking"])
+  usePagePolicies(["banking", "account", "audit"])
 
   const feedback = useFeedback()
   const { data: accounts } = useAccounts()

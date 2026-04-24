@@ -1,5 +1,4 @@
 import { Link } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell } from "@/components/layout"
 import { InfoPanel } from "@/components/primitives"
@@ -9,8 +8,7 @@ import { formatDate } from "@/shared/lib/utils"
 import { useState } from "react"
 
 export function ApprovalsPage() {
-  usePageHelp(pageHelpContent.approvals)
-  usePagePolicies(["journal"])
+  usePagePolicies(["account", "journal", "audit"])
   const { data: pending, isLoading, error } = usePendingApprovals()
   const approveTransaction = useApproveTransaction()
   const rejectTransaction = useRejectTransaction()
