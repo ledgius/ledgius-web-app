@@ -1,7 +1,6 @@
 // Spec references: R-0062.
 import { useState, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
 import { Button, InfoPanel, InlineAlert } from "@/components/primitives"
@@ -10,7 +9,6 @@ import { useEscapeKey } from "@/hooks/useEscapeKey"
 import { useFeedback } from "@/components/feedback"
 
 export function SellDisposePage() {
-  usePageHelp(pageHelpContent.sellAsset)
   usePagePolicies(["account", "tax", "assets"])
   const navigate = useNavigate()
   const handleCancel = useCallback(() => navigate("/assets"), [navigate])

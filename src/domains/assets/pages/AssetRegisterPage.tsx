@@ -2,7 +2,6 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
 import { Plus } from "lucide-react"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell } from "@/components/layout"
 import { Button, InfoPanel, Badge } from "@/components/primitives"
@@ -86,7 +85,6 @@ const columns: Column<Asset>[] = [
 ]
 
 export function AssetRegisterPage() {
-  usePageHelp(pageHelpContent.assetRegister)
   usePagePolicies(["account", "tax", "assets"])
   const navigate = useNavigate()
 

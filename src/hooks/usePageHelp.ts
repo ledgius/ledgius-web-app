@@ -412,95 +412,14 @@ export const pageHelpContent = {
     ],
   },
 
-  // ── Fixed Assets ──
-  assetRegister: {
-    title: "Asset Register",
-    sections: [
-      { heading: "What is this?", body: "Your fixed asset register tracks every capital item — plant, equipment, vehicles, IT. Each asset carries its purchase cost, depreciation method, and current book value." },
-      { heading: "Categories", body: "Assets are grouped by category: Plant & Equipment, Motor Vehicles, Office Equipment, Furniture & Fittings, and IT Equipment. Each category may have different depreciation rates." },
-      { heading: "Status", body: "Active = currently depreciating. Fully Depreciated = book value has reached residual. Disposed = sold, scrapped, donated, or traded in. Disposed assets are hidden by default — toggle 'Show disposed' to see them." },
-      { heading: "Annual estimate review", body: "AASB 116 requires you to review useful life and residual value at each year-end. The review workflow lands with a later update; the underlying command is already in place." },
-      { heading: "Tip", body: "Click any row to drill into per-asset detail — summary, activity timeline, and actions." },
-    ],
-  },
-  assetDetail: {
-    title: "Asset Detail",
-    sections: [
-      { heading: "What is this?", body: "The single-asset hub — summary figures, estimate history, activity timeline, and the actions available for this asset's current state." },
-      { heading: "Status meanings", body: "Draft = captured but no GL yet. Active = on the books, depreciating. Fully Depreciated = book value at residual, no more depreciation accrues. Disposed = sold/scrapped/donated/traded, disposal journal posted. Archived = disposed + past the retention window." },
-      { heading: "Correction paths (AASB 108)", body: "Four distinct paths, each with its own journal shape. (1) Non-posting edit — name/description/business-use %. (2) Same-period reclassification — reverse + repost before the period closes. (3) Prospective estimate change — useful life/residual revised, future runs only. (4) Prior-period restatement — current-period correction to Retained Earnings (Opening) when the target period is locked. Use the Edit menu to pick the right path; the system will route to the correct command or explain why it can't." },
-      { heading: "Reading the activity timeline", body: "The timeline shows every mutation as an immutable audit row: who, when, and the before/after diff. Posted journals appear with the action (acquired, dep_posted, disposed) and any linked transaction reference." },
-      { heading: "Accounting vs tax", body: "Everything on this page is the accounting view under AASB 116. Income-tax depreciation (Div 40), CGT on disposal, and FBT on motor vehicles run in separate layers — they don't always produce the same number." },
-    ],
-  },
-  buyAsset: {
-    title: "Buy Asset",
-    sections: [
-      { heading: "What is this?", body: "Record a new asset purchase paid directly from a bank account. On submit, the system posts a balanced acquisition journal (Dr capital, Dr GST, Cr bank), creates the asset row with status Active, and writes an audit entry — all in one database transaction. If anything fails, nothing is committed." },
-      { heading: "Cash mode only", body: "This page handles cash / bank-funded purchases. Bill-linked acquisitions (create a new bill at the same time, or capitalise an existing bill line) land in a follow-up task (T-0030)." },
-      { heading: "Depreciation methods", body: "Straight Line = equal amounts over the useful life. Diminishing Value = higher in early years, reducing over time per ATO formula. Instant Write-off = fully expensed in the purchase period when cost ≤ FY threshold." },
-      { heading: "GST & BAS", body: "Use tax code CAP for capital acquisitions. BAS classification (G10 for >$1,000, G11 for ≤$1,000) is derived downstream from the tax code — you don't set the label here." },
-      { heading: "Instant write-off eligibility", body: "When the cost is under the current FY threshold, the form shows an amber tip suggesting the method. Selecting Instant Write-off above the threshold is rejected server-side with a clear error." },
-      { heading: "Residual value", body: "Estimated salvage value at end of useful life. Depreciation floors at this — book value never drops below residual." },
-    ],
-  },
-  sellAsset: {
-    title: "Sell / Dispose Asset",
-    sections: [
-      { heading: "What is this?", body: "Record the sale, scrapping, donation, or trade-in of a fixed asset. The system calculates the accounting gain or loss and creates the closing journal entries in a single atomic posting." },
-      { heading: "Accounting gain/loss vs tax outcome", body: "The figure shown is the accounting gain/loss per AASB 116 §68 — posted to Other Income / Other Expense, not operating revenue. It is NOT the tax outcome: Division 40 balancing adjustment, CGT s118-24 component for any non-taxable-use portion, and pre-CGT asset treatment are computed separately at ITR time (R-0073). The two numbers may differ." },
-      { heading: "Pro-rata depreciation", body: "If the disposal date falls between the last posted depreciation run and today, the system posts a pro-rata depreciation entry covering the partial period first, then the disposal journal. Both live in the same database transaction." },
-      { heading: "Four disposal reasons", body: "Sold = exchanged for cash/receivable. Scrapped = written off with zero proceeds (often a loss equal to book value). Donated = given away at nil value. Traded In = used as part-payment for a replacement." },
-      { heading: "BAS treatment", body: "Sales of capital assets flow to BAS G1 (total sales) and 1A (GST on sales) automatically via the BAS extraction layer. Tax code on the sale line does the work." },
-    ],
-  },
-  depreciation: {
-    title: "Depreciation",
-    sections: [
-      { heading: "What is this?", body: "Depreciation reduces the book value of your assets over their useful life. Each posted run creates balanced journal entries: debit depreciation expense, credit accumulated depreciation." },
-      { heading: "Monthly period", body: "Periods are monthly by default, anchored on calendar month-end in the tenant timezone. Quarterly is on the roadmap." },
-      { heading: "Why runs are idempotent", body: "You cannot run depreciation twice for the same period. The DB has a unique constraint on (tenant, period_end) for posted runs. Preview is safe to re-run freely; Run commits the calculated lines in one transaction." },
-      { heading: "Reversing a wrong run", body: "If a run was posted in error, use Reverse Run: compensating journal entries, accumulated rolled back per asset, run flipped to 'reversed'. Original rows are never deleted — preserved for audit." },
-      { heading: "Methods", body: "Straight Line = (cost − residual) ÷ life × (days ÷ 365). Diminishing Value = book × (days ÷ 365) × (200% ÷ life) per TR 2022/1; floors at residual. Instant Write-off = full cost minus residual in the acquisition period if cost ≤ FY threshold." },
-      { heading: "Vehicle business-use split", body: "Motor Vehicles with business-use < 100% produce two expense rows tagged deductible=true / deductible=false. This is presentation metadata only — it is NOT a tax determination. True tax deductibility (FBT context, entity type, record-keeping) lives in the tax layer (R-0073)." },
-      { heading: "Accounting vs tax", body: "This page posts accounting depreciation per AASB 116. Tax depreciation (Div 40) and small-business simplified pools (Div 328) run in a separate layer and may produce different numbers. They reconcile at year-end." },
-      { heading: "Annual estimate review", body: "AASB 116 §51 requires annual review of useful life and residual. Changes flow through Change Depreciation Estimate — prospective only, no reversal of past depreciation. The review workflow arrives with R-0072." },
-    ],
-  },
-
-  // ── Loans / Liabilities ──
-  loanRegister: {
-    title: "Loan Register",
-    sections: [
-      { heading: "What is this?", body: "Your loan register — every financing arrangement your business has taken on. Bank term loans, chattel mortgages for vehicles and equipment, business lines of credit, related-party loans. Each loan carries its original amount, current balance, interest rate, repayment schedule, and GL liability account." },
-      { heading: "Interest accrual vs payments", body: "Accrual recognises interest accumulating daily on the outstanding balance — debits Interest Expense, credits Accrued Interest Payable. Payments then clear that accrued interest plus reduce the principal liability. Cash-basis tenants skip accrual and post interest direct-to-expense on payment." },
-      { heading: "When to pay out early", body: "Worth it when interest savings over the remaining term exceed any early-termination fee, or when you have surplus cash with nowhere more productive to deploy it, or when a variable rate is climbing. The Payout form previews the savings — information only, not a journal entry." },
-      { heading: "Use of funds and deductibility", body: "Each loan carries a use-of-funds label: business / mixed / private. Interest on business borrowings is deductible under s8-1 ITAA. Mixed-use loans require apportionment per TR 95/25 — computed in the tax layer (R-0073 forthcoming) at year-end, not at posting time." },
-      { heading: "Annual estimate review", body: "AASB 108: when a variable rate or remaining term changes, use Change Estimate on the detail page. Prospective only — does not restate past interest. Reminder calendar lands with R-0072." },
-    ],
-  },
-  loanPayments: {
-    title: "Loan Payments",
-    sections: [
-      { heading: "What is this?", body: "Record loan repayments. Each payment splits into principal (reduces the loan liability) and interest (expense or clears accrued-interest-payable, depending on basis). GL entries created atomically with the payment row and audit trail." },
-      { heading: "Principal vs interest split", body: "Auto-calculated from current accrued interest + scheduled repayment. Lender statement shows different numbers? Override either side on the Record Payment form; the other auto-recomputes so totals match your bank." },
-      { heading: "Cash-basis vs accrual-basis", body: "Accrual (default): interest accrues monthly; payments clear accrued. Cash: no accrual runs; payment posts Dr Interest Expense + Dr Loan + Cr Bank. Per-tenant setting (loan_interest_basis)." },
-      { heading: "Part-payments and prepayments", body: "Part-payment = less than scheduled; accrued interest cleared first, principal gets the rest. Prepayment = more than scheduled; excess reduces principal further, bringing next period's interest down. No penalty." },
-      { heading: "Overpayments", body: "Total > current_balance + accrued_interest → rejected with ErrOverpayment. To fully settle a loan and close it out, use the Payout flow instead — it handles the final accrual + balance clearance + optional termination fee in one transaction." },
-      { heading: "Reversal", body: "Recorded a wrong payment? Use Reverse Payment. Offsetting journal posted, loan balance + accrued restored, original payment marked reversed. Original rows preserved for audit." },
-    ],
-  },
-  loanPayout: {
-    title: "Loan Payout",
-    sections: [
-      { heading: "What is this?", body: "Close out a loan with a final settlement — principal cleared, accrued interest settled (plus pro-rata to payout date if needed), and any early-termination fee posted. Loan moves to status PaidOut and remains in the register for audit." },
-      { heading: "Pro-rata interest", body: "If your payout date falls between the last accrual run and today, the system posts a pro-rata accrual covering the partial period first, then the payout journal that clears everything. Both in the same DB transaction. Cash-basis tenants skip — interest posts directly on the payout journal." },
-      { heading: "Termination fee", body: "Enter it on the form and it posts as a sibling journal (loan_termination_fee) — Dr Termination Fee Expense, Cr Bank — rather than as a child of the payout. Keeps BAS extraction clean: the fee may carry GST while the loan payout itself doesn't." },
-      { heading: "Savings — information only", body: "The preview shows an estimated saving (remaining scheduled interest less the termination fee) so you can decide. This is informational only — the figure does NOT hit the ledger in any way." },
-      { heading: "BAS treatment", body: "Interest is a GST input-taxed supply (s40-5 ITAA) so the interest leg doesn't flow to BAS G10/G11/1A/1B. The termination fee MAY carry GST depending on the lender — pick the right tax code on the fee line. Derivation runs in A-0042's extraction layer." },
-      { heading: "After payout", body: "Loan stays visible with status PaidOut, zero balance. Filtered out of the Active view by default; toggled back on via 'Show paid-out' on the register. Full payment + accrual history preserved." },
-    ],
-  },
+  // ── Fixed Assets & Loans / Liabilities ──
+  //
+  // Migrated to the knowledge pipeline per T-0038. Articles are now served
+  // by GET /api/v1/knowledge/articles from internal-policy YAML in
+  // ledgius-api/docs/authority/articles/internal/. The Help tab picks them
+  // up automatically via the usePagePolicies hook on each page — no inline
+  // pageHelpContent entries are needed here. Remaining pages migrate in
+  // follow-up PRs (see T-0038 inventory punch-list).
 
   // ── Super Obligations ──
   superObligations: {

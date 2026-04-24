@@ -1,7 +1,6 @@
 // Spec references: R-0062, A-0040, A-0041, T-0029.
 import { useState, useCallback, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
 import { Button, InfoPanel, InlineAlert } from "@/components/primitives"
@@ -25,7 +24,6 @@ function fyStartForDate(date: string): string {
 }
 
 export function BuyAssetPage() {
-  usePageHelp(pageHelpContent.buyAsset)
   usePagePolicies(["account", "tax", "assets"])
   const navigate = useNavigate()
   const handleCancel = useCallback(() => navigate("/assets"), [navigate])
