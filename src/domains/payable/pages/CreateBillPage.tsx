@@ -1,6 +1,5 @@
 import { useState, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
 import { Button, InlineAlert, Combobox } from "@/components/primitives"
@@ -25,8 +24,7 @@ const emptyLine = (): LineInput => ({
 })
 
 export function CreateBillPage() {
-  usePageHelp(pageHelpContent.createBill)
-  usePagePolicies(["payable", "tax"])
+  usePagePolicies(["payable", "account", "tax"])
   const navigate = useNavigate()
   const handleCancel = useCallback(() => navigate("/bills"), [navigate])
   useEscapeKey(handleCancel)

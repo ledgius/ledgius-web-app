@@ -1,8 +1,7 @@
 import { useState } from "react"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
-import { Button, Combobox, InfoPanel } from "@/components/primitives"
+import { Button, Combobox } from "@/components/primitives"
 import { DataTable } from "@/shared/components/DataTable"
 import { useReceipts, useCreateReceipt, type ReceiptSummary } from "../hooks/useReceipts"
 import { useCustomers } from "@/domains/contact/hooks/useContacts"
@@ -25,8 +24,7 @@ const columns = [
 ]
 
 export function ReceiptsPage() {
-  usePageHelp(pageHelpContent.receipts)
-  usePagePolicies(["receipt"])
+  usePagePolicies(["receivable", "receipt", "account", "banking"])
   const { data: receipts, isLoading, error: fetchError } = useReceipts()
   const { data: customers } = useCustomers()
   const { data: accounts } = useAccounts()
@@ -99,12 +97,7 @@ export function ReceiptsPage() {
 
   return (
     <PageShell header={header} loading={isLoading}>
-      <InfoPanel title="Recording receipts" storageKey="receipts-info">
-        <p><strong>1. Select customer and invoice</strong> — choose who paid and which invoice the payment is for.</p>
-        <p><strong>2. Enter payment details</strong> — amount received, date, bank account, and payment reference.</p>
-        <p><strong>3. Post</strong> — the receipt creates journal entries crediting your accounts receivable and debiting your bank account.</p>
-      </InfoPanel>
-      {error && <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-md">{error}</div>}
+{error && <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-md">{error}</div>}
       {success && <div className="mb-4 p-3 bg-green-50 text-green-700 text-sm rounded-md">{success}</div>}
 
       {showForm && (

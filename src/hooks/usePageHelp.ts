@@ -54,97 +54,16 @@ export const pageHelpContent = {
   },
 
   // ── Sales / Receivables ──
-  invoices: {
-    title: "Invoices (AR)",
-    sections: [
-      { heading: "What is this?", body: "Sales invoices issued to your customers. Each invoice creates an accounts receivable entry and records revenue." },
-      { heading: "Status", body: "Draft = not yet posted to the ledger. Posted = committed to the general ledger. On Hold = temporarily paused." },
-      { heading: "Creating invoices", body: "Click '+ New Invoice' to create. You'll need a customer, date, and at least one line item with a revenue account and tax code." },
-      { heading: "Credit notes", body: "To reverse or reduce an invoice, use 'Issue Credit Note' from the invoice detail page." },
-      { heading: "Tip", body: "Use the search bar to find invoices by number or customer name. Click any row to view details." },
-    ],
-  },
-  invoiceDetail: {
-    title: "Invoice Detail",
-    sections: [
-      { heading: "What is this?", body: "The full detail of a single invoice including line items, totals, and activity history." },
-      { heading: "Totals panel", body: "The right sidebar shows net amount, GST, and total. These are calculated from the line items." },
-      { heading: "Credit notes", body: "Click 'Issue Credit Note' to create a credit against this invoice. This creates a separate document — it does not modify the original invoice." },
-      { heading: "PDF", body: "Click the PDF button to download a printable version of this invoice." },
-      { heading: "Activity", body: "The activity panel shows the audit trail — who created, modified, or posted this invoice." },
-    ],
-  },
-  createInvoice: {
-    title: "Create Invoice",
-    sections: [
-      { heading: "Required fields", body: "Customer, invoice number, and date are mandatory. At least one line item with a description, price, and revenue account is needed." },
-      { heading: "Tax codes", body: "Each line item can have a different tax code. The default is GST at 10%. Select 'GST Free' for exempt items." },
-      { heading: "Totals", body: "The grey computed columns show calculated values — subtotal, GST, and total. These update live as you enter line items." },
-      { heading: "Keyboard", body: "Press Esc to cancel and return to the invoices list." },
-    ],
-  },
-  creditNotes: {
-    title: "Credit Notes",
-    sections: [
-      { heading: "What is this?", body: "Credit notes reduce or reverse an existing invoice. They create a negative AR entry against the original invoice." },
-      { heading: "When to use", body: "Use credit notes for returns, overcharges, or agreed discounts after invoicing. Never delete an invoice — issue a credit note instead." },
-      { heading: "Required fields", body: "Select the customer and original invoice, then enter the credit note number, date, amount, and reason." },
-      { heading: "Tip", body: "The reason field is important — it becomes part of the audit trail and helps explain the credit later." },
-    ],
-  },
-  receipts: {
-    title: "Receipts",
-    sections: [
-      { heading: "What is this?", body: "Record payments received from customers. Each receipt allocates cash against outstanding invoices." },
-      { heading: "How it works", body: "Select a customer to see their open invoices, then enter the amount received against each invoice." },
-      { heading: "Partial payments", body: "You can allocate a partial amount against an invoice. The remaining balance stays outstanding." },
-      { heading: "Bank account", body: "Select the bank account where the payment was deposited. This creates the corresponding bank entry." },
-    ],
-  },
+  // invoices, invoiceDetail, createInvoice, creditNotes, receipts: migrated
+  // to knowledge pipeline (Tranche C) — see
+  // ledgius-api/docs/authority/articles/internal/ledgius-{invoices,
+  // invoice-detail,invoice-create,credit-notes,receipts}.yaml.
 
   // ── Purchases / Payables ──
-  bills: {
-    title: "Bills (AP)",
-    sections: [
-      { heading: "What is this?", body: "Supplier bills (accounts payable). Each bill records what you owe to a vendor and the associated expenses." },
-      { heading: "Creating bills", body: "Click '+ New Bill' to enter a supplier invoice. Select the vendor, add line items with expense accounts, and the system calculates GST." },
-      { heading: "Debit notes", body: "To reverse or reduce a bill, use 'Issue Debit Note' from the bill detail page." },
-      { heading: "Tip", body: "Review the AP outstanding badge in the header to see your total payables at a glance." },
-    ],
-  },
-  billDetail: {
-    title: "Bill Detail",
-    sections: [
-      { heading: "What is this?", body: "The full detail of a single supplier bill including line items, totals, and activity history." },
-      { heading: "Debit notes", body: "Click 'Issue Debit Note' to raise a debit against this bill — for returns, overcharges, or corrections." },
-      { heading: "Activity", body: "The activity panel shows the audit trail for this bill." },
-    ],
-  },
-  createBill: {
-    title: "Create Bill",
-    sections: [
-      { heading: "Required fields", body: "Vendor, bill number, and date are mandatory. Add line items with expense accounts to categorise the spending." },
-      { heading: "Duplicate check", body: "Use a consistent bill numbering scheme to avoid accidentally entering the same supplier invoice twice." },
-      { heading: "Keyboard", body: "Press Esc to cancel and return to the bills list." },
-    ],
-  },
-  debitNotes: {
-    title: "Debit Notes",
-    sections: [
-      { heading: "What is this?", body: "Debit notes reduce or reverse an existing bill. They create a positive AP entry that offsets the original bill." },
-      { heading: "When to use", body: "Use debit notes for supplier returns, billing errors, or agreed adjustments. Never delete a bill — issue a debit note instead." },
-      { heading: "Tip", body: "Always include a reason — it becomes part of the permanent audit trail." },
-    ],
-  },
-  payments: {
-    title: "Payments",
-    sections: [
-      { heading: "What is this?", body: "Record payments made to suppliers. Each payment allocates cash against outstanding bills." },
-      { heading: "How it works", body: "Select a vendor to see their open bills, then enter the amount paid against each bill." },
-      { heading: "Partial payments", body: "You can pay a portion of a bill. The remaining amount stays in accounts payable." },
-      { heading: "Bank account", body: "Select the bank account from which the payment was made." },
-    ],
-  },
+  // bills, billDetail, createBill, debitNotes, payments: migrated to
+  // knowledge pipeline (Tranche D) — see
+  // ledgius-api/docs/authority/articles/internal/ledgius-{bills,bill-detail,
+  // bill-create,debit-notes,payments}.yaml.
 
   // ── Banking, GL, Approvals ──
   //

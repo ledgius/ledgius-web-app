@@ -1,6 +1,5 @@
 import { useState } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection, TotalsCard } from "@/components/layout"
 import { EntityHeader, AuditTimeline } from "@/components/workflow"
@@ -47,8 +46,7 @@ const lineColumns: Column<BillLine>[] = [
 ]
 
 export function BillDetailPage() {
-  usePageHelp(pageHelpContent.billDetail)
-  usePagePolicies(["payable", "tax"])
+  usePagePolicies(["payable", "account", "tax"])
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const notify = useNotification()

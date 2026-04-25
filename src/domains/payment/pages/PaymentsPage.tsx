@@ -1,10 +1,9 @@
 import { BackLink } from "@/components/primitives"
 import { useMemo, useState } from "react"
 import { Link } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
-import { Badge, Button, Combobox, InfoPanel } from "@/components/primitives"
+import { Badge, Button, Combobox } from "@/components/primitives"
 import { DataTable } from "@/shared/components/DataTable"
 import { usePayments, useCreatePayment, type PaymentSummary } from "../hooks/usePayments"
 import { useVendors } from "@/domains/contact/hooks/useContacts"
@@ -60,8 +59,7 @@ const columns = [
 ]
 
 export function PaymentsPage() {
-  usePageHelp(pageHelpContent.payments)
-  usePagePolicies(["payment"])
+  usePagePolicies(["payable", "payment", "account", "banking"])
   const { data: payments, isLoading, error: fetchError } = usePayments()
   const { data: vendors } = useVendors()
   const { data: accounts } = useAccounts()
@@ -165,28 +163,7 @@ export function PaymentsPage() {
   return (
     <PageShell header={header} loading={isLoading}>
       <BackLink />
-      <InfoPanel title="About Payments" storageKey="payments-info">
-        <p>
-          <strong>A payment is money that has already left your bank account</strong> — via bank transfer, direct debit,
-          cheque, or the like. This page records those payments and <em>attributes</em> them against the bills they
-          settled.
-        </p>
-        <p className="mt-1.5">
-          When you click <strong>New Payment</strong>, the form shows an <strong>Open Bills</strong> table — empty until
-          you pick a vendor, then populated with that vendor's open bills <strong>sorted by due date</strong>. Tick the
-          bills this payment settled; each tick defaults to the bill's outstanding amount (paid in full).
-        </p>
-        <p className="mt-1.5">
-          If you ticked bills totalling <em>less</em> than the payment amount, the remainder sits as a vendor credit. If
-          you allocate <em>more</em> than the payment, the form will stop you — un-tick a bill or reduce its allocated
-          amount.
-        </p>
-        <p className="mt-1.5 text-blue-600">
-          Imported bank-feed payments appear here automatically; attribute them to a vendor from the payment detail page.
-        </p>
-      </InfoPanel>
-
-      {error && <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-md">{error}</div>}
+{error && <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-md">{error}</div>}
       {success && <div className="mb-4 p-3 bg-green-50 text-green-700 text-sm rounded-md">{success}</div>}
 
       {showForm && (
