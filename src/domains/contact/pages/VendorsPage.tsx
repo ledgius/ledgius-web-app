@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, InlineCreatePanel } from "@/components/layout"
 import { Button, InlineAlert } from "@/components/primitives"
@@ -178,8 +177,7 @@ function InlineVendorForm({ onClose }: { onClose: () => void }) {
 }
 
 export function VendorsPage() {
-  usePageHelp(pageHelpContent.vendors)
-  usePagePolicies(["contact"])
+  usePagePolicies(["contact", "payable"])
   const { data: vendors, isLoading, error } = useVendors()
   const navigate = useNavigate()
   const [search, setSearch] = useState("")

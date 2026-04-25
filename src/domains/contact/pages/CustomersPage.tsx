@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react"
 import { useNavigate } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, InlineCreatePanel } from "@/components/layout"
 import { Button, InlineAlert } from "@/components/primitives"
@@ -178,8 +177,7 @@ function InlineCustomerForm({ onClose }: { onClose: () => void }) {
 }
 
 export function CustomersPage() {
-  usePageHelp(pageHelpContent.customers)
-  usePagePolicies(["contact"])
+  usePagePolicies(["contact", "receivable"])
   const { data: customers, isLoading, error } = useCustomers()
   const navigate = useNavigate()
   const [search, setSearch] = useState("")
