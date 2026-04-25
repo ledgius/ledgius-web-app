@@ -1,9 +1,8 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, InlineCreatePanel } from "@/components/layout"
-import { Button, InfoPanel, InlineAlert } from "@/components/primitives"
+import { Button, InlineAlert } from "@/components/primitives"
 import { DataTable } from "@/shared/components/DataTable"
 import { SearchFilter } from "@/shared/components/SearchFilter"
 import { useProducts, useCreateProduct, type Product } from "../hooks/useProducts"
@@ -177,8 +176,7 @@ function InlineProductForm({ onClose }: { onClose: () => void }) {
 }
 
 export function ProductsPage() {
-  usePageHelp(pageHelpContent.products)
-  usePagePolicies(["product"])
+  usePagePolicies(["product", "account", "tax"])
   const [search, setSearch] = useState("")
   const [typeFilter, setTypeFilter] = useState("")
   const [createOpen, setCreateOpen] = useState(false)
@@ -203,33 +201,7 @@ export function ProductsPage() {
 
   return (
     <PageShell header={header} loading={isLoading}>
-      <InfoPanel title="About Products & Services" storageKey="products-info">
-        <p>
-          <strong>Products & Services</strong> are reusable line-item templates that pre-fill description, unit,
-          price, default accounts, and tax codes when you add them to invoices and bills. Create one entry per item
-          you regularly sell or purchase, and you'll spend less time re-entering the same data on every invoice.
-        </p>
-        <p className="mt-1.5">
-          <strong>Types</strong>:
-          {" "}<span className="inline-block px-1.5 py-0 rounded-full bg-gray-100 text-[10px]">product</span>{" "}
-          for physical goods held in inventory,
-          {" "}<span className="inline-block px-1.5 py-0 rounded-full bg-gray-100 text-[10px]">service</span>{" "}
-          for labour or consulting you bill for, and
-          {" "}<span className="inline-block px-1.5 py-0 rounded-full bg-gray-100 text-[10px]">overhead</span>{" "}
-          for internal cost codes (e.g. rent, utilities) used on bills but not sold.
-        </p>
-        <p className="mt-1.5">
-          <strong>Sell / Buy prices</strong> default onto invoice and bill lines but can still be overridden per
-          transaction. <strong>Default accounts</strong> (income and expense) control which GL account the transaction
-          posts to; <strong>tax codes</strong> control GST treatment (usually <em>GST 10%</em> for taxable supplies,
-          <em>GST Free</em> for exempt items like fresh food).
-        </p>
-        <p className="mt-1.5 text-blue-600">
-          Using products is optional — you can still type free-text descriptions on invoices. But for anything you
-          sell more than twice, a product entry pays for itself quickly.
-        </p>
-      </InfoPanel>
-      <InlineCreatePanel isOpen={createOpen} onClose={() => setCreateOpen(false)} title="New Product / Service">
+<InlineCreatePanel isOpen={createOpen} onClose={() => setCreateOpen(false)} title="New Product / Service">
         <InlineProductForm onClose={() => setCreateOpen(false)} />
       </InlineCreatePanel>
 

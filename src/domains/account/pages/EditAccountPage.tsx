@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
 import { EntityHeader, AuditTimeline } from "@/components/workflow"
@@ -16,7 +15,6 @@ const categoryLabels: Record<string, string> = {
 }
 
 export function EditAccountPage() {
-  usePageHelp(pageHelpContent.editAccount)
   usePagePolicies(["account"])
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()

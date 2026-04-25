@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell } from "@/components/layout"
 import { DataTable } from "@/shared/components/DataTable"
@@ -28,8 +27,7 @@ const tabLabels: Record<ReportTab, string> = {
 }
 
 export function ReportsPage() {
-  usePageHelp(pageHelpContent.reports)
-  usePagePolicies(["reporting"])
+  usePagePolicies(["reporting", "account", "audit"])
   const [tab, setTab] = useState<ReportTab>("trial-balance")
   const [from, setFrom] = useState("2026-01-01")
   const [to, setTo] = useState("2026-06-30")

@@ -1,6 +1,5 @@
 import { useState, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
 import { Button, InlineAlert } from "@/components/primitives"
@@ -9,7 +8,6 @@ import { useCreateAccount, useAccounts } from "../hooks/useAccounts"
 import { useFeedback } from "@/components/feedback"
 
 export function CreateAccountPage() {
-  usePageHelp(pageHelpContent.createAccount)
   usePagePolicies(["account"])
   const navigate = useNavigate()
   const handleCancel = useCallback(() => navigate("/accounts"), [navigate])

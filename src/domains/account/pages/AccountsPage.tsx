@@ -5,7 +5,6 @@ import { Button, Badge, InlineAlert } from "@/components/primitives"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { SearchFilter } from "@/shared/components/SearchFilter"
 import { useAccounts, useCreateAccount, type Account } from "../hooks/useAccounts"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { useFeedback } from "@/components/feedback"
 import { Plus, Eye, EyeOff } from "lucide-react"
@@ -139,7 +138,6 @@ function InlineAccountForm({ onClose }: { onClose: () => void }) {
 }
 
 export function AccountsPage() {
-  usePageHelp(pageHelpContent.chartOfAccounts)
   usePagePolicies(["account"])
   const { data: accounts, isLoading, error } = useAccounts()
   const navigate = useNavigate()

@@ -1,12 +1,10 @@
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell } from "@/components/layout"
 import { DataTable } from "@/shared/components/DataTable"
 import { useTemplates, useDeleteTemplate, type TransactionTemplate } from "../hooks/useTemplates"
 
 export function TemplatesPage() {
-  usePageHelp(pageHelpContent.templates)
-  usePagePolicies(["journal"])
+  usePagePolicies(["account", "receivable", "payable"])
   const { data: templates, isLoading, error } = useTemplates()
   const deleteTemplate = useDeleteTemplate()
 
