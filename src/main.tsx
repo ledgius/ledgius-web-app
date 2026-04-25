@@ -6,6 +6,7 @@ import { AuthProvider } from "./shared/lib/auth"
 import { ActivePeriodProvider } from "./shared/lib/active-period"
 import { NotificationProvider, FeedbackProvider } from "./components/feedback"
 import { HelpPanelProvider } from "./components/workflow"
+import { ThemeProvider } from "./hooks/useTheme"
 import { router } from "./router"
 import "./index.css"
 
@@ -25,9 +26,11 @@ createRoot(document.getElementById("root")!).render(
         <ActivePeriodProvider>
           <NotificationProvider>
             <FeedbackProvider>
-              <HelpPanelProvider>
-                <RouterProvider router={router} />
-              </HelpPanelProvider>
+              <ThemeProvider>
+                <HelpPanelProvider>
+                  <RouterProvider router={router} />
+                </HelpPanelProvider>
+              </ThemeProvider>
             </FeedbackProvider>
           </NotificationProvider>
         </ActivePeriodProvider>

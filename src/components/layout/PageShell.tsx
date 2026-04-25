@@ -3,6 +3,7 @@ import { cn } from "@/shared/lib/utils"
 import { PageLoader } from "@/components/primitives"
 import { ArticleInfoPanel } from "@/components/workflow/ArticleInfoPanel"
 import { PageStatus } from "@/components/workflow/PageStatus"
+import { useTheme } from "@/hooks/useTheme"
 
 /**
  * Standard accounting page composition shell.
@@ -43,6 +44,8 @@ export function PageShell({
   loading = false,
   className,
 }: PageShellProps) {
+  const { isThemeActive } = useTheme()
+
   if (loading) {
     return (
       <div className={cn("flex flex-col h-full min-h-0", className)}>
@@ -53,7 +56,11 @@ export function PageShell({
   }
 
   return (
-    <div className={cn("flex flex-col h-full min-h-0", className)}>
+    <div className={cn(
+      "flex flex-col h-full min-h-0",
+      isThemeActive && "bg-white/80 backdrop-blur-sm rounded-xl p-6 shadow-sm",
+      className,
+    )}>
       {/* Header zone */}
       {header && <div className="shrink-0 mb-6">{header}</div>}
 
