@@ -23,6 +23,8 @@ export { HelpPanelProvider, useHelpPanel, useHelpPanelToggle, useHelpDockPositio
 
 export { ArticleInfoPanel } from "./ArticleInfoPanel"
 
+export { PageStatus } from "./PageStatus"
+
 export { SessionPlanner } from "./SessionPlanner"
 
 export { ConnectionCard } from "./ConnectionCard"

@@ -2,6 +2,7 @@ import type { ReactNode } from "react"
 import { cn } from "@/shared/lib/utils"
 import { PageLoader } from "@/components/primitives"
 import { ArticleInfoPanel } from "@/components/workflow/ArticleInfoPanel"
+import { PageStatus } from "@/components/workflow/PageStatus"
 
 /**
  * Standard accounting page composition shell.
@@ -55,6 +56,13 @@ export function PageShell({
     <div className={cn("flex flex-col h-full min-h-0", className)}>
       {/* Header zone */}
       {header && <div className="shrink-0 mb-6">{header}</div>}
+
+      {/* T-0040 page status widget — operational checklist + counters.
+          Renders nothing when the current route has no registered
+          status checker (Books Overview, contacts, etc.). Sits above
+          the InfoPanel because operational state ("here's where you
+          are") logically precedes the steps ("here's how to do it"). */}
+      <PageStatus />
 
       {/* API-served Info Panel — sits below the page header, above the
           primary content. The component renders nothing when the
