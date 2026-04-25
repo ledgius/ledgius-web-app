@@ -1,0 +1,11 @@
+<svg width="280" height="50" viewBox="0 0 280 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="4" y="4" width="16.40" height="5.14" rx="1.80" fill="#2563EB" opacity="0.25"></rect>
+  <rect x="4" y="10.14" width="16.40" height="5.14" rx="1.80" fill="#2563EB" opacity="0.4"></rect>
+  <rect x="4" y="16.29" width="16.40" height="5.14" rx="1.80" fill="#2563EB" opacity="0.28"></rect>
+  <rect x="4" y="22.43" width="16.40" height="5.14" rx="1.80" fill="#2563EB" opacity="0.45"></rect>
+  <rect x="4" y="28.57" width="16.40" height="5.14" rx="1.80" fill="#2563EB" opacity="0.3"></rect>
+  <rect x="4" y="34.71" width="16.40" height="5.14" rx="1.80" fill="#2563EB" opacity="0.5"></rect>
+  <rect x="4" y="40.86" width="34.00" height="5.14" rx="1.80" fill="#2563EB" opacity="1"></rect>
+  <circle cx="35.24" cy="7.76" r="3.76" fill="#2563EB"></circle>
+  <text x="52" y="32" font-family="'Space Grotesk', Arial, sans-serif" font-weight="700" font-size="28" letter-spacing="-1.2" fill="#0C1A20">Ledgi<tspan fill="#2563EB">us</tspan></text>
+</svg>
