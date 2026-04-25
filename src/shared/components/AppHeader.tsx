@@ -8,6 +8,7 @@ import {
 import { useQuery } from "@tanstack/react-query"
 import { cn } from "@/shared/lib/utils"
 import { useAuth } from "@/shared/lib/auth"
+import { useTheme } from "@/hooks/useTheme"
 import { useActivePeriod } from "@/shared/lib/active-period"
 import { useHelpPanelToggle } from "@/components/workflow"
 import { FinancialTimeline, useCalendarBadge } from "@/components/workflow/FinancialTimeline"
@@ -46,6 +47,7 @@ function formatCompact(amount: number): string {
 export function AppHeader({ onSearchOpen, onFeedbackOpen }: AppHeaderProps & { onFeedbackOpen?: () => void }) {
   const navigate = useNavigate()
   const { user, currentRole, tenants, currentTenantId, switchTenant, logout } = useAuth()
+  const { isThemeActive } = useTheme()
   const { toggle: toggleHelp, isOpen: helpOpen } = useHelpPanelToggle()
   const [createOpen, setCreateOpen] = useState(false)
   const [userOpen, setUserOpen] = useState(false)
@@ -83,7 +85,10 @@ export function AppHeader({ onSearchOpen, onFeedbackOpen }: AppHeaderProps & { o
   }, [])
 
   return (
-    <header className="h-12 shrink-0 border-b border-gray-200 bg-white flex items-center px-4 gap-4">
+    <header className={cn(
+      "h-12 shrink-0 border-b border-gray-200 flex items-center px-4 gap-4",
+      isThemeActive ? "bg-white/80 backdrop-blur-xl" : "bg-white"
+    )}>
       {/* ── Left: Logo + Tenant ── */}
       <div className="flex items-center gap-3 min-w-0">
         <img src="/brand/logo/logo-compact.svg" alt="Ledgius" className="h-8 w-auto" />

@@ -10,11 +10,12 @@ import {
   UsersRound, Percent, PiggyBank, UserCheck, Wallet,
   Camera, Car, GitMerge, Send, Inbox, Sparkles, Import, Upload, Radio,
   FileBarChart, Scale, TrendingUp, Clock, ClipboardCheck, ChevronsLeft, ChevronsRight,
-  Menu, X, HeartPulse, Calendar, MessageSquare as MessageSquareIcon,
+  Menu, X, HeartPulse, Calendar, MessageSquare as MessageSquareIcon, Palette,
 } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 import { useAuthTokenSync, useAuth } from "@/shared/lib/auth"
 import { useFeatures } from "@/hooks/useFeatures"
+import { useTheme } from "@/hooks/useTheme"
 import { AppHeader } from "./AppHeader"
 import { FeedbackConsoleStrip } from "@/components/feedback"
 import { HelpPanelSidebar, useHelpDockPosition } from "@/components/workflow"
@@ -208,6 +209,12 @@ const settingsSections: NavSection[] = [
     ],
   },
   {
+    title: "Personalisation",
+    items: [
+      { to: "/settings/appearance", label: "Appearance", icon: Palette },
+    ],
+  },
+  {
     title: "Administration",
     items: [
       { to: "/users", label: "Users & Roles", icon: UsersRound },
@@ -369,6 +376,7 @@ export function Layout() {
   useAuthTokenSync()
   const { user } = useAuth()
   const { hasFeature } = useFeatures()
+  const { isThemeActive, theme } = useTheme()
   const navigate = useNavigate()
   const helpDock = useHelpDockPosition()
   const [commandOpen, setCommandOpen] = useState(false)
@@ -450,7 +458,15 @@ export function Layout() {
   }, [handleGlobalKeyDown])
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div
+      className={cn("flex flex-col h-screen", isThemeActive ? "" : "bg-gray-50")}
+      style={isThemeActive && theme.backgroundImage ? {
+        backgroundImage: `url(${theme.backgroundImage})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+        backgroundAttachment: "fixed",
+      } : undefined}
+    >
       {/* ── Persistent header ── */}
       <AppHeader onSearchOpen={() => setCommandOpen(true)} onFeedbackOpen={() => setFeedbackOpen(true)} />
 
@@ -475,7 +491,8 @@ export function Layout() {
         </button>
 
         <aside className={cn(
-          "bg-white border-r border-gray-200 flex flex-col transition-all duration-200",
+          "border-r border-gray-200 flex flex-col transition-all duration-200",
+          isThemeActive ? "bg-white/75 backdrop-blur-xl" : "bg-white",
           sidebarCollapsed ? "w-12" : "w-52",
           // Mobile: fixed overlay, hidden by default
           "fixed md:static inset-y-0 left-0 z-40 mt-12 md:mt-0",

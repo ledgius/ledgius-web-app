@@ -98,6 +98,7 @@ const PricingPlansPage = lazy(() => import("@/domains/platform/pages/PricingPlan
 const PlatformUsersPage = lazy(() => import("@/domains/platform/pages/PlatformUsersPage").then(m => ({ default: m.PlatformUsersPage })))
 const OperationsPage = lazy(() => import("@/domains/platform/pages/OperationsPage").then(m => ({ default: m.OperationsPage })))
 const PlatformSettingsPage = lazy(() => import("@/domains/platform/pages/PlatformSettingsPage").then(m => ({ default: m.PlatformSettingsPage })))
+const AppearancePage = lazy(() => import("@/domains/admin/pages/AppearancePage").then(m => ({ default: m.AppearancePage })))
 
 // Wrap each lazy page in Suspense with the branded loading spinner.
 function S({ children }: { children: React.ReactNode }) {
@@ -193,6 +194,7 @@ export const router = createBrowserRouter([
       { path: "super-rates", element: <S><SuperRatesPage /></S> },
       { path: "super-obligations", element: <RequireFeature feature="payroll" label="Super Obligations"><S><SuperObligationsPage /></S></RequireFeature> },
       { path: "users", element: <S><UsersPage /></S> },
+      { path: "settings/appearance", element: <S><AppearancePage /></S> },
 
       // Audit
       { path: "audit-log", element: <S><AuditLogPage /></S> },
