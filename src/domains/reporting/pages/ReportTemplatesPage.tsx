@@ -8,7 +8,7 @@ import { usePageHelp } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { useFeedback } from "@/components/feedback"
 import { api } from "@/shared/lib/api"
-import { Plus, FileText, Copy, Pencil, Trash2 } from "lucide-react"
+import { Plus, FileText, Copy, Pencil, Trash2, Play } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
 
 interface ReportTemplate {
@@ -156,6 +156,9 @@ export function ReportTemplatesPage() {
                                 <Pencil className="h-3 w-3" />Edit
                               </button>
                             )}
+                            <button onClick={() => navigate(`/reports/templates/${t.id}/generate`)} className="text-xs text-green-600 hover:text-green-700 flex items-center gap-1" title="Generate">
+                              <Play className="h-3 w-3" />Generate
+                            </button>
                             <button onClick={() => cloneTemplate.mutate(t.id)} className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1" title="Clone">
                               <Copy className="h-3 w-3" />Clone
                             </button>

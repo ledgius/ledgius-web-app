@@ -1,4 +1,4 @@
-// Spec references: R-0071 (RT-002, RT-003, RT-005), A-0042.
+// Spec references: R-0071 (RT-002, RT-003, RT-005), A-0042, T-0033-09.
 //
 // Puck report components — the building blocks for the visual template editor.
 // Each component renders in the editor canvas AND in the final HTML output.
@@ -11,6 +11,8 @@
 // let the Config cast handle the Puck wrapper types.
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
+
+import { fieldSlugPickerField } from "./FieldSlugPicker"
 
 const TextField = {
   label: "Text",
@@ -35,7 +37,7 @@ const TextField = {
 const DataField = {
   label: "Data Field",
   fields: {
-    fieldSlug: { type: "text" as const, label: "Field Slug" },
+    fieldSlug: fieldSlugPickerField("Field"),
     label: { type: "text" as const, label: "Label (optional)" },
     format: { type: "select" as const, label: "Format", options: [
       { label: "Text", value: "text" }, { label: "Currency", value: "currency" },
@@ -60,7 +62,7 @@ const DataField = {
 const DataTable = {
   label: "Data Table",
   fields: {
-    dataField: { type: "text" as const, label: "List Field Slug" },
+    dataField: fieldSlugPickerField("List Field", "list"),
     columns: { type: "textarea" as const, label: "Columns (JSON)" },
   },
   defaultProps: {
@@ -177,7 +179,7 @@ const SubtotalRow = {
   label: "Subtotal / Total",
   fields: {
     label: { type: "text" as const, label: "Label" },
-    field: { type: "text" as const, label: "Field Slug" },
+    field: fieldSlugPickerField("Field"),
     format: { type: "select" as const, label: "Format", options: [
       { label: "Currency", value: "currency" }, { label: "Number", value: "number" },
     ]},
@@ -206,7 +208,7 @@ const DateField = {
     source: { type: "select" as const, label: "Source", options: [
       { label: "Current Date", value: "now" }, { label: "Data Field", value: "field" },
     ]},
-    fieldSlug: { type: "text" as const, label: "Field Slug (if source=field)" },
+    fieldSlug: fieldSlugPickerField("Field (if source=field)", "date"),
     dateFormat: { type: "select" as const, label: "Format", options: [
       { label: "DD/MM/YYYY", value: "dd/mm/yyyy" }, { label: "D Month YYYY", value: "d-month-yyyy" },
     ]},
