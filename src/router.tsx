@@ -39,7 +39,7 @@ const PaymentDetailPage = lazy(() => import("@/domains/payment/pages/PaymentDeta
 const BankStatementsPage = lazy(() => import("@/domains/banking/pages/BankStatementsPage").then(m => ({ default: m.BankStatementsPage })))
 const BankFeedsPage = lazy(() => import("@/domains/bankfeed/pages/BankFeedsPage").then(m => ({ default: m.BankFeedsPage })))
 const BusinessSettingsPage = lazy(() => import("@/domains/admin/pages/BusinessSettingsPage").then(m => ({ default: m.BusinessSettingsPage })))
-const ReconciliationPage = lazy(() => import("@/domains/banking/pages/ReconciliationPage").then(m => ({ default: m.ReconciliationPage })))
+const ReconciliationPage = lazy(() => import("@/domains/banking/pages/ReconciliationPageV2").then(m => ({ default: m.ReconciliationPageV2 })))
 const BankingPage = lazy(() => import("@/domains/banking/pages/BankingPage").then(m => ({ default: m.BankingPage })))
 const TransfersPage = lazy(() => import("@/domains/banking/pages/TransfersPage").then(m => ({ default: m.TransfersPage })))
 const CapturedReceiptsPage = lazy(() => import("@/domains/capture/pages/CapturedReceiptsPage").then(m => ({ default: m.CapturedReceiptsPage })))
