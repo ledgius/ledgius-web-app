@@ -294,6 +294,7 @@ function AllocatorInner({
                       <option value="exact">Exact amount</option>
                       <option value="range">Min / Max range</option>
                       <option value="set">Set of amounts</option>
+                      <option value="set_ranges">Set of ranges</option>
                     </select>
 
                     {ruleAmountType === "exact" && (
@@ -329,13 +330,29 @@ function AllocatorInner({
                     )}
 
                     {ruleAmountType === "set" && (
-                      <input
-                        type="text"
-                        value={ruleAmountSet}
-                        onChange={e => setRuleAmountSet(e.target.value)}
-                        className="w-full bg-white border border-gray-300 rounded px-2 py-1.5 text-xs"
-                        placeholder="e.g. 39.36, 49.00, 79.00"
-                      />
+                      <div>
+                        <input
+                          type="text"
+                          value={ruleAmountSet}
+                          onChange={e => setRuleAmountSet(e.target.value)}
+                          className="w-full bg-white border border-gray-300 rounded px-2 py-1.5 text-xs"
+                          placeholder="e.g. 39.36, 49.00, 79.00"
+                        />
+                        <p className="text-[10px] text-gray-400 mt-1">Comma-separated exact amounts</p>
+                      </div>
+                    )}
+
+                    {ruleAmountType === "set_ranges" && (
+                      <div>
+                        <input
+                          type="text"
+                          value={ruleAmountSet}
+                          onChange={e => setRuleAmountSet(e.target.value)}
+                          className="w-full bg-white border border-gray-300 rounded px-2 py-1.5 text-xs"
+                          placeholder="e.g. 38-42, 58-62, 98-106"
+                        />
+                        <p className="text-[10px] text-gray-400 mt-1">Comma-separated ranges (min-max). Matches if amount falls within any range.</p>
+                      </div>
                     )}
                   </div>
 
