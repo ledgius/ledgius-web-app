@@ -1,6 +1,5 @@
 import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, InlineCreatePanel } from "@/components/layout"
 import { Button, Badge, InlineAlert } from "@/components/primitives"
@@ -218,8 +217,7 @@ function InlineEmployeeForm({ onClose }: { onClose: () => void }) {
 }
 
 export function EmployeesPage() {
-  usePageHelp(pageHelpContent.employees)
-  usePagePolicies(["payroll"])
+  usePagePolicies(["payroll", "tax"])
   const { data: employees, isLoading, error } = useEmployees()
   const navigate = useNavigate()
   const [createOpen, setCreateOpen] = useState(false)

@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
 import { EntityHeader, AuditTimeline } from "@/components/workflow"
@@ -13,8 +12,7 @@ import { api } from "@/shared/lib/api"
 import { useQueryClient } from "@tanstack/react-query"
 
 export function EmployeeDetailPage() {
-  usePageHelp(pageHelpContent.employees)
-  usePagePolicies(["payroll"])
+  usePagePolicies(["payroll", "tax"])
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const feedback = useFeedback()

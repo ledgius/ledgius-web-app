@@ -3,7 +3,7 @@ import { BackLink } from "@/components/primitives"
 import { PageShell, PageSection } from "@/components/layout"
 import { StatusPill, MoneyValue, DateValue } from "@/components/financial"
 import { InlineAlert } from "@/components/primitives"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
+import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { api } from "@/shared/lib/api"
 
 interface SGQuarter {
@@ -16,7 +16,7 @@ interface SGQuarter {
 }
 
 export function SuperObligationsPage() {
-  usePageHelp(pageHelpContent.superObligations)
+  usePagePolicies(["payroll", "tax", "audit"])
   const [quarters, setQuarters] = useState<SGQuarter[]>([])
   const [loading, setLoading] = useState(true)
   const [error] = useState("")

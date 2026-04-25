@@ -1,6 +1,5 @@
 import { useState, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
 import { Button, InlineAlert } from "@/components/primitives"
@@ -9,8 +8,7 @@ import { useFeedback } from "@/components/feedback"
 import { useCreateEmployee } from "../hooks/usePayroll"
 
 export function CreateEmployeePage() {
-  usePageHelp(pageHelpContent.employees)
-  usePagePolicies(["payroll"])
+  usePagePolicies(["payroll", "tax"])
   const navigate = useNavigate()
   const handleCancel = useCallback(() => navigate("/employees"), [navigate])
   useEscapeKey(handleCancel)

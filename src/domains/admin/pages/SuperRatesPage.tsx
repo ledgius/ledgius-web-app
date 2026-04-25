@@ -1,4 +1,3 @@
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell } from "@/components/layout"
 import { DataTable, type Column } from "@/shared/components/DataTable"
@@ -60,8 +59,7 @@ const columns: Column<SuperRate>[] = [
 ]
 
 export function SuperRatesPage() {
-  usePageHelp(pageHelpContent.superRates)
-  usePagePolicies(["payroll"])
+  usePagePolicies(["payroll", "tax"])
   const { data: rates, isLoading, error } = useSuperRates()
 
   const header = (
