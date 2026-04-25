@@ -1,6 +1,5 @@
 import { useState, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
 import { Button, InlineAlert, Combobox } from "@/components/primitives"
@@ -25,8 +24,7 @@ const emptyLine = (): LineInput => ({
 })
 
 export function CreateInvoicePage() {
-  usePageHelp(pageHelpContent.createInvoice)
-  usePagePolicies(["receivable", "tax"])
+  usePagePolicies(["receivable", "account", "tax"])
   const navigate = useNavigate()
   const feedback = useFeedback()
   const createInvoice = useCreateInvoice()

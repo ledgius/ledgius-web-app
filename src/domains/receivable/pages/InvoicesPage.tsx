@@ -2,11 +2,10 @@ import { useState, useMemo, useEffect } from "react"
 import { Link, useNavigate, useSearchParams } from "react-router-dom"
 import { BackLink } from "@/components/primitives"
 import { PageShell } from "@/components/layout"
-import { Button, InfoPanel } from "@/components/primitives"
+import { Button } from "@/components/primitives"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { SearchFilter } from "@/shared/components/SearchFilter"
 import { StatusPill, MoneyValue, DateValue } from "@/components/financial"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { useInvoices, type InvoiceSummary } from "../hooks/useInvoices"
 import { Plus } from "lucide-react"
@@ -43,8 +42,7 @@ const columns: Column<InvoiceSummary>[] = [
 type DocFilter = "all" | "invoice" | "credit_note" | "overdue"
 
 export function InvoicesPage() {
-  usePageHelp(pageHelpContent.invoices)
-  usePagePolicies(["receivable", "tax"])
+  usePagePolicies(["receivable", "account", "tax"])
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
   const [search, setSearch] = useState("")
@@ -132,22 +130,7 @@ export function InvoicesPage() {
           </Link>
         </div>
       )}
-      <InfoPanel title="About Invoices" storageKey="invoices-info">
-        <p>
-          <strong>Invoices</strong> are bills you issue to customers — money they owe you. Each invoice records the
-          goods or services, applicable GST, and a due date for payment.
-        </p>
-        <p className="mt-1.5">
-          When a customer pays, go to the <Link to="/receipts" className="underline font-medium">Receipts</Link> page
-          and allocate the receipt against the invoice(s) it settled. Issue a{" "}
-          <Link to="/credit-notes" className="underline font-medium">Credit Note</Link> if you need to partially or
-          fully refund an invoice.
-        </p>
-        <p className="mt-1.5 text-blue-600">
-          Invoice lines with GST tax codes are automatically included in your BAS for the relevant period.
-        </p>
-      </InfoPanel>
-      <DataTable
+<DataTable
         columns={columns}
         data={filtered}
         loading={isLoading}

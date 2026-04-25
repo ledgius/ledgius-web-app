@@ -1,8 +1,7 @@
-import { Link, useNavigate } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
+import { useNavigate } from "react-router-dom"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell } from "@/components/layout"
-import { Button, InfoPanel } from "@/components/primitives"
+import { Button } from "@/components/primitives"
 import { StatusPill, MoneyValue, DateValue } from "@/components/financial"
 import { DataTable, type Column } from "@/shared/components/DataTable"
 import { useInvoices, type InvoiceSummary } from "../hooks/useInvoices"
@@ -38,8 +37,7 @@ const columns: Column<InvoiceSummary>[] = [
 ]
 
 export function CreditNoteListPage() {
-  usePageHelp(pageHelpContent.creditNotes)
-  usePagePolicies(["receivable", "tax"])
+  usePagePolicies(["receivable", "account", "tax"])
   const { data: invoices, isLoading, error } = useInvoices()
   const navigate = useNavigate()
 
@@ -65,21 +63,7 @@ export function CreditNoteListPage() {
 
   return (
     <PageShell header={header} loading={isLoading}>
-      <InfoPanel title="About Credit Notes" storageKey="credit-notes-list-info">
-        <p>
-          <strong>Credit Notes</strong> reduce what a customer owes you — issued for returns, partial refunds, or price
-          adjustments against a previously issued <Link to="/invoices" className="underline font-medium">invoice</Link>.
-          Each credit note records the original invoice, the credit amount, and the reason.
-        </p>
-        <p className="mt-1.5">
-          Click <strong>New Credit Note</strong> to issue one. GST on the original invoice is proportionally reversed —
-          this affects the BAS period in which the credit note is dated, not the original invoice's period.
-        </p>
-        <p className="mt-1.5 text-blue-600">
-          Never delete an invoice to "fix" it — always issue a credit note. Deletion breaks the audit trail.
-        </p>
-      </InfoPanel>
-      <DataTable
+<DataTable
         columns={columns}
         data={creditNotes}
         loading={isLoading}
