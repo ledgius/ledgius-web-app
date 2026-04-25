@@ -2,8 +2,7 @@
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { PageShell } from "@/components/layout"
-import { Button, InfoPanel, Skeleton } from "@/components/primitives"
-import { usePageHelp } from "@/hooks/usePageHelp"
+import { Button, Skeleton } from "@/components/primitives"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { useFeedback } from "@/components/feedback"
 import { api } from "@/shared/lib/api"
@@ -60,8 +59,7 @@ function machineStateIcon(state: string) {
 }
 
 export function OperationsPage() {
-  usePageHelp(undefined)
-  usePagePolicies(["platform"])
+  usePagePolicies(["platform", "audit"])
   const [activeTab, setActiveTab] = useState<"machines" | "databases" | "storage" | "backups">("machines")
 
   const header = (
@@ -75,10 +73,6 @@ export function OperationsPage() {
 
   return (
     <PageShell header={header}>
-      <InfoPanel title="Platform operations" storageKey="platform-ops-info" collapsible>
-        <p>Monitor Fly.io machines, database sizes and schema versions, tenant storage volumes, and manage backups. All operations are audit-logged.</p>
-      </InfoPanel>
-
       {/* Tabs */}
       <div className="flex items-center gap-1 border-b border-gray-200 mb-6">
         {([
