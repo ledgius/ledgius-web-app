@@ -6,6 +6,7 @@
 
 import { useState, useMemo, useEffect, useCallback } from "react"
 import { useLocation } from "react-router-dom"
+import { usePageHelp } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { useFeedback } from "@/components/feedback"
 import { Skeleton } from "@/components/primitives"
@@ -36,6 +37,7 @@ function workflowStatus(item: QueueItem): string {
 }
 
 export function ReconciliationPageV2() {
+  usePageHelp(undefined)
   usePagePolicies(["banking", "reconciliation"])
   const feedback = useFeedback()
   const location = useLocation()
