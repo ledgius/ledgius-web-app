@@ -5,6 +5,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { Puck, type Data } from "@measured/puck"
 import "@measured/puck/puck.css"
 import { reportPuckConfig } from "../components/reportComponents"
+import { ReportEditorProvider } from "../components/FieldSlugPicker"
 import { api } from "@/shared/lib/api"
 import { useFeedback } from "@/components/feedback"
 import { ArrowLeft, Eye, FileDown } from "lucide-react"
@@ -140,17 +141,19 @@ export function ReportDesignerPage() {
 
       {/* Puck Editor */}
       <div className="flex-1 overflow-hidden">
-        <Puck
-          config={reportPuckConfig as any}
-          data={template.template_json || { root: { props: {} }, content: [], zones: {} }}
-          onPublish={(data: Data) => saveTemplate.mutate(data)}
-          headerTitle={template.name}
-          renderHeader={({ children }: { children: React.ReactNode }) => (
-            <div className="flex items-center gap-2">
-              {children}
-            </div>
-          )}
-        />
+        <ReportEditorProvider dataSource={template.data_source}>
+          <Puck
+            config={reportPuckConfig as any}
+            data={template.template_json || { root: { props: {} }, content: [], zones: {} }}
+            onPublish={(data: Data) => saveTemplate.mutate(data)}
+            headerTitle={template.name}
+            renderHeader={({ children }: { children: React.ReactNode }) => (
+              <div className="flex items-center gap-2">
+                {children}
+              </div>
+            )}
+          />
+        </ReportEditorProvider>
       </div>
     </div>
   )
