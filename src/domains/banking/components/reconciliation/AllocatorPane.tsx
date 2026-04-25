@@ -82,6 +82,13 @@ function AllocatorInner({
   const [rulePattern, setRulePattern] = useState(() =>
     tx.description.split(" ").slice(0, 2).join(" ")
   )
+  const [ruleMatchType, setRuleMatchType] = useState("contains")
+  const [ruleAmountType, setRuleAmountType] = useState("any")
+  const [ruleAmountValue, setRuleAmountValue] = useState("")
+  const [ruleAmountMin, setRuleAmountMin] = useState("")
+  const [ruleAmountMax, setRuleAmountMax] = useState("")
+  const [ruleAmountSet, setRuleAmountSet] = useState("")
+  const [ruleDirection, setRuleDirection] = useState("any")
 
   const subtotal = lines.reduce((s, l) => s + (parseFloat(l.amount) || 0), 0)
   const outOfBal = amount - subtotal
@@ -236,46 +243,135 @@ function AllocatorInner({
             </div>
 
             {/* Create rule toggle */}
-            <label className="flex items-start gap-2 p-3 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors">
-              <input
-                type="checkbox"
-                checked={createRule}
-                onChange={e => setCreateRule(e.target.checked)}
-                className="rounded border-gray-300 text-primary-600 mt-0.5"
-              />
-              <div>
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <label className="flex items-center gap-2 p-3 cursor-pointer hover:bg-gray-50 transition-colors">
+                <input
+                  type="checkbox"
+                  checked={createRule}
+                  onChange={e => setCreateRule(e.target.checked)}
+                  className="rounded border-gray-300 text-primary-600"
+                />
                 <span className="text-xs font-medium text-gray-700">Create a rule for this pattern</span>
-                {createRule && (
-                  <input
-                    type="text"
-                    value={rulePattern}
-                    onChange={e => setRulePattern(e.target.value)}
-                    className="mt-1.5 w-full bg-white border border-gray-300 rounded px-2 py-1 text-xs"
-                    placeholder="Pattern to match…"
-                  />
-                )}
-              </div>
-            </label>
+              </label>
+
+              {createRule && (
+                <div className="px-3 pb-3 space-y-3 border-t border-gray-100 pt-3">
+                  {/* Pattern + match type */}
+                  <div className="grid grid-cols-[1fr_auto] gap-2">
+                    <div>
+                      <label className="block text-[10px] font-medium text-gray-500 mb-0.5">Description Pattern</label>
+                      <input
+                        type="text"
+                        value={rulePattern}
+                        onChange={e => setRulePattern(e.target.value)}
+                        className="w-full bg-white border border-gray-300 rounded px-2 py-1.5 text-xs"
+                        placeholder="e.g. Square Australia"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-medium text-gray-500 mb-0.5">Match Type</label>
+                      <select
+                        value={ruleMatchType}
+                        onChange={e => setRuleMatchType(e.target.value)}
+                        className="bg-white border border-gray-300 rounded px-2 py-1.5 text-xs pr-6"
+                      >
+                        <option value="contains">Contains</option>
+                        <option value="exact">Exact Match</option>
+                        <option value="wildcard">Wildcard</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Amount matching */}
+                  <div>
+                    <label className="block text-[10px] font-medium text-gray-500 mb-0.5">Amount Matching</label>
+                    <select
+                      value={ruleAmountType}
+                      onChange={e => setRuleAmountType(e.target.value)}
+                      className="w-full bg-white border border-gray-300 rounded px-2 py-1.5 text-xs pr-6 mb-1.5"
+                    >
+                      <option value="any">Any amount</option>
+                      <option value="exact">Exact amount</option>
+                      <option value="range">Min / Max range</option>
+                      <option value="set">Set of amounts</option>
+                    </select>
+
+                    {ruleAmountType === "exact" && (
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={ruleAmountValue}
+                        onChange={e => setRuleAmountValue(e.target.value)}
+                        className="w-full bg-white border border-gray-300 rounded px-2 py-1.5 text-xs tabular-nums text-right"
+                        placeholder="e.g. 39.36"
+                      />
+                    )}
+
+                    {ruleAmountType === "range" && (
+                      <div className="grid grid-cols-2 gap-2">
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={ruleAmountMin}
+                          onChange={e => setRuleAmountMin(e.target.value)}
+                          className="bg-white border border-gray-300 rounded px-2 py-1.5 text-xs tabular-nums text-right"
+                          placeholder="Min"
+                        />
+                        <input
+                          type="number"
+                          step="0.01"
+                          value={ruleAmountMax}
+                          onChange={e => setRuleAmountMax(e.target.value)}
+                          className="bg-white border border-gray-300 rounded px-2 py-1.5 text-xs tabular-nums text-right"
+                          placeholder="Max"
+                        />
+                      </div>
+                    )}
+
+                    {ruleAmountType === "set" && (
+                      <input
+                        type="text"
+                        value={ruleAmountSet}
+                        onChange={e => setRuleAmountSet(e.target.value)}
+                        className="w-full bg-white border border-gray-300 rounded px-2 py-1.5 text-xs"
+                        placeholder="e.g. 39.36, 49.00, 79.00"
+                      />
+                    )}
+                  </div>
+
+                  {/* Direction */}
+                  <div>
+                    <label className="block text-[10px] font-medium text-gray-500 mb-0.5">Direction</label>
+                    <select
+                      value={ruleDirection}
+                      onChange={e => setRuleDirection(e.target.value)}
+                      className="w-full bg-white border border-gray-300 rounded px-2 py-1.5 text-xs pr-6"
+                    >
+                      <option value="any">Any (deposit or withdrawal)</option>
+                      <option value="deposit">Deposits only</option>
+                      <option value="withdrawal">Withdrawals only</option>
+                    </select>
+                  </div>
+                </div>
+              )}
+            </div>
+            {/* Actions — directly below the rule section */}
+            <div className="flex items-center gap-2 pt-2">
+              <Button variant="primary" size="sm" disabled={!canSave}
+                onClick={() => onSave(tx.id, lines, createRule, rulePattern)}>
+                Save & Next
+              </Button>
+              <Button variant="secondary" size="sm"
+                onClick={() => onApprove(tx.id)}>
+                Approve
+              </Button>
+              <Button variant="secondary" size="sm" onClick={onSkip}>
+                Skip
+              </Button>
+            </div>
           </>
         )}
       </div>
-
-      {/* Actions */}
-      {!isApproved && (
-        <div className="p-3 border-t border-gray-200 bg-gray-50/50 flex items-center gap-2">
-          <Button variant="primary" size="sm" disabled={!canSave}
-            onClick={() => onSave(tx.id, lines, createRule, rulePattern)}>
-            Save & Next
-          </Button>
-          <Button variant="secondary" size="sm"
-            onClick={() => onApprove(tx.id)}>
-            Approve
-          </Button>
-          <Button variant="secondary" size="sm" onClick={onSkip}>
-            Skip
-          </Button>
-        </div>
-      )}
     </div>
   )
 }
