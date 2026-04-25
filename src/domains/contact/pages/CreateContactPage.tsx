@@ -1,6 +1,5 @@
 import { useState, useCallback } from "react"
 import { useNavigate, useSearchParams } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
 import { Button, InlineAlert } from "@/components/primitives"
@@ -10,8 +9,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useFeedback } from "@/components/feedback"
 
 export function CreateContactPage() {
-  usePageHelp(pageHelpContent.createContact)
-  usePagePolicies(["contact"])
+  usePagePolicies(["contact", "receivable", "payable"])
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const type = searchParams.get("type") === "vendor" ? "vendor" : "customer"

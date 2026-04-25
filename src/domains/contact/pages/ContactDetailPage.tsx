@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
 import { EntityHeader, AuditTimeline } from "@/components/workflow"
@@ -23,8 +22,7 @@ const CHANNEL_LABELS: Record<string, string> = {
 }
 
 export function ContactDetailPage() {
-  usePageHelp(pageHelpContent.contactDetail)
-  usePagePolicies(["contact"])
+  usePagePolicies(["contact", "receivable", "payable"])
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const feedback = useFeedback()

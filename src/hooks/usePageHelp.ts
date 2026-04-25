@@ -111,38 +111,10 @@ export const pageHelpContent = {
   },
 
   // ── Contacts ──
-  customers: {
-    title: "Customers",
-    sections: [
-      { heading: "What is this?", body: "Your customer contacts for accounts receivable. Each customer has a credit account that tracks their invoices and payments." },
-      { heading: "Key fields", body: "ABN (Australian Business Number), credit limit, payment terms, and currency. These defaults are used when creating invoices." },
-      { heading: "Tip", body: "Click any customer to view and edit their details. Credit limits are advisory — they don't block invoice creation." },
-    ],
-  },
-  vendors: {
-    title: "Vendors",
-    sections: [
-      { heading: "What is this?", body: "Your supplier contacts for accounts payable. Each vendor has a credit account that tracks bills and payments you make to them." },
-      { heading: "Tip", body: "Set up accurate payment terms to help manage cash flow and bill scheduling." },
-    ],
-  },
-  contactDetail: {
-    title: "Contact Detail",
-    sections: [
-      { heading: "What is this?", body: "The full profile of a customer or vendor including entity details, credit account settings, and activity history." },
-      { heading: "Editing", body: "Click Edit to modify credit limit, payment terms, and discount settings. Entity details (name, ABN) are shown read-only here." },
-      { heading: "Activity", body: "The activity panel shows changes made to this contact record." },
-    ],
-  },
-  createContact: {
-    title: "Create Contact",
-    sections: [
-      { heading: "Customer vs Vendor", body: "The type is set based on where you navigated from — Customers or Vendors. Each creates the appropriate credit account." },
-      { heading: "Required fields", body: "Name is mandatory. Legal name defaults to the name if not specified." },
-      { heading: "ABN", body: "The Australian Business Number is optional but recommended for GST reporting and BAS preparation." },
-      { heading: "Payment terms", body: "Default payment terms (in days) are applied to new invoices or bills for this contact." },
-    ],
-  },
+  // customers, vendors, contactDetail, createContact: migrated to knowledge
+  // pipeline (Tranche Contacts) — see
+  // ledgius-api/docs/authority/articles/internal/ledgius-{customers,vendors,
+  // contact-detail,contact-create}.yaml.
 
   // ── Reports ──
   reports: {
