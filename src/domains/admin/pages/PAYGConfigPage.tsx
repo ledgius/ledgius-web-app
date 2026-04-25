@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
 import { Badge } from "@/components/primitives"
@@ -92,8 +91,7 @@ function getFYLabel(dateStr: string): string {
 }
 
 export function PAYGConfigPage() {
-  usePageHelp(pageHelpContent.paygConfig)
-  usePagePolicies(["payroll"])
+  usePagePolicies(["payroll", "tax"])
   const { data: brackets, isLoading, error } = usePAYGBrackets()
   const [selectedFY, setSelectedFY] = useState<string | null>(null)
 

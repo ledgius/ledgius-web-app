@@ -1,6 +1,5 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
 import { Button, InfoPanel } from "@/components/primitives"
@@ -40,7 +39,6 @@ const columns = [
 ]
 
 export function PayRunsPage() {
-  usePageHelp(pageHelpContent.payRuns)
   usePagePolicies(["payroll", "tax"])
   const { data: runs, isLoading, error: fetchError } = usePayRuns()
   const { data: employees } = useEmployees()

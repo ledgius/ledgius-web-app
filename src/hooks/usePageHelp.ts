@@ -296,22 +296,9 @@ export const pageHelpContent = {
   },
 
   // ── Payroll ──
-  employees: {
-    title: "Employees",
-    sections: [
-      { heading: "What is this?", body: "Employee records for payroll processing. Each employee has pay rates, tax settings, and superannuation details." },
-      { heading: "Creating employees", body: "Enter the employee's name, pay rate, tax file number status, and super fund details." },
-      { heading: "PAYG", body: "Pay As You Go withholding is calculated based on ATO tax tables and the employee's tax file declaration." },
-    ],
-  },
-  payRuns: {
-    title: "Pay Runs",
-    sections: [
-      { heading: "What is this?", body: "Process payroll for a pay period. A pay run calculates gross pay, PAYG withholding, superannuation, and net pay for selected employees." },
-      { heading: "Workflow", body: "Select the pay period and employees, review the calculations, then process. This creates journal entries for wages, tax, and super." },
-      { heading: "Tip", body: "Always review the pay run summary before processing. Pay runs create multiple journal entries that are difficult to reverse." },
-    ],
-  },
+  // employees + payRuns: migrated to knowledge pipeline (Tranche B) —
+  // see ledgius-api/docs/authority/articles/internal/ledgius-employees.yaml
+  // and ledgius-pay-runs.yaml.
 
   // auditLog: migrated to knowledge pipeline (T-0038 Tranche A) — see
   // ledgius-api/docs/authority/articles/internal/ledgius-audit-log.yaml.
@@ -325,20 +312,9 @@ export const pageHelpContent = {
       { heading: "Tip", body: "Assign the minimum role needed. Users can always be upgraded but restricting access prevents accidental changes." },
     ],
   },
-  paygConfig: {
-    title: "PAYG Withholding",
-    sections: [
-      { heading: "What is this?", body: "Configure Pay As You Go withholding rates based on ATO tax tables. These rates are used in pay run calculations." },
-      { heading: "Tax tables", body: "PAYG rates vary by income bracket and residency status. The system uses the ATO's published coefficients." },
-    ],
-  },
-  superRates: {
-    title: "Superannuation Rates",
-    sections: [
-      { heading: "What is this?", body: "Configure the superannuation guarantee rate. The current rate is set by the ATO and changes periodically." },
-      { heading: "Current rate", body: "Check the ATO website for the current Super Guarantee percentage. This rate is applied to ordinary time earnings in pay runs." },
-    ],
-  },
+  // paygConfig + superRates: migrated to knowledge pipeline (Tranche B) —
+  // see ledgius-api/docs/authority/articles/internal/ledgius-payg-config.yaml
+  // and ledgius-super-rates.yaml.
 
   // ── Export ──
   dataExport: {
@@ -362,13 +338,6 @@ export const pageHelpContent = {
   // pageHelpContent entries are needed here. Remaining pages migrate in
   // follow-up PRs (see T-0038 inventory punch-list).
 
-  // ── Super Obligations ──
-  superObligations: {
-    title: "Super Guarantee Obligations",
-    sections: [
-      { heading: "What is this?", body: "Track employer superannuation guarantee contributions by quarter — due dates, amounts owed, and payment status." },
-      { heading: "Quarterly due dates", body: "SG contributions must be received by the employee's super fund by the quarterly due date. Q1 (Jul–Sep) due 28 Oct, Q2 (Oct–Dec) due 28 Jan, Q3 (Jan–Mar) due 28 Apr, Q4 (Apr–Jun) due 28 Jul." },
-      { heading: "Overdue quarters", body: "Late SG payments incur the Super Guarantee Charge (SGC) which includes interest and an admin fee. Lodge an SGC statement with the ATO if overdue." },
-    ],
-  },
+  // superObligations: migrated to knowledge pipeline (Tranche B) — see
+  // ledgius-api/docs/authority/articles/internal/ledgius-super-obligations.yaml.
 } as const
