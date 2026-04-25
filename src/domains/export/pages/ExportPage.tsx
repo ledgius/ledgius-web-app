@@ -1,8 +1,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { PageShell, PageSection } from "@/components/layout"
-import { Button, InlineAlert, InfoPanel } from "@/components/primitives"
+import { Button, InlineAlert } from "@/components/primitives"
 import { StatusPill, DateValue } from "@/components/financial"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { api } from "@/shared/lib/api"
 import { useConnections, useDisconnect, usePush } from "@/hooks/useConnections"
@@ -38,8 +37,7 @@ const FORMAT_OPTIONS: { key: ExportFormat; label: string; description: string }[
 ]
 
 export function ExportPage() {
-  usePageHelp(pageHelpContent.dataExport)
-  usePagePolicies(["export", "tax", "privacy", "compliance"])
+  usePagePolicies(["export", "account", "audit"])
   const feedback = useFeedback()
   const [format, setFormat] = useState<ExportFormat>("xero")
   const [entities, setEntities] = useState<string[]>([])
@@ -190,13 +188,7 @@ export function ExportPage() {
 
   return (
     <PageShell header={header}>
-      <InfoPanel title="How data export works" storageKey="export-info">
-        <p><strong>1. Choose format</strong> — select Xero, MYOB AccountRight, QuickBooks Online, or Generic CSV. Each produces a different file format for the target system.</p>
-        <p><strong>2. Select entities</strong> — choose which data to include (accounts, contacts, invoices, etc.). Leave empty to export all.</p>
-        <p><strong>3. Run Export</strong> — the export runs in the background. A progress bar shows each phase: fetching → validating → mapping → writing → storing.</p>
-        <p><strong>4. Download</strong> — completed exports produce a ZIP bundle. Recent exports are listed at the bottom for re-download.</p>
-      </InfoPanel>
-      {error && <InlineAlert variant="error" className="mb-4">{error}</InlineAlert>}
+{error && <InlineAlert variant="error" className="mb-4">{error}</InlineAlert>}
 
       <PageSection title="Export Format">
         <div className="flex gap-3">

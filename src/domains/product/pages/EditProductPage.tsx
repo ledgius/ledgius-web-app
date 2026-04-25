@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react"
 import { useParams, useNavigate } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
 import { Button, InlineAlert } from "@/components/primitives"
@@ -13,8 +12,7 @@ import { useQueryClient } from "@tanstack/react-query"
 import { useFeedback } from "@/components/feedback"
 
 export function EditProductPage() {
-  usePageHelp(pageHelpContent.editProduct)
-  usePagePolicies(["product"])
+  usePagePolicies(["product", "account", "tax"])
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const handleCancel = useCallback(() => navigate("/products"), [navigate])

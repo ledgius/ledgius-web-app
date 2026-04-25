@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
 import { Button } from "@/components/primitives"
@@ -17,8 +16,7 @@ const columns = [
 ]
 
 export function RecurringPage() {
-  usePageHelp(pageHelpContent.recurring)
-  usePagePolicies(["journal"])
+  usePagePolicies(["account", "receivable", "payable"])
   const { data: schedules, isLoading, error: fetchError } = useRecurringSchedules()
   const createRecurring = useCreateRecurring()
   const [showForm, setShowForm] = useState(false)

@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router-dom"
 import { CheckCircle2, Circle, AlertTriangle } from "lucide-react"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
 import { MoneyValue } from "@/components/financial"
@@ -10,8 +9,7 @@ import { useDashboard } from "../hooks/useDashboard"
 import { useCalendarTimeline, useCompleteCalendarTask } from "@/domains/calendar/hooks/useCalendar"
 
 export function DashboardPage() {
-  usePageHelp(pageHelpContent.dashboard)
-  usePagePolicies(["reporting"])
+  usePagePolicies(["dashboard", "audit"])
   const { data: metrics, isLoading } = useDashboard()
   const { data: timelineData } = useCalendarTimeline(7)
   const completeTask = useCompleteCalendarTask()

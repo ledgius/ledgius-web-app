@@ -1,11 +1,10 @@
 // Spec references: R-0070 (UI-006, UI-011 through UI-015).
 import { useState } from "react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { useFeedback } from "@/components/feedback"
 import { PageShell } from "@/components/layout"
-import { Button, InfoPanel, Skeleton } from "@/components/primitives"
+import { Button, Skeleton } from "@/components/primitives"
 import { api } from "@/shared/lib/api"
 import { Plus, X, Check, Mail, Clock, UserX } from "lucide-react"
 import { cn } from "@/shared/lib/utils"
@@ -48,8 +47,7 @@ const _allRoles = [
 const roleLabelFor = (v: string) => _allRoles.find(r => r.value === v)?.label ?? v
 
 export function UsersPage() {
-  usePageHelp(pageHelpContent.users)
-  usePagePolicies(["platform"])
+  usePagePolicies(["admin", "audit"])
   const feedback = useFeedback()
   const qc = useQueryClient()
   const [showInvite, setShowInvite] = useState(false)
@@ -109,25 +107,7 @@ export function UsersPage() {
 
   return (
     <PageShell header={header}>
-      <InfoPanel title="Managing your team" storageKey="users-info" collapsible>
-        <p>
-          Invite team members by email to give them access to your organisation. Each person is assigned
-          a role that controls what they can see and do:
-        </p>
-        <ul className="mt-2 space-y-1.5 text-sm">
-          {ROLES.map(r => (
-            <li key={r.value}>
-              <strong className="text-gray-700">{r.label}</strong> — {r.description}
-            </li>
-          ))}
-        </ul>
-        <p className="mt-2 text-sm">
-          Your accountant or bookkeeper can be invited at no extra cost — they get their own
-          login with appropriate permissions. Invite as many team members as your plan allows.
-        </p>
-      </InfoPanel>
-
-      {/* Invite Form */}
+{/* Invite Form */}
       {showInvite && <InviteForm onCancel={() => setShowInvite(false)} onInvite={body => invite.mutate(body)} saving={invite.isPending} />}
 
       {isLoading ? (

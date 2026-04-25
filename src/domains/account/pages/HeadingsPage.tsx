@@ -1,9 +1,7 @@
 import { useState } from "react"
-import { Link } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
-import { Button, InfoPanel } from "@/components/primitives"
+import { Button } from "@/components/primitives"
 import { DataTable } from "@/shared/components/DataTable"
 import { useAccountHeadings, useCreateHeading, type AccountHeading } from "../hooks/useAccounts"
 
@@ -37,7 +35,6 @@ const columns = [
 ]
 
 export function HeadingsPage() {
-  usePageHelp(pageHelpContent.accountHeadings)
   usePagePolicies(["account"])
   const { data: headings, isLoading, error: fetchError } = useAccountHeadings()
   const createHeading = useCreateHeading()
@@ -71,23 +68,7 @@ export function HeadingsPage() {
 
   return (
     <PageShell header={header} loading={isLoading}>
-      <InfoPanel title="About Account Headings" storageKey="headings-info">
-        <p>
-          <strong>Account Headings</strong> are the grouping labels in your{" "}
-          <Link to="/accounts" className="underline font-medium">Chart of Accounts</Link> — they organise individual
-          accounts into categories (Assets, Liabilities, Equity, Income, Expenses) and optional sub-groups.
-        </p>
-        <p className="mt-1.5">
-          <strong>Code ranges follow standard accounting convention:</strong> 1000-series = Assets, 2000-series =
-          Liabilities, 3000-series = Equity, 4000-series = Income, 5000/6000-series = Expenses. When a heading's
-          category column is empty, the system displays the inferred category in grey italics.
-        </p>
-        <p className="mt-1.5 text-blue-600">
-          Changing a heading's code can cascade into GIFI/BAS mappings and historical reports — prefer creating new
-          headings over renumbering existing ones.
-        </p>
-      </InfoPanel>
-      {error && <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-md">{error}</div>}
+{error && <div className="mb-4 p-3 bg-red-50 text-red-700 text-sm rounded-md">{error}</div>}
       {showForm && (
         <PageSection title="New Heading">
           <div className="space-y-3">

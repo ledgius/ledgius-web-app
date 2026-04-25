@@ -1,6 +1,5 @@
 import { useState, useCallback } from "react"
 import { useNavigate } from "react-router-dom"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { PageShell, PageSection } from "@/components/layout"
 import { Button, InlineAlert } from "@/components/primitives"
@@ -11,8 +10,7 @@ import { useAccounts } from "@/domains/account/hooks/useAccounts"
 import { useFeedback } from "@/components/feedback"
 
 export function CreateProductPage() {
-  usePageHelp(pageHelpContent.createProduct)
-  usePagePolicies(["product"])
+  usePagePolicies(["product", "account", "tax"])
   const navigate = useNavigate()
   const handleCancel = useCallback(() => navigate("/products"), [navigate])
   useEscapeKey(handleCancel)

@@ -13,7 +13,6 @@ import {
   CheckCircle, Lock, ClipboardList, Wallet, Calculator,
   ChevronRight, Clock,
 } from "lucide-react"
-import { usePageHelp, pageHelpContent } from "@/hooks/usePageHelp"
 import { usePagePolicies } from "@/hooks/usePagePolicies"
 import { cn } from "@/shared/lib/utils"
 import { PageShell } from "@/components/layout"
@@ -442,8 +441,7 @@ export function BooksHealthPage() {
   // Help panel content is resolved from YAML by route (see
   // locales/en-AU/help/dashboard/books-health.yaml). Fallback to the dashboard
   // inline help keeps F1 useful even if the YAML loader misses.
-  usePageHelp(pageHelpContent.dashboard)
-  usePagePolicies(["reporting", "tax"])
+  usePagePolicies(["dashboard", "audit", "account", "receivable", "payable", "banking", "tax"])
   const [activeTab, setActiveTab] = useState<BooksTab>("current")
   const { data, isLoading, refetch, isFetching } = useBooksHealth()
   const { data: dashMetrics, isLoading: _dashLoading } = useDashboard()
