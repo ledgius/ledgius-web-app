@@ -37,6 +37,15 @@ interface ImportBatch {
   txn_total: number
   txn_imported: number
   txn_skipped: number
+  invoices_total: number
+  invoices_new: number
+  invoices_skipped: number
+  bills_total: number
+  bills_new: number
+  bills_skipped: number
+  credit_notes_total: number
+  credit_notes_new: number
+  credit_notes_skipped: number
   source_debit_total: string | null
   source_credit_total: string | null
   target_debit_total: string | null
@@ -512,6 +521,13 @@ export function DataImportPage() {
               MYOB (<em>Reports → Accounts → Chart of Accounts</em>) — this provides the account type classifications needed for accurate reporting.
             </div>
           )}
+          {batch.source_system === "xero" && (
+            <div className="mb-4 p-3 rounded-lg border border-blue-200 bg-blue-50 text-sm text-blue-800">
+              <strong>Import from Xero:</strong> Export CSV files from Xero for each entity type.
+              Upload <strong>Chart of Accounts</strong> and <strong>Contacts</strong> first, then <strong>Invoices</strong>, <strong>Bills</strong>,
+              and <strong>Credit Notes</strong> — documents reference contacts and accounts by name.
+            </div>
+          )}
 
           {/* Import options — single panel, two columns */}
           <div className="grid grid-cols-2 gap-4 mb-4 p-3 rounded-lg border border-gray-200 bg-gray-50">
@@ -551,6 +567,13 @@ export function DataImportPage() {
             <DropZone label="Vendors" onFileSelected={(f) => uploadFile("contacts", f, "vendor")} optional compact />
             <DropZone label="Transactions" onFileSelected={(f) => uploadFile("transactions", f)} compact />
           </div>
+          {batch.source_system === "xero" && (
+            <div className="grid grid-cols-3 gap-3 mt-3">
+              <DropZone label="Invoices" onFileSelected={(f) => uploadFile("invoices", f)} optional compact />
+              <DropZone label="Bills" onFileSelected={(f) => uploadFile("bills", f)} optional compact />
+              <DropZone label="Credit Notes" onFileSelected={(f) => uploadFile("credit_notes", f)} optional compact />
+            </div>
+          )}
 
           {/* Files uploaded summary */}
           {batch.source_files && batch.source_files.length > 0 && (
@@ -865,6 +888,24 @@ export function DataImportPage() {
                   {batch.txn_skipped > 0 && <span className="text-amber-600"> · {batch.txn_skipped} duplicates (will be skipped)</span>}
                 </p>
               </div>
+              {batch.invoices_total > 0 && (
+                <div>
+                  <span className="text-gray-500">Invoices</span>
+                  <p className="font-semibold">{batch.invoices_total} lines staged</p>
+                </div>
+              )}
+              {batch.bills_total > 0 && (
+                <div>
+                  <span className="text-gray-500">Bills</span>
+                  <p className="font-semibold">{batch.bills_total} lines staged</p>
+                </div>
+              )}
+              {batch.credit_notes_total > 0 && (
+                <div>
+                  <span className="text-gray-500">Credit Notes</span>
+                  <p className="font-semibold">{batch.credit_notes_total} lines staged</p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -887,6 +928,9 @@ export function DataImportPage() {
                   <p className="font-medium text-green-800">Import committed successfully</p>
                   <p className="text-green-700 mt-0.5">
                     {batch.accounts_new} accounts · {batch.contacts_new} customers &amp; vendors · {batch.txn_imported} transactions
+                    {batch.invoices_total > 0 && <> · {batch.invoices_total} invoice lines</>}
+                    {batch.bills_total > 0 && <> · {batch.bills_total} bill lines</>}
+                    {batch.credit_notes_total > 0 && <> · {batch.credit_notes_total} credit note lines</>}
                   </p>
                 </div>
               </div>
@@ -903,6 +947,9 @@ export function DataImportPage() {
                   </p>
                   <p className="text-green-700 mt-0.5">
                     {batch.accounts_new} accounts created · {batch.contacts_new} customers &amp; vendors created · {batch.txn_imported} transactions imported
+                    {batch.invoices_total > 0 && <> · {batch.invoices_total} invoice lines</>}
+                    {batch.bills_total > 0 && <> · {batch.bills_total} bill lines</>}
+                    {batch.credit_notes_total > 0 && <> · {batch.credit_notes_total} credit note lines</>}
                   </p>
                 </div>
               </div>
@@ -971,6 +1018,9 @@ interface ImportBatchSummary {
   contacts_total: number
   txn_total: number
   txn_imported: number
+  invoices_total: number
+  bills_total: number
+  credit_notes_total: number
   started_at: string | null
   imported_by: string | null
   source_files: { name: string; type: string; rows: number }[]
