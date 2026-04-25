@@ -160,18 +160,16 @@ export function QueueList({
                     </span>
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <DateValue value={tx.trans_date} format="short" className="text-[10px] text-gray-400" />
+                    <DateValue value={tx.trans_date} format="short" className="text-[10px] text-gray-400 shrink-0" />
                     {tx.description !== tx.counterparty_name && (
                       <span className="text-[10px] text-gray-400 truncate">{tx.description}</span>
                     )}
+                    <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0 ml-auto", statusColor(status))}>
+                      {status === "approved" && <Check className="h-2.5 w-2.5 inline -mt-0.5 mr-0.5" />}
+                      {status}
+                    </span>
                   </div>
                 </div>
-
-                {/* Status badge */}
-                <span className={cn("text-[10px] px-1.5 py-0.5 rounded-full font-medium shrink-0", statusColor(status))}>
-                  {status === "approved" && <Check className="h-2.5 w-2.5 inline -mt-0.5 mr-0.5" />}
-                  {status}
-                </span>
 
                 {isSelected && <ChevronRight className="h-3.5 w-3.5 text-primary-400 shrink-0" />}
               </div>
