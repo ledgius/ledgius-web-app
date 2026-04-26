@@ -39,7 +39,7 @@ const columns = [
 ]
 
 export function PayRunsPage() {
-  usePagePolicies(["payroll", "tax"])
+  usePagePolicies(["payroll", "tax", "nes", "awards", "pay-runs"])
   const { data: runs, isLoading, error: fetchError } = usePayRuns()
   const { data: employees } = useEmployees()
   const processPayRun = useProcessPayRun()

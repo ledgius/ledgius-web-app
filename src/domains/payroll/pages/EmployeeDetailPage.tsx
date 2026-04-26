@@ -12,7 +12,7 @@ import { api } from "@/shared/lib/api"
 import { useQueryClient } from "@tanstack/react-query"
 
 export function EmployeeDetailPage() {
-  usePagePolicies(["payroll", "tax"])
+  usePagePolicies(["payroll", "tax", "nes", "awards", "employees", "leave"])
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const feedback = useFeedback()

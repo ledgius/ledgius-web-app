@@ -217,7 +217,7 @@ function InlineEmployeeForm({ onClose }: { onClose: () => void }) {
 }
 
 export function EmployeesPage() {
-  usePagePolicies(["payroll", "tax"])
+  usePagePolicies(["payroll", "tax", "nes", "awards", "employees", "leave"])
   const { data: employees, isLoading, error } = useEmployees()
   const navigate = useNavigate()
   const [createOpen, setCreateOpen] = useState(false)
