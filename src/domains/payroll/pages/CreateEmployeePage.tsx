@@ -8,7 +8,7 @@ import { useFeedback } from "@/components/feedback"
 import { useCreateEmployee } from "../hooks/usePayroll"
 
 export function CreateEmployeePage() {
-  usePagePolicies(["payroll", "tax"])
+  usePagePolicies(["payroll", "tax", "nes", "awards", "employees"])
   const navigate = useNavigate()
   const handleCancel = useCallback(() => navigate("/employees"), [navigate])
   useEscapeKey(handleCancel)
