@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { api } from "@/shared/lib/api"
+import type { DecimalString } from "@/shared/lib/decimal"
 
 export interface Employee {
   id: number; first_name: string; last_name: string; email: string | null
@@ -23,7 +24,8 @@ export function useEmployee(id: number) {
 
 export interface PayRun {
   id: number; pay_period_start: string; pay_period_end: string; payment_date: string
-  status: string; total_gross: string; total_tax: string; total_super: string; total_net: string
+  status: string
+  total_gross: DecimalString; total_tax: DecimalString; total_super: DecimalString; total_net: DecimalString
   employee_count: number
   stp_status?: "pending" | "accepted" | "failed" | "submitted" | null
   stp_submitted_at?: string | null
