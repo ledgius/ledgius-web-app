@@ -12,6 +12,48 @@ export interface Employee {
   super_fund_name: string | null; super_fund_abn: string | null
   super_fund_usi: string | null; super_member_number: string | null
   bank_bsb: string | null; bank_account_number: string | null; bank_account_name: string | null
+  // R-0005 PAY-STP-013/039 + A-0049: TFN handling. The cleartext TFN
+  // is never returned to the frontend — only the receipt fields below.
+  tfn_supplied_at: string | null
+}
+
+// Receipt returned by PUT /employees/:id/tfn. Deliberately never echoes
+// the cleartext TFN — it's stored encrypted server-side and decrypted
+// only at PAYEVNT-build time.
+export interface SetEmployeeTFNResponse {
+  employee_id: number
+  tfn_provided: boolean
+  tfn_supplied_at: string
+}
+
+// useSetEmployeeTFN encrypts and stores the supplied TFN via the
+// API setter endpoint. The cleartext value travels over TLS to the
+// API and is never persisted in browser state beyond the input box's
+// lifetime — callers MUST clear their input state after a successful
+// mutation. Spec references: R-0005 PAY-STP-013/039, A-0049.
+export function useSetEmployeeTFN(employeeId: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (tfn: string) =>
+      api.put<SetEmployeeTFNResponse>(`/employees/${employeeId}/tfn`, { tfn }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["employees", employeeId] })
+      qc.invalidateQueries({ queryKey: ["employees"] })
+    },
+  })
+}
+
+// useClearEmployeeTFN nulls the encrypted TFN columns server-side.
+// Used when withdrawing a TFN (e.g. record was created in error).
+export function useClearEmployeeTFN(employeeId: number) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: () => api.delete<void>(`/employees/${employeeId}/tfn`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["employees", employeeId] })
+      qc.invalidateQueries({ queryKey: ["employees"] })
+    },
+  })
 }
 
 export function useEmployee(id: number) {

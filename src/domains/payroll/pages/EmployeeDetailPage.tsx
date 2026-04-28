@@ -7,6 +7,7 @@ import { Button, InlineAlert, Skeleton } from "@/components/primitives"
 import { useFeedback } from "@/components/feedback"
 import { useEscapeKey } from "@/hooks/useEscapeKey"
 import { useEmployee } from "../hooks/usePayroll"
+import { TfnSection } from "../components/TfnSection"
 import { useEntityActivity } from "@/hooks/useEntityActivity"
 import { api } from "@/shared/lib/api"
 import { useQueryClient } from "@tanstack/react-query"
@@ -199,6 +200,20 @@ export function EmployeeDetailPage() {
             </label>
           </div>
         </div>
+      </PageSection>
+
+      {/*
+        TFN capture / display lives in its own section because it has a
+        dedicated lifecycle (encrypted server-side via PUT /tfn, never
+        re-displayed in cleartext) outside the parent page's
+        save/discard flow. R-0005 PAY-STP-013/039 + A-0049.
+      */}
+      <PageSection title="Tax File Number">
+        <TfnSection
+          employeeId={employee.id}
+          tfnProvided={employee.tfn_provided}
+          tfnSuppliedAt={employee.tfn_supplied_at}
+        />
       </PageSection>
 
       <PageSection title="Superannuation">
